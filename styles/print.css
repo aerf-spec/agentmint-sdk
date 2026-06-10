@@ -1,24 +1,86 @@
 @media print {
   :root {
-    --yellow: #b45309;
+    --seal: #b45309;
     --green: #047857;
+  }
+
+  @page {
+    margin: 18mm;
   }
 
   html,
   body {
-    background: #ffffff;
-    color: #000000;
+    background: #ffffff !important;
+    color: #000000 !important;
   }
 
   .dot-grid,
   .hero-gradient,
   .nav,
-  .no-print {
+  .packet-nav,
+  .no-print,
+  .packet-exit {
     display: none !important;
+  }
+
+  .site-shell,
+  .filing {
+    background: #ffffff !important;
+  }
+
+  .packet-page {
+    padding: 0 !important;
+  }
+
+  .packet-card,
+  .gap-table,
+  .crosswalk-table,
+  .attestation-block,
+  .faq-item {
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .verification-section,
+  .hash-display,
+  .packet-code-block {
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+  }
+
+  .hash-display__value,
+  .verification-section__copy,
+  .verification-section__heading,
+  .packet-code-block {
+    color: #000000 !important;
   }
 
   .artifact-card {
     page-break-before: always;
-    border-color: #ccc !important;
+    page-break-inside: avoid;
+  }
+
+  .gap-card,
+  .attestation-block,
+  .verification-section {
+    page-break-inside: avoid;
+  }
+
+  .faq-answer {
+    display: block !important;
+  }
+
+  .faq-toggle {
+    cursor: default !important;
+  }
+
+  .faq-toggle__label {
+    display: none !important;
+  }
+
+  .sample-banner {
+    display: none !important;
   }
 }

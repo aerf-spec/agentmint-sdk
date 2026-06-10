@@ -17,7 +17,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
-      include: ["app/**/*.tsx", "components/ui/**/*.tsx", "lib/**/*.ts", "scripts/build-packet.ts"],
+      include: ["app/**/*.tsx", "components/**/*.tsx", "lib/**/*.ts", "scripts/build-packet.ts"],
       thresholds: {
         lines: 100,
         functions: 100,

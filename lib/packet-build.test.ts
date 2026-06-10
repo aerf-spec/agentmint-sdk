@@ -6,12 +6,11 @@ import { describe, expect, it } from "vitest";
 
 import { canonicalize } from "@/lib/canonical";
 import {
-  PACKET_PUBLIC_ID,
-  PACKET_PUBLIC_URL,
   buildVerifyScript,
   getPacketBuildPaths,
   writePacketArtifacts,
 } from "@/lib/packet-build";
+import { PACKET_PUBLIC_ID, PACKET_PUBLIC_URL } from "@/lib/packet-public";
 import { createArtifact, createPacketData } from "@/test/factories";
 
 describe("packet build", () => {

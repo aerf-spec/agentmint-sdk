@@ -9,19 +9,19 @@ const BASE_STYLE: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   minHeight: "18px",
-  padding: "4px 10px",
-  borderRadius: "4px",
+  padding: "3px 9px",
+  borderRadius: "3px",
   fontFamily: "var(--font-mono), monospace",
   fontSize: "10px",
-  fontWeight: 700,
+  fontWeight: 600,
   letterSpacing: "0.08em",
   lineHeight: 1,
   textTransform: "uppercase",
 };
 
 const GAP_STYLE: CSSProperties = {
-  background: "rgba(251, 191, 36, 0.1)",
-  border: "1px solid rgba(251, 191, 36, 0.35)",
+  background: "var(--seal-wash)",
+  border: "1px solid color-mix(in srgb, var(--yellow) 35%, transparent)",
   color: "var(--yellow)",
 };
 
@@ -29,8 +29,8 @@ const STYLES: Record<StatusPillProps["status"], { label: string; style: CSSPrope
   attested: {
     label: "ATTESTED",
     style: {
-      background: "rgba(16, 185, 129, 0.1)",
-      border: "1px solid rgba(16, 185, 129, 0.35)",
+      background: "var(--verified-wash)",
+      border: "1px solid color-mix(in srgb, var(--green) 35%, transparent)",
       color: "var(--green)",
     },
   },

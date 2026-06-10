@@ -3,10 +3,8 @@ import { dirname, resolve } from "node:path";
 
 import { canonicalizeToBuffer, computeHash } from "./canonical";
 import { assertPacketInvariants } from "./packet-invariants";
+import { PACKET_PUBLIC_ID, PACKET_PUBLIC_URL } from "./packet-public";
 import type { PacketData } from "./types";
-
-export const PACKET_PUBLIC_ID = "sample-health-001";
-export const PACKET_PUBLIC_URL = `https://agentmint.run/p/${PACKET_PUBLIC_ID}/packet.json`;
 
 export type PacketBuildPaths = {
   outputDir: string;
