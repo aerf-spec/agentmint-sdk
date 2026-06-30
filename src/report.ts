@@ -26,6 +26,7 @@ export class AgentMintReport {
     const completedRuns = filtered.filter((r) => r.status === "completed").length;
     const killedRuns = filtered.filter((r) => r.status === "killed").length;
     const totalBlocked = filtered.reduce((s, r) => s + r.blockedCount, 0);
+    const totalWarned = filtered.reduce((s, r) => s + r.warnedCount, 0);
     const totalHeld = filtered.reduce((s, r) => s + r.heldCount, 0);
     const totalCost = filtered.reduce((s, r) => s + r.totalCost, 0);
     const avgCost = totalRuns > 0 ? totalCost / totalRuns : 0;
@@ -51,6 +52,7 @@ export class AgentMintReport {
           completedRuns,
           killedRuns,
           totalBlocked,
+          totalWarned,
           totalHeld,
           bindViolations,
           denyBlocks,
@@ -78,6 +80,7 @@ export class AgentMintReport {
       "",
       `WORKFLOW          ${requireBlocks} prerequisite violations blocked`,
       `                  ${totalHeld} checkpoint holds`,
+      `                  ${totalWarned} warnings`,
       "",
       `COST              avg $${avgCost.toFixed(2)}/run`,
       `                  total $${totalCost.toFixed(2)}`,

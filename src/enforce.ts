@@ -1,6 +1,30 @@
-import type { AgentMintConfig, RunState } from "./types.js";
+import type { AgentMintConfig, RunState, Violation } from "./types.js";
 import { matchesAny } from "./matcher.js";
 import { blockResponse, logEvent } from "./log.js";
+import { recordInput, recordOutput } from "./session.js";
+import { validateInputCrossRefs, validateOutputCrossRefs, checkRequires } from "./cross-ref.js";
+import { checkBreakers } from "./breakers.js";
+
+function handleViolation(
+  v: Violation,
+  state: RunState,
+  config: Readonly<AgentMintConfig>,
+  params: Record<string, unknown>,
+  shadow: boolean,
+): { shouldBlock: boolean; response?: ReturnType<typeof blockResponse> } {
+  if (v.action === "block") {
+    state.blockedCount++;
+    logEvent(state, v.tool, params, "blocked", { reason: v.type, details: v.details });
+    config.onBlock?.(v.tool, v.type, v.details);
+    const resp = blockResponse(v.tool, v.details);
+    return { shouldBlock: !shadow, response: resp };
+  }
+  // warn
+  state.warnedCount++;
+  logEvent(state, v.tool, params, "warned", { reason: v.type, details: v.details });
+  config.onWarn?.(v.tool, v.type, v.details);
+  return { shouldBlock: false };
+}
 
 export async function enforce(
   tool: string,
@@ -10,13 +34,15 @@ export async function enforce(
   state: RunState,
 ): Promise<unknown> {
   state.callCount++;
+  const spec = config.spec;
+  const shadow = config.mode === "shadow";
 
   // 0. Already dead
   if (state.status === "killed") {
     return blockResponse(tool, "Run has been terminated.");
   }
 
-  // 1. Budget
+  // 1. Budget (existing programmatic config)
   if (
     config.budget !== undefined &&
     config.costEstimator &&
@@ -49,7 +75,21 @@ export async function enforce(
     }
   }
 
-  // 3. Retry limit
+  // 3. Record input to session (must happen before breaker check so current call is counted)
+  recordInput(state.session, tool, params);
+
+  // 4. Circuit breakers (spec-driven)
+  if (spec?.breakers) {
+    const breakerViolations = checkBreakers(
+      tool, params, state.session, spec.breakers, state.totalCost,
+    );
+    for (const v of breakerViolations) {
+      const result = handleViolation(v, state, config, params, shadow);
+      if (result.shouldBlock) return result.response!;
+    }
+  }
+
+  // 4. Retry limit
   if (config.retryLimit !== undefined) {
     const count = state.retryCounts[tool] ?? 0;
     if (count >= config.retryLimit) {
@@ -65,10 +105,7 @@ export async function enforce(
     }
   }
 
-  // Steps 4-8: in shadow mode, log the block but fall through to execution.
-  const shadow = config.mode === "shadow";
-
-  // 4. Bind
+  // 5. Bind
   if (config.bind) {
     for (const [field, expected] of Object.entries(config.bind)) {
       if (params[field] !== undefined && params[field] !== expected) {
@@ -86,7 +123,7 @@ export async function enforce(
     }
   }
 
-  // 5. Deny
+  // 6. Deny
   if (config.deny && matchesAny(tool, config.deny)) {
     state.blockedCount++;
     logEvent(state, tool, params, "blocked", { reason: "denied" });
@@ -95,7 +132,7 @@ export async function enforce(
     if (!shadow) return blocked;
   }
 
-  // 6. Allow
+  // 7. Allow
   if (config.allow && config.allow.length > 0 && !matchesAny(tool, config.allow)) {
     state.blockedCount++;
     logEvent(state, tool, params, "blocked", { reason: "not_in_scope" });
@@ -104,7 +141,16 @@ export async function enforce(
     if (!shadow) return blocked;
   }
 
-  // 7. Require (only checked when hitting a checkpoint tool)
+  // 8. Spec: requires
+  if (spec) {
+    const reqViolations = checkRequires(tool, spec, state.completedSteps);
+    for (const v of reqViolations) {
+      const result = handleViolation(v, state, config, params, shadow);
+      if (result.shouldBlock) return result.response!;
+    }
+  }
+
+  // 9. Programmatic requires (legacy)
   if (config.require && config.checkpoint && matchesAny(tool, config.checkpoint)) {
     for (const req of config.require) {
       if (!state.completedSteps.has(req)) {
@@ -124,7 +170,16 @@ export async function enforce(
     }
   }
 
-  // 8. Checkpoint
+  // 10. Spec: cross-ref input validation + blocked patterns/values
+  if (spec) {
+    const inputViolations = validateInputCrossRefs(tool, params, spec, state.session);
+    for (const v of inputViolations) {
+      const result = handleViolation(v, state, config, params, shadow);
+      if (result.shouldBlock) return result.response!;
+    }
+  }
+
+  // 11. Checkpoint
   if (config.checkpoint && matchesAny(tool, config.checkpoint)) {
     state.heldCount++;
     logEvent(state, tool, params, "held", { reason: "checkpoint_required" });
@@ -149,7 +204,7 @@ export async function enforce(
     }
   }
 
-  // 9. Execute
+  // 12. Execute
   const t0 = Date.now();
   let result: unknown;
   try {
@@ -163,14 +218,28 @@ export async function enforce(
   }
   const durationMs = Date.now() - t0;
 
-  // 10. Cost
+  // Record output to session store AFTER execution
+  recordOutput(state.session, tool, result);
+
+  // 13. Spec: cross-ref output validation (warn only, post-execution)
+  if (spec) {
+    const outputViolations = validateOutputCrossRefs(tool, result, spec, state.session);
+    for (const v of outputViolations) {
+      // Output violations can only warn (tool already executed)
+      state.warnedCount++;
+      logEvent(state, tool, params, "warned", { reason: v.type, details: v.details });
+      config.onWarn?.(tool, v.type, v.details);
+    }
+  }
+
+  // 14. Cost
   let cost: number | undefined;
   if (config.costEstimator) {
     cost = config.costEstimator(tool, params, result);
     state.totalCost += cost;
   }
 
-  // 11. Update state
+  // 15. Update state
   state.executedCount++;
   state.completedSteps.add(tool);
   state.retryCounts[tool] = (state.retryCounts[tool] ?? 0) + 1;
@@ -182,7 +251,7 @@ export async function enforce(
     state.retrievedData.push(`${tool}: ${summary}`);
   }
 
-  // 12. Log
+  // 16. Log
   logEvent(state, tool, params, "allowed", { cost, durationMs });
 
   return result;

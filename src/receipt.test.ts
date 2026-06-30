@@ -10,6 +10,7 @@ const makeState = (overrides?: Partial<RunState>): RunState => ({
   callCount: 0,
   executedCount: 0,
   blockedCount: 0,
+  warnedCount: 0,
   heldCount: 0,
   killedCount: 0,
   skippedCount: 0,
@@ -18,6 +19,7 @@ const makeState = (overrides?: Partial<RunState>): RunState => ({
   boundValues: {},
   events: [],
   retrievedData: [],
+  session: { inputs: new Map(), outputs: new Map(), callHistory: [] },
   ...overrides,
 });
 
@@ -142,6 +144,7 @@ describe("formatReceipt", () => {
     expect(record.status).toBe("completed");
     expect(record.summary.calls).toBe(3);
     expect(record.summary.blocked).toBe(1);
+    expect(record.summary.warned).toBe(0);
     expect(record.summary.budget).toBe(10);
     expect(record.events[0]?.boundParams).toEqual({ patient_id: "PT-1" });
     expect(record.requiredSteps).toEqual([

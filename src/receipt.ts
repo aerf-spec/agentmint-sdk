@@ -7,6 +7,7 @@ import type {
 
 const ICONS: Record<EventResult, string> = {
   allowed: "✓",
+  warned: "⚠",
   blocked: "✗",
   held: "⏸",
   approved: "✓",
@@ -17,6 +18,7 @@ const ICONS: Record<EventResult, string> = {
 
 const SUFFIXES: Record<EventResult, string> = {
   blocked: "  BLOCKED",
+  warned: "  WARNED",
   held: "  HELD",
   rejected: "  REJECTED",
   killed: "  KILLED",
@@ -71,6 +73,7 @@ export function buildRecord(
       calls: state.callCount,
       executed: state.executedCount,
       blocked: state.blockedCount,
+      warned: state.warnedCount,
       held: state.heldCount,
       skipped: state.skippedCount,
       cost: config.costEstimator ? state.totalCost : null,
@@ -85,6 +88,7 @@ export function buildRecord(
           })),
         }
       : {}),
+    ...(state.evidence ? { evidenceRoot: state.evidence.build() } : {}),
   };
 }
 
@@ -136,7 +140,10 @@ export function formatReceipt(
   if (record.summary.cost !== null && record.summary.budget !== null) {
     summary += ` / $${record.summary.budget.toFixed(2)}`;
   }
-  summary += ` · Time: ${record.summary.elapsedSeconds}s · Blocked: ${record.summary.blocked}`;
+  summary += ` · Blocked: ${record.summary.blocked}`;
+  if (record.summary.warned > 0) {
+    summary += ` · Warned: ${record.summary.warned}`;
+  }
   lines.push(pad(`  ${summary}`, INNER_WIDTH));
 
   if (record.requiredSteps && record.requiredSteps.length > 0) {
@@ -144,6 +151,10 @@ export function formatReceipt(
       .map((step) => `${step.completed ? "✓" : "✗"} ${step.tool}`)
       .join(" ");
     lines.push(pad(`  Required: ${required}`, INNER_WIDTH));
+  }
+
+  if (record.evidenceRoot) {
+    lines.push(pad(`  Evidence: ${record.evidenceRoot.slice(0, 16)}…`, INNER_WIDTH));
   }
 
   lines.push(pad("", INNER_WIDTH));

@@ -1,83 +1,14 @@
-/** What the developer passes to harden() */
-export interface AgentMintConfig {
-  /** Lock parameter values - block calls where a bound param has a different value */
-  readonly bind?: Record<string, string>;
-  /** If non-empty, only these tools can execute. Supports wildcards: "read_patient_*" */
-  readonly allow?: readonly string[];
-  /** These tools never execute. Overrides allow. Supports wildcards. */
-  readonly deny?: readonly string[];
-  /** These tools must complete before any checkpoint tool fires */
-  readonly require?: readonly string[];
-  /** These tools pause for human approval. Supports wildcards. */
-  readonly checkpoint?: readonly string[];
-  /** Max USD for the run. Requires costEstimator callback. */
-  readonly budget?: number;
-  /** Max seconds for the run */
-  readonly timeout?: number;
-  /** Max calls per tool name (not per run) */
-  readonly retryLimit?: number;
-  /** Suppress stdout receipt */
-  readonly silent?: boolean;
-  /** Enable Merkle tree evidence chain */
-  readonly evidenceChain?: boolean;
-  /** Shadow mode logs enforcement decisions but doesn't block */
-  readonly mode?: "enforce" | "shadow";
-  /** Called when a checkpoint tool is invoked. Return true to approve. */
-  readonly onCheckpoint?: (
-    tool: string,
-    params: Readonly<Record<string, unknown>>,
-  ) => Promise<boolean>;
-  /** Called after any tool is blocked */
-  readonly onBlock?: (tool: string, reason: string, details?: string) => void;
-  /** Called when the run is killed (budget/timeout) */
-  readonly onKill?: (reason: string, state: Readonly<RunState>) => void;
-  /** Called after each successful tool execution. Returns estimated USD cost. */
-  readonly costEstimator?: (
-    tool: string,
-    params: Readonly<Record<string, unknown>>,
-    result: unknown,
-  ) => number;
-}
+import type { MerkleTree } from "./merkle.js";
 
-/** Mutable state tracked per harden() call */
-export interface RunState {
-  /** Unique run ID: "amr_" + 8 alphanumeric chars */
-  runId: string;
-  /** Unix timestamp ms when harden() was called */
-  startedAt: number;
-  /** Current run status */
-  status: "running" | "completed" | "killed";
-  /** Why the run was killed, if applicable */
-  killReason?: string;
-  /** Cumulative USD cost */
-  totalCost: number;
-  /** Total tool calls attempted (including blocked) */
-  callCount: number;
-  /** Tool calls that actually executed */
-  executedCount: number;
-  /** Tool calls that were blocked */
-  blockedCount: number;
-  /** Tool calls that were held for checkpoint */
-  heldCount: number;
-  /** Tool calls that triggered a kill */
-  killedCount: number;
-  /** Tool calls skipped due to retry limit */
-  skippedCount: number;
-  /** Per-tool call counts */
-  retryCounts: Record<string, number>;
-  /** Tools that have executed successfully */
-  completedSteps: Set<string>;
-  /** Frozen copy of config.bind */
-  boundValues: Readonly<Record<string, string>>;
-  /** Full event log */
-  events: Event[];
-  /** Summaries of data returned by tools (for grounding check) */
-  retrievedData: string[];
-}
+// ── Actions & Results ──────────────────────────────────────────────
+
+/** Action to take when a rule fires */
+export type RuleAction = "warn" | "block";
 
 /** Result type for an enforcement decision */
 export type EventResult =
   | "allowed"
+  | "warned"
   | "blocked"
   | "held"
   | "approved"
@@ -85,65 +16,171 @@ export type EventResult =
   | "killed"
   | "skipped";
 
-/** One entry per tool call attempt */
+// ── Spec Types ─────────────────────────────────────────────────────
+
+export interface SpecPropertyConfig {
+  cross_ref?: string;
+  max_ref?: string;
+  blocked_patterns?: string[];
+  blocked_values?: string[];
+  action?: RuleAction;
+}
+
+export interface SpecToolConfig {
+  requires?: string[];
+  action?: RuleAction;
+  input?: { properties?: Record<string, SpecPropertyConfig> };
+  output?: { properties?: Record<string, SpecPropertyConfig> };
+}
+
+export interface SpecBreakerConfig {
+  loop?: { max_identical_calls: number; action?: RuleAction };
+  velocity?: { max_calls_per_window: number; window_seconds: number; action?: RuleAction };
+  cost?: { max_usd: number; action?: RuleAction };
+}
+
+export interface AgentMintSpec {
+  version: string;
+  defaults?: { action?: RuleAction };
+  tools?: Record<string, SpecToolConfig>;
+  breakers?: SpecBreakerConfig;
+}
+
+// ── Session Store ──────────────────────────────────────────────────
+
+export interface SessionStore {
+  inputs: Map<string, Record<string, unknown>>;
+  outputs: Map<string, unknown>;
+  callHistory: Array<{
+    tool: string;
+    timestamp: number;
+    args: Record<string, unknown>;
+    argsHash: string;
+  }>;
+}
+
+// ── Violation ──────────────────────────────────────────────────────
+
+export interface Violation {
+  type:
+    | "cross_ref"
+    | "max_ref"
+    | "blocked_pattern"
+    | "blocked_value"
+    | "requires"
+    | "loop_breaker"
+    | "velocity_breaker"
+    | "cost_breaker";
+  tool: string;
+  field?: string;
+  expected?: string;
+  actual?: string;
+  details: string;
+  action: RuleAction;
+}
+
+// ── Config ─────────────────────────────────────────────────────────
+
+/** What the developer passes to harden() */
+export interface AgentMintConfig {
+  readonly spec?: AgentMintSpec;
+  readonly bind?: Record<string, string>;
+  readonly allow?: readonly string[];
+  readonly deny?: readonly string[];
+  readonly require?: readonly string[];
+  readonly checkpoint?: readonly string[];
+  readonly budget?: number;
+  readonly timeout?: number;
+  readonly retryLimit?: number;
+  readonly silent?: boolean;
+  readonly evidenceChain?: boolean;
+  readonly mode?: "enforce" | "shadow";
+  readonly receiptsDir?: string;
+  readonly onCheckpoint?: (
+    tool: string,
+    params: Readonly<Record<string, unknown>>,
+  ) => Promise<boolean>;
+  readonly onBlock?: (tool: string, reason: string, details?: string) => void;
+  readonly onWarn?: (tool: string, reason: string, details?: string) => void;
+  readonly onKill?: (reason: string, state: Readonly<RunState>) => void;
+  readonly costEstimator?: (
+    tool: string,
+    params: Readonly<Record<string, unknown>>,
+    result: unknown,
+  ) => number;
+}
+
+// ── Run State ──────────────────────────────────────────────────────
+
+export interface RunState {
+  runId: string;
+  startedAt: number;
+  status: "running" | "completed" | "killed";
+  killReason?: string;
+  totalCost: number;
+  callCount: number;
+  executedCount: number;
+  blockedCount: number;
+  warnedCount: number;
+  heldCount: number;
+  killedCount: number;
+  skippedCount: number;
+  retryCounts: Record<string, number>;
+  completedSteps: Set<string>;
+  boundValues: Readonly<Record<string, string>>;
+  events: Event[];
+  retrievedData: string[];
+  session: SessionStore;
+  /** Merkle evidence chain, present only when config.evidenceChain is enabled */
+  evidence?: MerkleTree;
+}
+
+// ── Event ──────────────────────────────────────────────────────────
+
 export interface Event {
-  /** ISO 8601 timestamp */
   readonly timestamp: string;
-  /** Seconds since run start, e.g. "4.8s" */
   readonly elapsed: string;
-  /** Tool name */
   readonly tool: string;
-  /** Redacted parameters */
   readonly params: Readonly<Record<string, unknown>>;
-  /** Enforcement decision */
   readonly result: EventResult;
-  /** Why this decision was made */
   readonly reason?: string;
-  /** Additional context */
   readonly details?: string;
-  /** USD cost of this call */
   readonly cost?: number;
-  /** Execution time in milliseconds */
   readonly durationMs?: number;
 }
 
-/** What the agent receives when a tool call is blocked */
+// ── Block Response ─────────────────────────────────────────────────
+
 export interface BlockResponse {
   readonly error: true;
   readonly tool: string;
   readonly message: string;
 }
 
-/** Function signature used by framework adapters */
+// ── Function Signatures ────────────────────────────────────────────
+
 export type EnforcerFn = (
   tool: string,
   params: Record<string, unknown>,
   execute: () => Promise<unknown>,
 ) => Promise<unknown>;
 
-/** Options for AgentMintReport.generate() */
+// ── Report ─────────────────────────────────────────────────────────
+
 export interface ReportOptions {
-  /** Time window filter, e.g. "30d" */
   readonly last?: string;
-  /** Output format */
   readonly format?: "text" | "json";
 }
 
-/** AgentMint Evidence Record Format - structured receipt */
+// ── AERF Record ────────────────────────────────────────────────────
+
 export interface AERFRecord {
-  /** Schema version */
   version: "0.1.0";
-  /** Run identifier */
   runId: string;
-  /** Bound parameter values */
   boundValues: Record<string, string>;
-  /** ISO 8601 start time */
   startedAt: string;
-  /** Final run status */
   status: RunState["status"];
-  /** Enforcement mode */
   mode: "enforce" | "shadow";
-  /** Condensed event log */
   events: ReadonlyArray<{
     tool: string;
     result: EventResult;
@@ -151,29 +188,47 @@ export interface AERFRecord {
     details?: string;
     boundParams?: Record<string, string>;
   }>;
-  /** Run summary */
   summary: {
     calls: number;
     executed: number;
     blocked: number;
+    warned: number;
     held: number;
     skipped: number;
     cost: number | null;
     budget: number | null;
     elapsedSeconds: number;
   };
-  /** Required step completion status */
   requiredSteps?: Array<{ tool: string; completed: boolean }>;
+  /** Merkle root over all events, present only when evidenceChain is enabled */
+  evidenceRoot?: string;
 }
 
-/** Merkle proof for a single event in the evidence chain */
+// ── Merkle ─────────────────────────────────────────────────────────
+
 export interface MerkleProof {
-  /** Hash of the leaf (event) */
   leaf: string;
-  /** Position in the tree */
   index: number;
-  /** Sibling hashes needed to reconstruct the root */
   siblings: ReadonlyArray<{ hash: string; position: "left" | "right" }>;
-  /** Root hash to verify against */
   root: string;
+}
+
+// ── JSONL ──────────────────────────────────────────────────────────
+
+export interface JSONLEvent {
+  timestamp: string;
+  runId: string;
+  tool: string;
+  result: string;
+  reason?: string;
+  details?: string;
+  params?: Record<string, unknown>;
+  cost?: number;
+  durationMs?: number;
+  violations?: Array<{
+    type: string;
+    field?: string;
+    details: string;
+    action: string;
+  }>;
 }

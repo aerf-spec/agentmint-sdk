@@ -7,6 +7,8 @@ import type {
   RunState,
 } from "./types.js";
 import { redact } from "./redact.js";
+import { createSession } from "./session.js";
+import { MerkleTree, canonicalize } from "./merkle.js";
 
 const CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -25,6 +27,7 @@ export function createRunState(config: AgentMintConfig): RunState {
     callCount: 0,
     executedCount: 0,
     blockedCount: 0,
+    warnedCount: 0,
     heldCount: 0,
     killedCount: 0,
     skippedCount: 0,
@@ -33,6 +36,8 @@ export function createRunState(config: AgentMintConfig): RunState {
     boundValues: Object.freeze({ ...config.bind }),
     events: [],
     retrievedData: [],
+    session: createSession(),
+    ...(config.evidenceChain ? { evidence: new MerkleTree() } : {}),
   };
 }
 
@@ -57,6 +62,10 @@ export function logEvent(
     ...(opts?.durationMs !== undefined && { durationMs: opts.durationMs }),
   };
   state.events.push(event);
+  // Append a tamper-evident leaf to the Merkle evidence chain when enabled
+  if (state.evidence) {
+    state.evidence.addLeaf(canonicalize(event));
+  }
   return event;
 }
 

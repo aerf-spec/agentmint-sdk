@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { harden } from "./harden.js";
+import { MerkleTree } from "./merkle.js";
 
 describe("harden", () => {
   it("wraps_record", async () => {
@@ -59,5 +60,41 @@ describe("harden", () => {
     const tools = harden({ foo: async () => 1 });
     (tools as any).__receipt();
     expect((tools as any).__state().status).toBe("completed");
+  });
+
+  it("evidence_chain_disabled_by_default", async () => {
+    const tools = harden({ foo: async () => 1 });
+    await (tools as any).foo();
+    expect((tools as any).__evidence()).toBeNull();
+  });
+
+  it("evidence_chain_builds_verifiable_proofs", async () => {
+    const tools = harden({ foo: async () => 1, bar: async () => 2 }, { evidenceChain: true });
+    await (tools as any).foo();
+    await (tools as any).bar();
+
+    const evidence = (tools as any).__evidence();
+    expect(evidence).not.toBeNull();
+    expect(evidence.leafCount).toBe((tools as any).__log().length);
+    expect(evidence.root).toMatch(/^[0-9a-f]{64}$/);
+
+    for (let i = 0; i < evidence.leafCount; i++) {
+      const proof = evidence.getProof(i);
+      expect(MerkleTree.verify(proof)).toBe(true);
+      expect(proof.root).toBe(evidence.root);
+    }
+  });
+
+  it("evidence_chain_detects_tampering", async () => {
+    const tools = harden({ foo: async () => 1 }, { evidenceChain: true });
+    await (tools as any).foo();
+    const proof = (tools as any).__evidence().getProof(0);
+    expect(MerkleTree.verify({ ...proof, leaf: "deadbeef" })).toBe(false);
+  });
+
+  it("evidence_root_appears_in_receipt", async () => {
+    const tools = harden({ foo: async () => 1 }, { evidenceChain: true });
+    await (tools as any).foo();
+    expect((tools as any).__receipt()).toContain("Evidence:");
   });
 });

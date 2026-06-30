@@ -30,6 +30,7 @@ export const brand = () => blue("Agent") + fg("Mint");
 
 export const icons: Record<EventResult, string> = {
   allowed: green("✓"),
+  warned: yellow("⚠"),
   blocked: red("✗"),
   held: yellow("⏸"),
   approved: green("✓"),

@@ -1,14 +1,30 @@
 # AgentMint
 
-Runtime guardrails for healthcare AI agents. One function. Every tool call checked.
+Runtime guardrails for AI agents. Validation · Circuit breakers · Audit receipts.
 
-## Demo
+Zero runtime dependencies. One YAML spec. One line of code.
+
+## Try it now
 
 ```
-npx agentmint demo
+npx agentmint demo a
 ```
 
-Runs a simulated prior authorization with zero API keys. Shows a bind violation, a denied SUD record access, and a physician checkpoint — then prints the receipt.
+Three rogue agent scenarios in 10 seconds, no API keys.
+
+## The problem
+
+Your AI agent calls a tool, gets a 200 back, and keeps going — even when the data is wrong. It refunds the wrong customer. It overwrites a file it never read. It retries 15 times with identical args, burning tokens. Nobody catches it until production breaks.
+
+## What AgentMint does
+
+AgentMint sits at the tool boundary and catches three things:
+
+**Validation** — Cross-ref tool outputs against inputs. Did the refund match the order that was looked up? Is the amount within the order total? Was the prerequisite step completed first?
+
+**Circuit breakers** — Stop runaway loops (identical-arg detection), velocity spikes (too many calls too fast), and cost overruns before they burn money.
+
+**Audit receipts** — JSONL stream of every tool call, every violation, every enforcement decision. Queryable with grep/jq. Deterministic, no LLM judge needed.
 
 ## Install
 
@@ -16,111 +32,153 @@ Runs a simulated prior authorization with zero API keys. Shows a bind violation,
 npm install agentmint
 ```
 
-Zero runtime dependencies. Zero config required. Node 18+.
-
 ## Quick start
 
 ```typescript
 import { harden } from 'agentmint'
 
+// Wrap your tools — one line
 const tools = harden(myTools, {
-  bind: { patient_id: 'PT-4827' },
-  deny: ['delete_*', 'read_patient_sud_*'],
-  checkpoint: ['submit_determination'],
-  onCheckpoint: async (tool, params) => {
-    return await getPhysicianApproval(tool, params)
-  },
+  spec: loadSpec('./agentmint.spec.yaml'),
 })
 
 // Use tools exactly as before. The agent doesn't know they're wrapped.
 const result = await agent.run(task, { tools })
 ```
 
-## API exports
+## Spec file
 
-```typescript
-import {
-  harden,
-  buildRecord,
-  AgentMintReport,
-  MerkleTree,
-  canonicalize,
-} from 'agentmint'
+```yaml
+# agentmint.spec.yaml
+version: "1.0"
+
+tools:
+  issue_refund:
+    requires:
+      - lookup_order
+    input:
+      properties:
+        amount:
+          max_ref: lookup_order.output.total
+        order_id:
+          cross_ref: lookup_order.input.order_id
+
+  run_command:
+    input:
+      properties:
+        command:
+          blocked_patterns:
+            - "rm -rf"
+            - "DROP TABLE"
+          action: block
+
+  git_push:
+    input:
+      properties:
+        branch:
+          blocked_values: ["main", "master"]
+          action: block
+
+breakers:
+  loop:
+    max_identical_calls: 5
+    action: block
+  velocity:
+    max_calls_per_window: 15
+    window_seconds: 30
+    action: block
 ```
 
-## Three questions this answers
+## CLI
 
-Your health system buyer will ask:
+| Command | What it does |
+|---------|-------------|
+| `agentmint demo [1\|2\|3\|a]` | Run demo scenarios showing all three capabilities |
+| `agentmint init [--example refund\|coding\|data]` | Generate a starter spec |
+| `agentmint watch` | Real-time validation against your spec |
+| `agentmint ci` | Validate and exit 0/1 for CI gating |
+| `agentmint diff <run1> <run2>` | Compare behavior between two runs |
 
-| Question | Config |
-|----------|--------|
-| "How do you prevent cross-patient data access?" | `bind: { patient_id }` |
-| "Can your AI deny claims without physician review?" | `checkpoint: ['submit_determination']` |
-| "How do you block access to 42 CFR Part 2 substance use data?" | `deny: ['read_patient_sud_*']` |
+## What it catches
 
-## How to adopt
+| Violation | Example | Default action |
+|-----------|---------|---------------|
+| `requires` | Refund without prior order lookup | `block` |
+| `cross_ref` | Refund order_id ≠ looked-up order_id | `warn` |
+| `max_ref` | Refund amount > order total | `warn` |
+| `blocked_pattern` | Command contains "rm -rf" | `block` |
+| `blocked_value` | Push to "main" branch | `block` |
+| `loop_breaker` | 5 identical calls (same tool + args) | `block` |
+| `velocity_breaker` | 15 calls in 30 seconds | `block` |
+| `cost_breaker` | Total cost exceeds $10 | `block` |
 
-**Day 1** — `harden(myTools)` with no config. Just logging. See what your agent does.
+## Severity model
 
-**Week 1** — Add `mode: 'shadow'` with your rules. See what *would* be blocked without blocking it.
-
-**Week 2** — Flip to `mode: 'enforce'`. Wrong patient? Blocked. SUD records? Blocked. Determination without physician? Held.
-
-## Config reference
-
-| Field | Type | What it does |
-|-------|------|-------------|
-| `bind` | `Record<string, string>` | Lock parameter values. Wrong patient_id → blocked. |
-| `allow` | `string[]` | Only these tools can run. Wildcards: `read_patient_*` |
-| `deny` | `string[]` | These tools never run. Overrides allow. |
-| `require` | `string[]` | Must complete before any checkpoint fires. |
-| `checkpoint` | `string[]` | Pause for human approval via `onCheckpoint`. |
-| `budget` | `number` | Max USD per run. Requires `costEstimator`. |
-| `timeout` | `number` | Max seconds per run. |
-| `retryLimit` | `number` | Max calls per tool name. |
-| `mode` | `'enforce' \| 'shadow'` | Shadow logs blocks but doesn't enforce them. |
-| `evidenceChain` | `boolean` | Enable Merkle tree for tamper-evident audit trail. |
-| `silent` | `boolean` | Suppress stdout receipt. |
-| `onCheckpoint` | `(tool, params) => Promise<boolean>` | Approval callback for checkpoint tools. |
-| `onBlock` | `(tool, reason, details?) => void` | Hook called after a blocked tool attempt. |
-| `onKill` | `(reason, state) => void` | Hook called when a run is terminated. |
-| `costEstimator` | `(tool, params, result) => number` | Returns estimated USD cost after successful execution. |
-
-## What the agent sees when blocked
-
-```typescript
-{ error: true, tool: 'read_patient_record', message: 'Access denied. patient_id must be "PT-4827" for this run.' }
-```
-
-Human-readable. The agent can decide what to do next.
+Two actions: `warn` (log + continue) and `block` (reject the call). Configurable per-rule with smart defaults — validation rules default to `warn`, breakers and blocked patterns default to `block`. The existing `checkpoint` mechanism provides human-in-the-loop approval for sensitive operations.
 
 ## Works with
 
 Auto-detected. No framework config needed.
 
-- **OpenAI-style** tool arrays with `function.name` / `function.execute`
-- **LangChain-style** tool arrays with `name` / `_call`
-- **Vercel-style** tool records with `execute`
-- **Any** `Record<string, Function>`
+```typescript
+// OpenAI SDK
+const tools = harden(openaiTools)
 
-## Evidence chain
+// Anthropic SDK
+const tools = harden(anthropicTools)
+
+// Vercel AI SDK
+const tools = harden(vercelTools)
+
+// LangChain
+const tools = harden(langchainTools)
+
+// Any function
+const tools = harden({ myTool: async (params) => { ... } })
+
+// Framework-agnostic single tool
+import { watchTool } from 'agentmint'
+const safeTool = watchTool('myTool', myFn, enforcer)
+```
+
+## Programmatic config
+
+Works without a spec file — configure in code:
 
 ```typescript
-import { harden, buildRecord } from 'agentmint'
-
-const tools = harden(myTools, { evidenceChain: true, ...config })
-// ... agent runs ...
-const record = buildRecord(tools.__state(), config)
-// Machine-readable AERF evidence record
+const tools = harden(myTools, {
+  bind: { customer_id: 'CUST-123' },
+  deny: ['delete_*'],
+  checkpoint: ['send_email'],
+  budget: 5.00,
+  timeout: 60,
+  retryLimit: 3,
+  mode: 'shadow',  // log violations without blocking
+  onCheckpoint: async (tool, params) => getApproval(tool, params),
+  costEstimator: (tool, params, result) => 0.01,
+})
 ```
 
 ## API
 
+```typescript
+import {
+  harden,
+  loadSpec,
+  watchTool,
+  AgentMintReport,
+  buildRecord,
+  formatJSONL,
+  parseJSONL,
+} from 'agentmint'
+```
+
+After wrapping:
 - `tools.__state()` — current RunState
 - `tools.__receipt()` — formatted terminal receipt
 - `tools.__log()` — event array
 
-Non-enumerable. Won't break framework tool iteration.
+Non-enumerable — won't break framework tool iteration.
 
 ## Zero dependencies
 

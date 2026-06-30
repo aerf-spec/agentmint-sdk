@@ -10,6 +10,7 @@ const makeState = (overrides?: Partial<RunState>): RunState => ({
   callCount: 0,
   executedCount: 0,
   blockedCount: 0,
+  warnedCount: 0,
   heldCount: 0,
   killedCount: 0,
   skippedCount: 0,
@@ -18,6 +19,7 @@ const makeState = (overrides?: Partial<RunState>): RunState => ({
   boundValues: {},
   events: [],
   retrievedData: [],
+  session: { inputs: new Map(), outputs: new Map(), callHistory: [] },
   ...overrides,
 });
 

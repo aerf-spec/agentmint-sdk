@@ -3,14 +3,27 @@ import { formatReceipt } from "./receipt.js";
 import { createRunState } from "./log.js";
 import { wrapAll as rawWrapAll } from "./adapters/raw.js";
 import { wrapAll as openaiWrapAll } from "./adapters/openai.js";
+import { wrapAll as anthropicWrapAll } from "./adapters/anthropic.js";
 import { wrapAll as langchainWrapAll } from "./adapters/langchain.js";
 import { wrapAll as vercelWrapAll } from "./adapters/vercel.js";
-import type { AgentMintConfig, RunState, Event, EnforcerFn } from "./types.js";
+import type { AgentMintConfig, RunState, Event, EnforcerFn, MerkleProof } from "./types.js";
+
+/** Built evidence chain handle, returned by __evidence() when evidenceChain is enabled */
+export interface EvidenceChain {
+  root: string;
+  leafCount: number;
+  getProof(index: number): MerkleProof;
+}
 
 export function harden<T extends Record<string, unknown> | unknown[]>(
   tools: T,
   config: AgentMintConfig = {},
-): T & { __state(): RunState; __receipt(): string; __log(): Event[] } {
+): T & {
+  __state(): RunState;
+  __receipt(): string;
+  __log(): Event[];
+  __evidence(): EvidenceChain | null;
+} {
   const state = createRunState(config);
 
   const enforcer: EnforcerFn = (tool, params, exec) =>
@@ -22,9 +35,16 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
     const first = tools[0];
     if (first && typeof first === "object" && first !== null) {
       const f = first as Record<string, unknown>;
+      // OpenAI: { function: { name, execute } }
       if (typeof (f.function as Record<string, unknown>)?.name === "string") {
         wrapped = openaiWrapAll(tools, enforcer);
-      } else if (typeof f.name === "string" && typeof f._call === "function") {
+      }
+      // Anthropic: { name, input_schema }
+      else if (typeof f.name === "string" && "input_schema" in f && typeof f.execute === "function") {
+        wrapped = anthropicWrapAll(tools, enforcer);
+      }
+      // LangChain: { name, _call }
+      else if (typeof f.name === "string" && typeof f._call === "function") {
         wrapped = langchainWrapAll(tools, enforcer);
       } else {
         wrapped = tools;
@@ -41,9 +61,9 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
       first !== null &&
       "execute" in (first as object)
     ) {
-      wrapped = vercelWrapAll(tools as any, enforcer);
+      wrapped = vercelWrapAll(tools as Record<string, { execute?: (...args: unknown[]) => Promise<unknown>; [key: string]: unknown }>, enforcer);
     } else {
-      wrapped = rawWrapAll(tools as any, enforcer);
+      wrapped = rawWrapAll(tools as Record<string, (...args: unknown[]) => Promise<unknown>>, enforcer);
     }
   }
 
@@ -63,11 +83,25 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
       value: () => state.events,
       enumerable: false,
     },
+    __evidence: {
+      value: (): EvidenceChain | null => {
+        const tree = state.evidence;
+        if (!tree) return null;
+        const root = tree.build();
+        return {
+          root,
+          leafCount: state.events.length,
+          getProof: (index: number) => tree.getProof(index),
+        };
+      },
+      enumerable: false,
+    },
   });
 
   return wrapped as T & {
     __state(): RunState;
     __receipt(): string;
     __log(): Event[];
+    __evidence(): EvidenceChain | null;
   };
 }
