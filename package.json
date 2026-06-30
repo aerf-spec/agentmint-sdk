@@ -1,14 +1,26 @@
 {
-  "name": "agentmint",
-  "version": "0.1.0",
+  "name": "@npmsai/agentmint",
+  "version": "0.1.1",
   "description": "Runtime guardrails for AI agents. Validation · Circuit breakers · Audit receipts.",
   "type": "module",
   "license": "MIT",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "keywords": [
-    "ai", "agent", "guardrails", "validation", "circuit-breaker",
-    "tool-calling", "llm", "openai", "anthropic", "vercel-ai",
-    "audit", "receipt", "safety"
+    "ai",
+    "agent",
+    "guardrails",
+    "validation",
+    "circuit-breaker",
+    "tool-calling",
+    "llm",
+    "openai",
+    "anthropic",
+    "vercel-ai",
+    "audit",
+    "receipt",
+    "safety"
   ],
   "exports": {
     ".": {
@@ -17,8 +29,13 @@
       "require": "./dist/index.cjs"
     }
   },
-  "bin": { "agentmint": "dist/cli/entry.js" },
-  "files": ["dist", "README.md"],
+  "bin": {
+    "agentmint": "dist/cli/entry.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
@@ -32,5 +49,13 @@
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^3.2.0"
-  }
+  },
+  "dependencies": {
+    "openai": "^6.45.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npmsai/agentmint.git"
+  },
+  "homepage": "https://github.com/npmsai/agentmint#readme"
 }

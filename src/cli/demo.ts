@@ -333,7 +333,7 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
 
   console.log("");
   console.log(`  ${muted("Next steps:")}`);
-  console.log(`    ${dim("$")} npm install agentmint`);
+  console.log(`    ${dim("$")} npm install @npmsai/agentmint`);
   console.log(`    ${dim("$")} agentmint init`);
   console.log(`    ${dim("$")} agentmint watch`);
   console.log("");

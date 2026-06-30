@@ -7,7 +7,7 @@ Zero runtime dependencies. One YAML spec. One line of code.
 ## Try it now
 
 ```
-npx agentmint demo a
+npx @npmsai/agentmint demo a
 ```
 
 Three rogue agent scenarios in 10 seconds, no API keys.
@@ -29,7 +29,7 @@ AgentMint sits at the tool boundary and catches three things:
 ## Install
 
 ```
-npm install agentmint
+npm install @npmsai/agentmint
 ```
 
 ## Quick start
