@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/cli/entry.ts",
+    "src/cli/verify.ts",
     "src/cli/demo.ts",
     "src/cli/test.ts",
     "src/cli/gate.ts",

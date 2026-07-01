@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0]
 
+- **New:** `agentmint verify` — independent, deterministic verification of a git
+  diff or directory. It derives invariants from the spec, type definitions, and
+  PR/ticket context, runs checks with no LLM in the decision loop, and emits a
+  verification receipt (terminal box, JSON, or JSONL) with a SHA-256 hash.
 - **Fix:** a bare `action: block` / `action: warn` on a tool with no concrete
   rules now blocks/warns the tool unconditionally instead of being a no-op.
 - **Fix:** `blocked_patterns` (and `blocked_values`) now support glob matching —

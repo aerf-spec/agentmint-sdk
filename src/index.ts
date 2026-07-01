@@ -13,6 +13,8 @@ export type { Scenario, ScenarioResult, SuiteResult } from "./test-runner.js";
 export { inferSpec, serializeSpec, mergeSpecs } from "./learn.js";
 export { gate, gateChainTip } from "./gate.js";
 export type { GateOptions, GateResult } from "./gate.js";
+export { verify, formatVerifyReceipt } from "./verify.js";
+export type { VerifyInput, VerifyReceipt, VerifyClaim } from "./verify.js";
 export type {
   AgentMintConfig,
   AgentMintSpec,

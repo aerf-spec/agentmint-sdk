@@ -1,7 +1,19 @@
+import { readFileSync } from "node:fs";
 import { harden } from "../harden.js";
 import { loadSpec } from "../spec.js";
 import type { AgentMintConfig, RunState } from "../types.js";
 import { blue, bold, brand, dim, fg, green, icons, muted, red, yellow } from "./color.js";
+
+const VERSION = (() => {
+  try {
+    const pkg = JSON.parse(
+      readFileSync(new URL("../../package.json", import.meta.url), "utf8"),
+    ) as { version?: string };
+    return pkg.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+})();
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const BOX_WIDTH = 56;
@@ -337,7 +349,7 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
   console.log(`    ${dim("$")} agentmint init`);
   console.log(`    ${dim("$")} agentmint watch`);
   console.log("");
-  console.log(`  ${dim(`${brand()} v0.2.0`)}`);
+  console.log(`  ${dim(`${brand()} v${VERSION}`)}`);
   console.log("");
 }
 

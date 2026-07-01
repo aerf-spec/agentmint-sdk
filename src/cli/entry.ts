@@ -16,6 +16,7 @@ const VERSION = (() => {
 const cmd = process.argv[2];
 
 const commands: Record<string, () => Promise<void>> = {
+  verify: () => import("./verify.js").then((m) => m.runVerify()),
   demo: () => import("./demo.js").then((m) => m.runDemo()),
   test: () => import("./test.js").then((m) => m.runTest()),
   gate: () => import("./gate.js").then((m) => m.runGate()),
@@ -30,11 +31,12 @@ const commands: Record<string, () => Promise<void>> = {
 function showHelp(): void {
   console.log("");
   console.log(`  ${brand()}  ${dim(`v${VERSION}`)}`);
-  console.log(`  ${muted("Runtime guardrails for AI agents")}`);
+  console.log(`  ${muted("Independent verification for AI agent tool calls")}`);
   console.log("");
   console.log(`  ${fg("Usage:")}  agentmint ${dim("<command>")}`);
   console.log("");
   console.log(`  ${fg("Commands:")}`);
+  console.log(`    ${fg("verify")}     ${muted("Independently verify a diff or directory against invariants")}`);
   console.log(`    ${fg("demo")}       ${muted("Run demo scenarios (validation + breakers + receipts)")}`);
   console.log(`    ${fg("test")}       ${muted("Run a pre-built agent test suite")}`);
   console.log(`    ${fg("gate")}       ${muted("Request human approval for an action")}`);
@@ -48,6 +50,7 @@ function showHelp(): void {
   console.log(`    ${fg("version")}    ${muted("Print version number")}`);
   console.log("");
   console.log(`  ${fg("Examples:")}`);
+  console.log(`    ${dim("$")} agentmint verify demo`);
   console.log(`    ${dim("$")} agentmint demo a`);
   console.log(`    ${dim("$")} agentmint test --suite prior-auth`);
   console.log(`    ${dim("$")} agentmint gate --action "deploy" --context '{"env":"production"}'`);
