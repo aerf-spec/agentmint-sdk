@@ -46,7 +46,15 @@ export function logEvent(
   tool: string,
   params: Record<string, unknown>,
   result: EventResult,
-  opts?: { reason?: string; details?: string; cost?: number; durationMs?: number },
+  opts?: {
+    reason?: string;
+    details?: string;
+    cost?: number;
+    durationMs?: number;
+    estimate?: number;
+    cumulative?: number;
+    callIndex?: number;
+  },
 ): Event {
   const redacted = redact(params, Object.keys(state.boundValues));
   const elapsed = ((Date.now() - state.startedAt) / 1000).toFixed(1) + "s";
@@ -60,6 +68,9 @@ export function logEvent(
     ...(opts?.details !== undefined && { details: opts.details }),
     ...(opts?.cost !== undefined && { cost: opts.cost }),
     ...(opts?.durationMs !== undefined && { durationMs: opts.durationMs }),
+    ...(opts?.estimate !== undefined && { estimate: opts.estimate }),
+    ...(opts?.cumulative !== undefined && { cumulative: opts.cumulative }),
+    ...(opts?.callIndex !== undefined && { callIndex: opts.callIndex }),
   };
   state.events.push(event);
   // Append a tamper-evident leaf to the Merkle evidence chain when enabled

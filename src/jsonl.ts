@@ -11,6 +11,9 @@ export function eventToJSONL(event: Event, runId: string): JSONLEvent {
     ...(Object.keys(event.params).length > 0 && { params: event.params }),
     ...(event.cost !== undefined && { cost: event.cost }),
     ...(event.durationMs !== undefined && { durationMs: event.durationMs }),
+    ...(event.estimate !== undefined && { estimate: event.estimate }),
+    ...(event.cumulative !== undefined && { cumulative: event.cumulative }),
+    ...(event.callIndex !== undefined && { callIndex: event.callIndex }),
   };
 }
 

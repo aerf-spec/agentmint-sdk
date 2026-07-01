@@ -4,6 +4,7 @@ import type {
   EventResult,
   RunState,
 } from "./types.js";
+import { guardrailsActive, resolveBudget } from "./budget.js";
 
 const ICONS: Record<EventResult, string> = {
   allowed: "✓",
@@ -76,8 +77,11 @@ export function buildRecord(
       warned: state.warnedCount,
       held: state.heldCount,
       skipped: state.skippedCount,
-      cost: config.costEstimator ? state.totalCost : null,
-      budget: config.budget ?? null,
+      cost:
+        config.costEstimator || guardrailsActive(config, config.spec)
+          ? state.totalCost
+          : null,
+      budget: resolveBudget(config.spec, config).max ?? null,
       elapsedSeconds: parseFloat(((Date.now() - state.startedAt) / 1000).toFixed(1)),
     },
     ...(config.require

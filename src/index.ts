@@ -4,6 +4,17 @@ export { loadSpec, loadSpecFromFile, parseYaml } from "./spec.js";
 export { createSession, recordInput, recordOutput, resolveRef } from "./session.js";
 export { validateInputCrossRefs, validateOutputCrossRefs, checkRequires } from "./cross-ref.js";
 export { checkBreakers } from "./breakers.js";
+export {
+  checkBudgetGuardrails,
+  estimateCallCost,
+  staticEstimate,
+  resolveCostCap,
+  resolveUsageCap,
+  resolveBudget,
+  guardrailsActive,
+  validateGuardrails,
+} from "./budget.js";
+export type { BudgetDecision } from "./budget.js";
 export { watchTool } from "./adapters/generic.js";
 export { AgentMintReport } from "./report.js";
 export { buildRecord } from "./receipt.js";
@@ -22,6 +33,8 @@ export type {
   SpecToolConfig,
   SpecPropertyConfig,
   SpecBreakerConfig,
+  SpecCostConfig,
+  SpecLimitsConfig,
   RuleAction,
   RunState,
   SessionStore,

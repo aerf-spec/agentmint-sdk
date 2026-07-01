@@ -26,17 +26,40 @@ export interface SpecPropertyConfig {
   action?: RuleAction;
 }
 
+/** Per-tool cost estimate + optional hard cap on a single call. */
+export interface SpecCostConfig {
+  /** Static estimated USD cost for one call of this tool. */
+  estimate_usd?: number;
+  /** Hard cap: block/warn when a single call is estimated above this. */
+  max_cost_usd?: number;
+  /** Action when max_cost_usd is exceeded (default: block). */
+  action?: RuleAction;
+}
+
+/** Per-tool usage caps within a single run. */
+export interface SpecLimitsConfig {
+  /** Max number of times this tool may run per run. */
+  max_calls_per_run?: number;
+  /** Action when the call cap is reached (default: block). */
+  action?: RuleAction;
+}
+
 export interface SpecToolConfig {
   requires?: string[];
   action?: RuleAction;
   input?: { properties?: Record<string, SpecPropertyConfig> };
   output?: { properties?: Record<string, SpecPropertyConfig> };
+  cost?: SpecCostConfig;
+  limits?: SpecLimitsConfig;
 }
 
 export interface SpecBreakerConfig {
   loop?: { max_identical_calls: number; action?: RuleAction };
   velocity?: { max_calls_per_window: number; window_seconds: number; action?: RuleAction };
+  /** Legacy post-hoc cost breaker (kept for backward compatibility). */
   cost?: { max_usd: number; action?: RuleAction };
+  /** Per-run budget guardrail, enforced pre-flight at the tool boundary. */
+  budget?: { max_total_usd: number; action?: RuleAction };
 }
 
 export interface AgentMintSpec {
@@ -70,7 +93,10 @@ export interface Violation {
     | "requires"
     | "loop_breaker"
     | "velocity_breaker"
-    | "cost_breaker";
+    | "cost_breaker"
+    | "cost_cap"
+    | "usage_cap"
+    | "budget_cap";
   tool: string;
   field?: string;
   expected?: string;
@@ -89,7 +115,12 @@ export interface AgentMintConfig {
   readonly deny?: readonly string[];
   readonly require?: readonly string[];
   readonly checkpoint?: readonly string[];
+  /** Per-run budget in USD. Beats YAML `breakers.budget.max_total_usd`. */
   readonly budget?: number;
+  /** Per-tool hard cap on a single call's estimated cost. Beats YAML `cost.max_cost_usd`. */
+  readonly costCaps?: Record<string, number>;
+  /** Per-tool usage caps within a run. Beats YAML `limits.max_calls_per_run`. */
+  readonly toolLimits?: Record<string, { maxCallsPerRun?: number }>;
   readonly timeout?: number;
   readonly retryLimit?: number;
   /** Human-in-the-loop approval for checkpointed tools (see gate()). */
@@ -109,10 +140,20 @@ export interface AgentMintConfig {
   readonly onBlock?: (tool: string, reason: string, details?: string) => void;
   readonly onWarn?: (tool: string, reason: string, details?: string) => void;
   readonly onKill?: (reason: string, state: Readonly<RunState>) => void;
+  /**
+   * Dynamic cost estimator. Beats static YAML `cost.estimate_usd`.
+   *
+   * Called pre-flight (with `result: undefined`) to decide budget guardrails,
+   * and post-execution (with the real `result`) to account actual cost. Must be
+   * pure and deterministic — the same inputs must always return the same number.
+   * The optional `state` argument exposes run context (e.g. cumulative cost,
+   * per-tool call counts) for usage- or state-dependent pricing.
+   */
   readonly costEstimator?: (
     tool: string,
     params: Readonly<Record<string, unknown>>,
     result: unknown,
+    state?: Readonly<RunState>,
   ) => number;
 }
 
@@ -153,6 +194,12 @@ export interface Event {
   readonly details?: string;
   readonly cost?: number;
   readonly durationMs?: number;
+  /** Pre-flight estimated USD cost of this call (budget guardrails). */
+  readonly estimate?: number;
+  /** Cumulative run cost in USD after this call. */
+  readonly cumulative?: number;
+  /** 1-based index of this call among calls to the same tool this run. */
+  readonly callIndex?: number;
 }
 
 // ── Block Response ─────────────────────────────────────────────────
@@ -231,6 +278,9 @@ export interface JSONLEvent {
   params?: Record<string, unknown>;
   cost?: number;
   durationMs?: number;
+  estimate?: number;
+  cumulative?: number;
+  callIndex?: number;
   violations?: Array<{
     type: string;
     field?: string;

@@ -1,6 +1,7 @@
 import { enforce } from "./enforce.js";
 import { formatReceipt } from "./receipt.js";
 import { createRunState } from "./log.js";
+import { validateGuardrails } from "./budget.js";
 import { wrapAll as rawWrapAll } from "./adapters/raw.js";
 import { wrapAll as openaiWrapAll } from "./adapters/openai.js";
 import { wrapAll as anthropicWrapAll } from "./adapters/anthropic.js";
@@ -24,6 +25,10 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
   __log(): Event[];
   __evidence(): EvidenceChain | null;
 } {
+  // Fail loudly at setup if budget guardrails are misconfigured, rather than
+  // surfacing a confusing decision mid-run.
+  validateGuardrails(config, config.spec);
+
   const state = createRunState(config);
 
   const enforcer: EnforcerFn = (tool, params, exec) =>

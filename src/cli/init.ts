@@ -172,10 +172,47 @@ breakers:
     action: block
 `;
 
+const BUDGET_SPEC = `# Budget Guardrails — runtime cost enforcement at the tool boundary.
+# Estimates and caps are evaluated BEFORE a tool runs, so an over-budget
+# call never executes. Start in shadow mode, then switch to enforce.
+
+version: "1.1"
+
+tools:
+  search_web:
+    cost:
+      estimate_usd: 0.03      # what one call costs
+      max_cost_usd: 0.05      # never let a single call exceed this
+      action: warn
+    limits:
+      max_calls_per_run: 3    # stop retry loops
+      action: block
+
+  browser_screenshot:
+    cost:
+      estimate_usd: 0.08     # a per-call cap needs an estimate to compare against
+      max_cost_usd: 0.10
+      action: block
+    limits:
+      max_calls_per_run: 2
+      action: block
+
+breakers:
+  # Hard ceiling on total estimated spend for the whole run.
+  budget:
+    max_total_usd: 5.00
+    action: block
+  # Stop an agent hammering one tool with identical args.
+  loop:
+    max_identical_calls: 3
+    action: block
+`;
+
 const EXAMPLES: Record<string, string> = {
   refund: REFUND_SPEC,
   coding: CODING_SPEC,
   data: DATA_SPEC,
+  budget: BUDGET_SPEC,
 };
 
 export async function runInit(): Promise<void> {
@@ -189,7 +226,7 @@ export async function runInit(): Promise<void> {
     console.log("");
     console.log(`  ${yellow("⚠")} ${fg("--ai flag coming this week.")}`);
     console.log(`  ${muted("For now, use")} ${fg("npx @npmsai/agentmint init")} ${muted("for a starter template.")}`);
-    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --example refund|coding|data")}`);
+    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --example refund|coding|data|budget")}`);
     console.log("");
     return;
   }

@@ -457,6 +457,130 @@ breakers:
   console.log(`  ${muted(`With it, ${caught} were caught and the agent still finished the task.`)}`);
 }
 
+// ── Scenario b: Budget Guardrails ───────────────────────────────
+
+async function scenarioB(): Promise<void> {
+  console.log("");
+  console.log(boxTop());
+  console.log(boxLine());
+  console.log(boxLine(`   ${fg(`"Compare 5 competitors' pricing, screenshot each"`)}`));
+  console.log(boxLine());
+  console.log(boxLine(`   ${muted("Run budget ")}${green("$1.00")}${muted(" — enforced before each call")}`));
+  console.log(boxLine());
+  console.log(boxBot());
+  console.log("");
+
+  // A research agent with a metered toolbelt. Screenshots are pricier than
+  // search; a full-page capture is priciest of all. Costs are estimated by a
+  // code estimator (dynamic beats static) and checked BEFORE each call runs.
+  const agentTools: Record<string, (p: Record<string, unknown>) => Promise<unknown>> = {
+    search_web: async (p) => ({ query: p.query, results: ["a", "b", "c"] }),
+    browser_screenshot: async (p) => ({ url: p.url, image: "png" }),
+    summarize: async (p) => ({ pages: p.pages, summary: "…" }),
+  };
+
+  const spec = loadSpec(`
+version: "1.1"
+tools:
+  search_web:
+    cost:
+      estimate_usd: 0.03
+    limits:
+      max_calls_per_run: 5
+      action: block
+  browser_screenshot:
+    cost:
+      max_cost_usd: 0.10
+      action: block
+  summarize:
+    cost:
+      estimate_usd: 0.30
+breakers:
+  budget:
+    max_total_usd: 1.00
+    action: block
+`);
+
+  const config: AgentMintConfig = {
+    spec,
+    silent: true,
+    // Dynamic pricing: a full-page screenshot costs more than the $0.10 cap.
+    costEstimator: (tool, params) => {
+      if (tool === "browser_screenshot") return params.fullPage ? 0.18 : 0.08;
+      if (tool === "summarize") return 0.30;
+      if (tool === "search_web") return 0.03;
+      return 0;
+    },
+  };
+  const tools = harden(agentTools, config) as Record<string, (p: Record<string, unknown>) => Promise<unknown>> & { __state(): RunState };
+
+  const isBlocked = (r: unknown): r is { error: true; message: string } =>
+    !!r && typeof r === "object" && (r as { error?: unknown }).error === true;
+
+  const money = (n: number | undefined): string => (n === undefined ? "—" : `$${n.toFixed(2)}`);
+
+  // Run one call and render its real result plus the estimate/running total.
+  async function call(name: string, fn: () => Promise<unknown>, note: string): Promise<void> {
+    const r = await fn();
+    const ev = tools.__state().events.at(-1);
+    const meter = `${dim("est")} ${fg(money(ev?.estimate))}  ${dim("run")} ${fg(money(ev?.cumulative))}`;
+    if (isBlocked(r)) {
+      console.log(`  ${icons.blocked} ${red(name)}  ${red(bold("BLOCKED"))}  ${meter}  ${dim(note)}`);
+    } else {
+      console.log(`  ${icons.allowed} ${fg(name)}  ${dim("ok")}       ${meter}  ${dim(note)}`);
+    }
+    await sleep(120);
+  }
+
+  await call("search_web", () => tools.search_web!({ query: "competitor pricing pages" }),
+    "→ search the field");
+  await call("search_web", () => tools.search_web!({ query: "enterprise tier pricing" }),
+    "→ refine the query");
+  await call("browser_screenshot", () => tools.browser_screenshot!({ url: "acme.com/pricing" }),
+    "→ capture Acme's page");
+  await call("browser_screenshot", () => tools.browser_screenshot!({ url: "beta.io/pricing", fullPage: true }),
+    "→ full-page capture priced over the $0.10 cap");
+  await call("browser_screenshot", () => tools.browser_screenshot!({ url: "beta.io/pricing" }),
+    "→ recovered: normal capture");
+  await call("summarize", () => tools.summarize!({ pages: 2 }),
+    "→ summarize what it has so far");
+  await call("search_web", () => tools.search_web!({ query: "gamma corp pricing" }),
+    "→ 3rd search");
+  await call("search_web", () => tools.search_web!({ query: "delta pricing" }),
+    "→ 4th search");
+  await call("search_web", () => tools.search_web!({ query: "epsilon pricing" }),
+    "→ 5th search (cap reached)");
+  await call("search_web", () => tools.search_web!({ query: "epsilon pricing tier 2" }),
+    "→ 6th search — over max_calls_per_run 5");
+  await call("summarize", () => tools.summarize!({ pages: 5 }),
+    "→ final summary");
+  await call("summarize", () => tools.summarize!({ pages: 5 }),
+    "→ would push the run over $1.00");
+
+  const st = tools.__state();
+  const calls = st.callCount;
+  const blocked = st.blockedCount;
+  const spent = st.totalCost;
+
+  console.log("");
+  console.log(boxTop());
+  console.log(boxLine(`  ${muted("What the budget guardrails caught:")}`));
+  console.log(boxLine());
+  console.log(boxLine(`    ${red("·")} ${fg("Full-page screenshot over the per-call cap")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("6th search — past max_calls_per_run")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("Final summarize would blow the run budget")}`));
+  console.log(boxLine());
+  console.log(boxLine(
+    `  ${muted("Calls:")} ${fg(String(calls))} ${dim("·")} ${muted("Blocked:")} ${red(String(blocked))} ${dim("·")} ${muted("Spent:")} ${green(money(spent))} ${dim("/")} ${fg("$1.00")}`,
+  ));
+  console.log(boxBot());
+  console.log("");
+  console.log(`  ${green("✓")} ${muted("Every decision ran BEFORE the call — nothing over-budget executed.")}`);
+  console.log("");
+  console.log(`  ${muted("Post-hoc dashboards tell you this")} ${fg("after")} ${muted("you've paid.")}`);
+  console.log(`  ${muted("Guardrails at the tool boundary stop it")} ${fg("before")} ${muted("you do.")}`);
+}
+
 // ── Scenario selector ───────────────────────────────────────────
 
 async function showMenu(): Promise<void> {
@@ -468,8 +592,9 @@ async function showMenu(): Promise<void> {
   console.log(boxLine(`  ${fg("[2]")} Coding Agent — rogue file operations`));
   console.log(boxLine(`  ${fg("[3]")} Data Pipeline — runaway queries`));
   console.log(boxLine(`  ${fg("[a]")} Coding Agent — 12-call stress test`));
+  console.log(boxLine(`  ${fg("[b]")} Budget Guardrails — cost caps at the boundary`));
   console.log(boxLine());
-  console.log(boxLine(`  ${muted("Usage:")} npx @npmsai/agentmint demo ${dim("[1|2|3|a]")}`));
+  console.log(boxLine(`  ${muted("Usage:")} npx @npmsai/agentmint demo ${dim("[1|2|3|a|b]")}`));
   console.log(boxBot());
   console.log("");
 }
@@ -490,8 +615,10 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
     await scenario3();
   } else if (arg === "a") {
     await scenarioA();
+  } else if (arg === "b") {
+    await scenarioB();
   } else {
-    console.log(`  ${red("✗")} Unknown scenario: ${red(arg)}. Use 1, 2, 3, or a.`);
+    console.log(`  ${red("✗")} Unknown scenario: ${red(arg)}. Use 1, 2, 3, a, or b.`);
   }
 
   console.log("");

@@ -4,6 +4,9 @@ import { blockResponse, logEvent } from "./log.js";
 import { recordInput, recordOutput } from "./session.js";
 import { validateInputCrossRefs, validateOutputCrossRefs, checkRequires } from "./cross-ref.js";
 import { checkBreakers } from "./breakers.js";
+import { checkBudgetGuardrails, guardrailsActive, staticEstimate } from "./budget.js";
+
+type BudgetContext = { estimate?: number; cumulative?: number; callIndex?: number };
 
 function handleViolation(
   v: Violation,
@@ -11,17 +14,18 @@ function handleViolation(
   config: Readonly<AgentMintConfig>,
   params: Record<string, unknown>,
   shadow: boolean,
+  extra: BudgetContext = {},
 ): { shouldBlock: boolean; response?: ReturnType<typeof blockResponse> } {
   if (v.action === "block") {
     state.blockedCount++;
-    logEvent(state, v.tool, params, "blocked", { reason: v.type, details: v.details });
+    logEvent(state, v.tool, params, "blocked", { reason: v.type, details: v.details, ...extra });
     config.onBlock?.(v.tool, v.type, v.details);
     const resp = blockResponse(v.tool, v.details);
     return { shouldBlock: !shadow, response: resp };
   }
   // warn
   state.warnedCount++;
-  logEvent(state, v.tool, params, "warned", { reason: v.type, details: v.details });
+  logEvent(state, v.tool, params, "warned", { reason: v.type, details: v.details, ...extra });
   config.onWarn?.(v.tool, v.type, v.details);
   return { shouldBlock: false };
 }
@@ -205,6 +209,23 @@ export async function enforce(
     }
   }
 
+  // 10b. Budget guardrails (pre-flight — the decision runs BEFORE execution,
+  //      at the tool boundary, so an over-budget or capped call never spends).
+  const budgetOn = guardrailsActive(config, spec);
+  let budgetCtx: BudgetContext = {};
+  if (budgetOn) {
+    const decision = checkBudgetGuardrails(tool, params, spec, config, state);
+    budgetCtx = {
+      estimate: decision.estimate,
+      cumulative: decision.cumulative,
+      callIndex: decision.callIndex,
+    };
+    for (const v of decision.violations) {
+      const result = handleViolation(v, state, config, params, shadow, budgetCtx);
+      if (result.shouldBlock) return result.response!;
+    }
+  }
+
   // 11. Checkpoint
   if (config.checkpoint && matchesAny(tool, config.checkpoint)) {
     state.heldCount++;
@@ -282,11 +303,21 @@ export async function enforce(
     }
   }
 
-  // 14. Cost
+  // 14. Cost accounting (post-execution actuals).
+  //   - A dynamic costEstimator computes the actual cost from the real result
+  //     (unchanged legacy behavior).
+  //   - With no estimator but active budget guardrails, accumulate the tool's
+  //     static YAML estimate so the per-run budget can track YAML-only setups.
   let cost: number | undefined;
   if (config.costEstimator) {
-    cost = config.costEstimator(tool, params, result);
+    cost = config.costEstimator(tool, params, result, state);
     state.totalCost += cost;
+  } else if (budgetOn) {
+    const est = staticEstimate(tool, spec);
+    if (est !== undefined) {
+      cost = est;
+      state.totalCost += cost;
+    }
   }
 
   // 15. Update state
@@ -301,8 +332,15 @@ export async function enforce(
     state.retrievedData.push(`${tool}: ${summary}`);
   }
 
-  // 16. Log
-  logEvent(state, tool, params, "allowed", { cost, durationMs });
+  // 16. Log — include the pre-flight estimate and the actual running total so
+  //     receipts explain exactly what this call was projected and did cost.
+  logEvent(state, tool, params, "allowed", {
+    cost,
+    durationMs,
+    ...(budgetOn
+      ? { estimate: budgetCtx.estimate, cumulative: state.totalCost, callIndex: budgetCtx.callIndex }
+      : {}),
+  });
 
   return result;
 }
