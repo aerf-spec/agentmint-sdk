@@ -23,7 +23,6 @@ function visLen(s: string): number { return s.replace(ANSI_RE, "").length; }
 function boxLine(c = ""): string { return `  ${blue("│")}${c}${" ".repeat(Math.max(0, BOX_WIDTH - visLen(c)))}${blue("│")}`; }
 function boxTop(): string { return `  ${blue(`┌${"─".repeat(BOX_WIDTH)}┐`)}`; }
 function boxBot(): string { return `  ${blue(`└${"─".repeat(BOX_WIDTH)}┘`)}`; }
-function divider(): string { return `  ${dim("─".repeat(BOX_WIDTH + 2))}`; }
 
 function center(text: string): string {
   const pad = Math.max(0, Math.floor((BOX_WIDTH - visLen(text)) / 2));
@@ -300,6 +299,142 @@ breakers:
   console.log(`    ${red("⊘")} ${fg("Rapid updates")} → ${red("velocity breaker")} ${dim("tripped")}`);
 }
 
+// ── Scenario a: Coding Agent Stress Test ────────────────────────
+
+async function scenarioA(): Promise<void> {
+  console.log("");
+  console.log(boxTop());
+  console.log(boxLine(center(`${brand()} ${fg("Coding Agent Stress Test")}`)));
+  console.log(boxLine());
+  console.log(boxLine(center(muted(`Task: "Fix the failing test in src/utils.ts"`))));
+  console.log(boxLine(center(dim("12 tool calls · 5 rules · 1 breaker"))));
+  console.log(boxBot());
+  console.log("");
+
+  const agentTools: Record<string, (p: Record<string, unknown>) => Promise<unknown>> = {
+    read_file: async (p) => ({
+      path: p.path,
+      content: String(p.path) === ".env"
+        ? "DATABASE_URL=postgres://admin:S3cret@prod:5432\nSTRIPE_KEY=sk_live_abc"
+        : "export function daysInMonth(m: number) { return m === 2 ? 28 : 30; }"
+    }),
+    write_file: async (p) => ({ path: p.path, written: true }),
+    run_command: async (p) => ({
+      exit_code: String(p.command).includes("npm test") ? 1 : 0,
+      stdout: String(p.command).includes("npm test") ? "" : "ok",
+      stderr: String(p.command).includes("npm test") ? "expected 29 got 28" : ""
+    }),
+    run_tests: async (p) => ({
+      suite: p.suite, passed: 8, failed: 1,
+      error: "daysInMonth(2,2024): expected 29, got 28"
+    }),
+    git_commit: async (p) => ({ sha: "a1b2c3d", message: p.message }),
+    git_push: async (p) => ({ pushed: true, branch: p.branch }),
+  };
+
+  const spec = loadSpec(`
+version: "1.0"
+tools:
+  write_file:
+    requires: [read_file]
+    input:
+      properties:
+        path:
+          cross_ref: read_file.input.path
+  read_file:
+    input:
+      properties:
+        path:
+          blocked_patterns: [".env", ".git/config", "*.pem"]
+          action: block
+  run_command:
+    input:
+      properties:
+        command:
+          blocked_patterns: ["rm -rf", "git reset --hard", "curl", "wget", "sudo"]
+          action: block
+  git_push:
+    requires: [run_tests]
+    input:
+      properties:
+        branch:
+          blocked_values: ["main", "master", "production"]
+          action: block
+  git_commit:
+    requires: [run_tests]
+breakers:
+  loop:
+    max_identical_calls: 3
+`);
+
+  let lastWarn: string | null = null;
+  const config: AgentMintConfig = {
+    spec,
+    silent: true,
+    onWarn: (_t, _r, d) => { if (d) lastWarn = d; },
+  };
+  const tools = harden(agentTools, config) as Record<string, (p: Record<string, unknown>) => Promise<unknown>> & { __state(): RunState };
+
+  const isBlocked = (r: unknown): r is { error: true; message: string } =>
+    !!r && typeof r === "object" && (r as { error?: unknown }).error === true;
+
+  // Run one call and render its real result (blocked / warned / allowed).
+  async function call(
+    name: string,
+    fn: () => Promise<unknown>,
+    note: string,
+  ): Promise<void> {
+    lastWarn = null;
+    const r = await fn();
+    if (isBlocked(r)) {
+      console.log(`  ${icons.blocked} ${red(name)}  ${red(bold("BLOCKED"))}  ${dim(note)}`);
+    } else if (lastWarn) {
+      console.log(`  ${icons.warned} ${yellow(name)}  ${yellow("WARNED")}  ${dim(note)}`);
+    } else {
+      console.log(`  ${icons.allowed} ${fg(name)}  ${dim("ok")}  ${dim(note)}`);
+    }
+    await sleep(120);
+  }
+
+  await call("read_file", () => tools.read_file!({ path: "src/utils.ts" }), "open the buggy file");
+  await call("write_file", () => tools.write_file!({ path: "src/utils.ts", content: "// fixed" }), "edit the file it just read");
+  await call("read_file", () => tools.read_file!({ path: ".env" }), "reach for credentials");
+  await call("write_file", () => tools.write_file!({ path: "package.json", content: "{}" }), "edit a file it never read");
+  await call("git_commit", () => tools.git_commit!({ message: "fix: leap year" }), "commit before tests pass");
+  await call("run_tests", () => tools.run_tests!({ suite: "unit" }), "run the suite");
+  await call("run_tests", () => tools.run_tests!({ suite: "unit" }), "same suite again");
+  await call("run_tests", () => tools.run_tests!({ suite: "unit" }), "and again — retry loop");
+  await call("run_command", () => tools.run_command!({ command: "rm -rf dist && npm run build" }), "clean and rebuild");
+  await call("git_push", () => tools.git_push!({ branch: "main" }), "push straight to main");
+  await call("run_tests", () => tools.run_tests!({ suite: "integration" }), "recover: different suite");
+  await call("git_push", () => tools.git_push!({ branch: "fix/leap-year" }), "recover: safe branch");
+
+  const st = tools.__state();
+  const calls = st.callCount;
+  const blocked = st.blockedCount;
+  const warned = st.warnedCount;
+  const allowed = st.executedCount - st.warnedCount;
+
+  console.log("");
+  console.log(boxTop());
+  console.log(boxLine(center(fg("Receipt"))));
+  console.log(boxLine());
+  console.log(boxLine(center(
+    `${muted("Calls:")} ${fg(String(calls))}  ${muted("Allowed:")} ${green(String(allowed))}  ${muted("Blocked:")} ${red(String(blocked))}  ${muted("Warned:")} ${yellow(String(warned))}`,
+  )));
+  console.log(boxLine());
+  console.log(boxLine(`  ${muted("Caught:")}`));
+  console.log(boxLine(`    ${red("·")} ${fg(".env credential read")}`));
+  console.log(boxLine(`    ${yellow("·")} ${fg("Edit to a file the agent never read")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("Commit before tests passed")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("Test retry loop (3 identical calls)")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("rm -rf in a shell command")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("Push to main")}`));
+  console.log(boxBot());
+  console.log("");
+  console.log(`  ${green("✓")} ${muted("Recovered: ran integration tests, pushed to")} ${fg("fix/leap-year")}`);
+}
+
 // ── Scenario selector ───────────────────────────────────────────
 
 async function showMenu(): Promise<void> {
@@ -310,9 +445,9 @@ async function showMenu(): Promise<void> {
   console.log(boxLine(`  ${fg("[1]")} Customer Support — refund gone wrong`));
   console.log(boxLine(`  ${fg("[2]")} Coding Agent — rogue file operations`));
   console.log(boxLine(`  ${fg("[3]")} Data Pipeline — runaway queries`));
-  console.log(boxLine(`  ${fg("[a]")} Run all three`));
+  console.log(boxLine(`  ${fg("[a]")} Coding Agent — 12-call stress test`));
   console.log(boxLine());
-  console.log(boxLine(`  ${muted("Usage:")} agentmint demo ${dim("[1|2|3|a]")}`));
+  console.log(boxLine(`  ${muted("Usage:")} npx @npmsai/agentmint demo ${dim("[1|2|3|a]")}`));
   console.log(boxBot());
   console.log("");
 }
@@ -331,23 +466,17 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
     await scenario2();
   } else if (arg === "3") {
     await scenario3();
-  } else if (arg === "a" || arg === "all") {
-    await scenario1();
-    console.log("");
-    console.log(divider());
-    await scenario2();
-    console.log("");
-    console.log(divider());
-    await scenario3();
+  } else if (arg === "a") {
+    await scenarioA();
   } else {
     console.log(`  ${red("✗")} Unknown scenario: ${red(arg)}. Use 1, 2, 3, or a.`);
   }
 
   console.log("");
-  console.log(`  ${muted("Next steps:")}`);
   console.log(`    ${dim("$")} npm install @npmsai/agentmint`);
-  console.log(`    ${dim("$")} agentmint init`);
-  console.log(`    ${dim("$")} agentmint watch`);
+  console.log("");
+  console.log(`    ${muted("import { harden } from '@npmsai/agentmint'")}`);
+  console.log(`    ${muted("const tools = harden(myTools)")}`);
   console.log("");
   console.log(`  ${dim(`${brand()} v${VERSION}`)}`);
   console.log("");

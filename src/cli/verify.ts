@@ -87,7 +87,7 @@ export async function runVerify(): Promise<void> {
   if (!args.demo && !args.dir && !args.diff) {
     console.error("");
     console.error(`  ${red("✗")} ${fg("agentmint verify")} needs ${fg("demo")}, ${fg("--dir")}, or ${fg("--diff")}`);
-    console.error(`  ${muted("Run")} ${fg("agentmint verify --help")} ${muted("for usage.")}`);
+    console.error(`  ${muted("Run")} ${fg("npx @npmsai/agentmint verify --help")} ${muted("for usage.")}`);
     console.error("");
     process.exitCode = 1;
     return;

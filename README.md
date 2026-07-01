@@ -1,107 +1,121 @@
 # AgentMint
 
-Independent verification for AI agent tool calls and AI-generated code.
-Policy enforcement · human approval · tamper-evident receipts.
-One npm install. Framework-agnostic. Zero runtime dependencies.
+Your AI agent has shell access, file access, and API keys.
+What's stopping it from reading `.env`, running `rm -rf`, or pushing to `main`?
 
-## The problem
+One line wraps your tools. Catches dangerous calls before they execute.
 
-The AI agent writes the code. Then writes the tests. The tests pass.
-But they validate what the agent built, not what you asked for.
-Meanwhile the agent's tool calls — refunds, database writes, git
-pushes — execute with no independent check.
+## See it
 
-## Try it (10 seconds)
-
-```bash
+```
 npx @npmsai/agentmint demo a
 ```
 
-## Verify your code
+## Install
 
-```bash
-agentmint verify --dir ./src --spec agentmint.spec.yaml
+```
+npm install @npmsai/agentmint
 ```
 
-## Benchmark a framework
-
-```bash
-agentmint bench --framework demo
-```
-
-## Test your agent before deploy
-
-```bash
-agentmint test --suite coding-agent
-```
-
-## Add human approval
+## Add to your agent
 
 ```typescript
-import { gate } from '@npmsai/agentmint'
+import { harden } from '@npmsai/agentmint'
 
-const result = await gate({
-  action: 'delete_records',
-  context: { table: 'users', count: 4200 },
-  channel: 'slack',
-  ttl: 300,
-})
-
-if (result.approved) executeAction()
+const tools = harden(myTools)
 ```
 
-## Auto-generate a spec
+Every call is now logged. Works with OpenAI SDK, Anthropic SDK,
+Vercel AI SDK, LangChain, Mastra, or plain async functions.
+Format auto-detected. ~17µs overhead per call.
 
-```bash
-agentmint scan --dir ./src
+## Add rules
+
+```yaml
+# agentmint.spec.yaml
+version: "1.0"
+tools:
+  write_file:
+    requires: [read_file]
+  run_command:
+    input:
+      properties:
+        command:
+          blocked_patterns: ["rm -rf", "DROP TABLE"]
+          action: block
+  git_push:
+    requires: [run_tests]
+    input:
+      properties:
+        branch:
+          blocked_values: ["main"]
+          action: block
+breakers:
+  loop:
+    max_identical_calls: 3
 ```
-
-## Learn from failures
-
-```bash
-agentmint learn --from receipts/incident.jsonl
-```
-
-## What it catches
-
-| Rule | Example | Default |
-|------|---------|---------|
-| requires | Refund without lookup | block |
-| action: block | delete_account | block |
-| cross_ref | Wrong order ID | warn |
-| max_ref | Amount > order total | warn |
-| blocked_pattern | rm -rf | block |
-| blocked_value | push to main | block |
-| loop_breaker | 5 identical calls | block |
-| velocity | 15 calls in 30s | block |
-| gate | Unapproved action | block |
-| verify | Invariant violation | block |
-
-## CLI
-
-| Command | What |
-|---------|------|
-| verify | Independent verification with receipt |
-| bench | Governance analysis across frameworks |
-| test | Pre-built compliance test suites |
-| gate | Human approval workflow |
-| scan | Auto-generate spec from source |
-| learn | Generate spec from failure receipts |
-| demo | Rogue agent scenarios |
-| watch | Real-time validation |
-| init | Starter spec |
-| ci | CI gate (exit 0/1) |
-| diff | Compare two runs |
-
-## Add to your agent (one line)
 
 ```typescript
 import { harden, loadSpec } from '@npmsai/agentmint'
 const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
 ```
 
-## Works with everything
+## What it catches
 
-OpenAI, Anthropic, Vercel AI, LangChain, Mastra, or plain async functions.
+| What happened | Rule | Result |
+|---|---|---|
+| Refunded without looking up the order | requires | blocked |
+| Wrote a file it never read | cross_ref | warned |
+| Refunded more than the order total | max_ref | warned |
+| Ran `rm -rf dist` | blocked_pattern | blocked |
+| Pushed to `main` | blocked_value | blocked |
+| Retried same failing call 5x | loop_breaker | blocked |
+| 20 calls in 10 seconds | velocity_breaker | blocked |
+| Read `.env` credentials | blocked_pattern | blocked |
+
+## Approve risky actions
+
+```typescript
+import { gate } from '@npmsai/agentmint'
+
+const ok = await gate({
+  action: 'delete_records',
+  context: { table: 'users', count: 4200 },
+  channel: 'slack',
+  ttl: 300,
+})
+if (ok.approved) deleteRecords()
+```
+
+## Pre-built stress tests
+
+```
+npx @npmsai/agentmint test --suite coding-agent  # 8 scenarios
+npx @npmsai/agentmint test --suite refund-agent  # 8 scenarios
+npx @npmsai/agentmint test --suite prior-auth    # 12 scenarios
+```
+
+## Every call gets a receipt
+
+```typescript
+tools.__receipt()  // terminal receipt
+tools.__log()      // event array
+tools.__state()    // counters
+```
+
+JSONL events with timestamp, tool, args, and reason.
+SHA-256 hash chain for tamper evidence.
+
+## More tools
+
+```
+npx @npmsai/agentmint scan --dir ./src             generate spec from code
+npx @npmsai/agentmint learn --from incident.jsonl  turn failures into rules
+npx @npmsai/agentmint bench --framework demo       governance benchmark
+npx @npmsai/agentmint verify --dir ./src           check code against spec
+npx @npmsai/agentmint ci                           CI gate (exit 0/1)
+```
 
 ## Zero runtime dependencies. MIT.
+</content>
+</invoke>

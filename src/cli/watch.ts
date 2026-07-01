@@ -15,7 +15,7 @@ export async function runWatch(): Promise<void> {
   if (!existsSync(specPath)) {
     console.log("");
     console.log(`  ${red("✗")} Spec not found: ${red(specPath)}`);
-    console.log(`  ${muted("Run")} ${fg("agentmint init")} ${muted("to create one.")}`);
+    console.log(`  ${muted("Run")} ${fg("npx @npmsai/agentmint init")} ${muted("to create one.")}`);
     console.log("");
     process.exitCode = 1;
     return;

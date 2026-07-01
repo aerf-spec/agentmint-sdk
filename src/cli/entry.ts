@@ -32,12 +32,12 @@ const commands: Record<string, () => Promise<void>> = {
 function showHelp(): void {
   console.log("");
   console.log(`  ${brand()}  ${dim(`v${VERSION}`)}`);
-  console.log(`  ${muted("Independent verification for AI agent tool calls")}`);
+  console.log(`  ${muted("Catches dangerous AI agent tool calls before they execute")}`);
   console.log("");
-  console.log(`  ${fg("Usage:")}  agentmint ${dim("<command>")}`);
+  console.log(`  ${fg("Usage:")}  npx @npmsai/agentmint ${dim("<command>")}`);
   console.log("");
   console.log(`  ${fg("Commands:")}`);
-  console.log(`    ${fg("verify")}     ${muted("Independently verify a diff or directory against invariants")}`);
+  console.log(`    ${fg("verify")}     ${muted("Check a diff or directory against invariants")}`);
   console.log(`    ${fg("bench")}      ${muted("Benchmark governance coverage with and without AgentMint")}`);
   console.log(`    ${fg("demo")}       ${muted("Run demo scenarios (validation + breakers + receipts)")}`);
   console.log(`    ${fg("test")}       ${muted("Run a pre-built agent test suite")}`);
@@ -52,16 +52,14 @@ function showHelp(): void {
   console.log(`    ${fg("version")}    ${muted("Print version number")}`);
   console.log("");
   console.log(`  ${fg("Examples:")}`);
-  console.log(`    ${dim("$")} agentmint verify demo`);
-  console.log(`    ${dim("$")} agentmint bench --framework demo`);
-  console.log(`    ${dim("$")} agentmint demo a`);
-  console.log(`    ${dim("$")} agentmint test --suite prior-auth`);
-  console.log(`    ${dim("$")} agentmint gate --action "deploy" --context '{"env":"production"}'`);
-  console.log(`    ${dim("$")} agentmint scan --dir ./src`);
-  console.log(`    ${dim("$")} agentmint learn --from receipts/incident.jsonl`);
-  console.log(`    ${dim("$")} agentmint init --example coding`);
-  console.log(`    ${dim("$")} agentmint watch --spec ./agentmint.spec.yaml`);
-  console.log(`    ${dim("$")} agentmint diff run1.jsonl run2.jsonl`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint demo a`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint test --suite prior-auth`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint gate --action "deploy" --context '{"env":"production"}'`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint scan --dir ./src`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint learn --from receipts/incident.jsonl`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint verify --dir ./src`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint ci`);
+  console.log(`    ${dim("$")} npx @npmsai/agentmint diff run1.jsonl run2.jsonl`);
   console.log("");
 }
 
@@ -82,9 +80,9 @@ if (!cmd || cmd === "help" || cmd === "--help" || cmd === "-h") {
   console.error(`  ${red("✗")} Unknown command: ${red(cmd)}`);
   if (suggestion) {
     console.error(`  ${muted("Did you mean")} ${fg(suggestion)}${muted("?")}`);
-    console.error(`\n    ${dim("$")} agentmint ${suggestion}`);
+    console.error(`\n    ${dim("$")} npx @npmsai/agentmint ${suggestion}`);
   } else {
-    console.error(`  ${muted("Run")} ${fg("agentmint help")} ${muted("to see available commands")}`);
+    console.error(`  ${muted("Run")} ${fg("npx @npmsai/agentmint help")} ${muted("to see available commands")}`);
   }
   console.error("");
   process.exitCode = 1;

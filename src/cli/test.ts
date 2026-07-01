@@ -44,7 +44,7 @@ export async function runTest(): Promise<void> {
   if (!suite) {
     console.error("");
     console.error(`  ${red("✗")} ${fg("agentmint test")} requires ${fg("--suite <name>")}`);
-    console.error(`  ${muted("Run")} ${fg("agentmint test --list")} ${muted("to see available suites.")}`);
+    console.error(`  ${muted("Run")} ${fg("npx @npmsai/agentmint test --list")} ${muted("to see available suites.")}`);
     console.error("");
     process.exitCode = 1;
     return;

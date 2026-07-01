@@ -1,7 +1,7 @@
 {
   "name": "@npmsai/agentmint",
-  "version": "0.2.0",
-  "description": "Runtime guardrails for AI agents. Validation · Circuit breakers · Audit receipts.",
+  "version": "0.2.1",
+  "description": "One-line wrapper that catches dangerous AI agent tool calls before they execute.",
   "type": "module",
   "license": "MIT",
   "engines": {

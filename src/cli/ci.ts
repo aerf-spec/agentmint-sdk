@@ -14,7 +14,7 @@ export async function runCi(): Promise<void> {
 
   if (!existsSync(specPath)) {
     console.error(`\n  ${red("✗")} Spec not found: ${red(specPath)}`);
-    console.error(`  ${muted("Run")} ${fg("agentmint init")} ${muted("to create one.")}\n`);
+    console.error(`  ${muted("Run")} ${fg("npx @npmsai/agentmint init")} ${muted("to create one.")}\n`);
     process.exitCode = 1;
     return;
   }
