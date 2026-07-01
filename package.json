@@ -1,26 +1,21 @@
 {
   "name": "@npmsai/agentmint",
   "version": "0.2.1",
-  "description": "One-line wrapper that catches dangerous AI agent tool calls before they execute.",
+  "description": "Cryptographic receipts and audit trails for agentic workflows",
   "type": "module",
   "license": "MIT",
   "engines": {
     "node": ">=18"
   },
   "keywords": [
-    "ai",
     "agent",
-    "guardrails",
-    "validation",
-    "circuit-breaker",
-    "tool-calling",
-    "llm",
-    "openai",
-    "anthropic",
-    "vercel-ai",
-    "audit",
     "receipt",
-    "safety"
+    "audit",
+    "compliance",
+    "verification",
+    "SOC2",
+    "AIUC-1",
+    "agentmint"
   ],
   "exports": {
     ".": {
