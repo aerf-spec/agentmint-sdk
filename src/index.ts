@@ -1,4 +1,5 @@
 export { harden } from "./harden.js";
+export { runBench, formatBenchMarkdown, formatBenchTable } from "./bench.js";
 export { loadSpec, loadSpecFromFile, parseYaml } from "./spec.js";
 export { createSession, recordInput, recordOutput, resolveRef } from "./session.js";
 export { validateInputCrossRefs, validateOutputCrossRefs, checkRequires } from "./cross-ref.js";
@@ -34,3 +35,4 @@ export type {
   EnforcerFn,
   MerkleProof,
 } from "./types.js";
+export type { BenchReport, BenchResult } from "./bench.js";

@@ -62,13 +62,6 @@ agentmint scan --dir ./src
 agentmint learn --from receipts/incident.jsonl
 ```
 
-## Add to your agent (one line)
-
-```typescript
-import { harden, loadSpec } from '@npmsai/agentmint'
-const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
-```
-
 ## What it catches
 
 | Rule | Example | Default |
@@ -99,6 +92,13 @@ const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
 | init | Starter spec |
 | ci | CI gate (exit 0/1) |
 | diff | Compare two runs |
+
+## Add to your agent (one line)
+
+```typescript
+import { harden, loadSpec } from '@npmsai/agentmint'
+const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
+```
 
 ## Works with everything
 
