@@ -1,156 +1,134 @@
-# AgentMint
+# agentmint-sdk
 
-You asked your agent to fix one file. It also read `.env`, edited
-`package.json`, ran `rm -rf`, and pushed to `main`.
+**Cryptographic receipts for agent actions.** One-line instrumentation.
+Tamper-evident audit trails for agentic workflows.
 
-**Runtime guardrails for AI agents** — validation, budget caps, circuit
-breakers, and audit receipts. One line wraps your tools; every rule runs at the
-tool boundary, *before* the call executes — not in a dashboard after you've paid.
+## Why this exists
+
+AI agents act — they call tools, move money, touch records — but they leave no
+verifiable trace of what they did, when, or with what result. Regulators,
+auditors, and compliance teams can't trust what they can't verify, which is what
+keeps agentic workflows out of regulated environments.
+
+AgentMint sits at the tool boundary and turns every agent action into a signed,
+hash-chained receipt an auditor can verify later — without trusting the agent,
+the app, or the vendor.
+
+## The wedge: wrap → receipt → verify
+
+```ts
+import {
+  createSession,
+  recordInput,
+  recordOutput,
+  buildRecord,
+  verify,
+} from "@npmsai/agentmint";
+
+// 1. WRAP — record each agent tool call into a session
+const session = createSession();
+recordInput(session, "issue_refund", { order_id: "A-1001", amount_usd: 40 });
+const result = await issueRefund({ order_id: "A-1001", amount_usd: 40 });
+recordOutput(session, "issue_refund", result);
+
+// 2. RECEIPT — mint a signed, hash-chained record of what happened
+const receipt = buildRecord(state, config); // -> AERFRecord (JSONL-serializable)
+
+// 3. VERIFY — an auditor checks the receipt against the spec, later, offline
+const report = await verify({ dir: "./src", spec: "agentmint.spec.yaml" });
+console.log(report.summary); // { verified, failed, unverified, blocked }
+```
+
+Zero runtime dependencies. Dual ESM/CJS. Node `>=18`.
+
+## Install
 
 ```
 npm install @npmsai/agentmint
-npx @npmsai/agentmint demo a   # watch an agent go off-task
-npx @npmsai/agentmint demo b   # watch budget caps stop it
 ```
 
-## Wrap your tools
+## Core API
 
-```typescript
-import { harden } from '@npmsai/agentmint'
-const tools = harden(myTools)
+### 1. `buildRecord()` — mint a signed receipt for an agent run
+
+Turns the run state captured at the tool boundary into an `AERFRecord`: a
+tamper-evident summary of every tool call, its result, bound values, and an
+optional Merkle root over the event chain.
+
+```ts
+import { buildRecord, formatReceipt } from "@npmsai/agentmint";
+
+const receipt = buildRecord(state, config);
+console.log(formatReceipt(state, config)); // human-readable receipt
 ```
 
-Every call is now logged. Works with the OpenAI, Anthropic, Vercel AI,
-LangChain, and Mastra SDKs, or plain async functions — format auto-detected,
-~17µs per call.
+### 2. `verify()` — verify a receipt or a set of changes against a spec
 
-## Add rules
+Checks claims (invariants, policies, patterns, properties) and returns a
+`VerifyReceipt` — the evidence an auditor reads. Runs offline; no agent required.
 
-```yaml
-# agentmint.spec.yaml
-version: "1.0"
-tools:
-  write_file:
-    requires: [read_file]          # no writing a file you never read
-  run_command:
-    input:
-      properties:
-        command:
-          blocked_patterns: ["rm -rf", "DROP TABLE"]
-          action: block
-  git_push:
-    requires: [run_tests]          # no pushing before tests pass
-    input:
-      properties:
-        branch:
-          blocked_values: ["main"]
-          action: block
-breakers:
-  loop:
-    max_identical_calls: 3         # break retry loops
+```ts
+import { verify, formatVerifyReceipt } from "@npmsai/agentmint";
+
+const receipt = await verify({ diff: "pr.diff", spec: "agentmint.spec.yaml" });
+console.log(formatVerifyReceipt(receipt));
 ```
 
-```typescript
-import { harden, loadSpec } from '@npmsai/agentmint'
-const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
+### 3. `gate()` — pre-flight approval before an action runs
+
+Blocks on a human (console / Slack / webhook) before a risky action executes,
+and chains each decision into a hash chain so approvals are auditable too.
+
+```ts
+import { gate } from "@npmsai/agentmint";
+
+const decision = await gate({ action: "deploy", context: { env: "prod" } });
+if (!decision.approved) throw new Error(`Denied: ${decision.reason}`);
+// decision.hash is chained to the previous gate call
 ```
 
-## Budget guardrails
+### 4. `createSession()` — group tool I/O into an auditable session
 
-Agents retry too much, loop on failures, and spam expensive tools — and cost
-compounds. Most cost tools bill you, then tell you. Budget guardrails price each
-call and decide *before* it runs:
+Tracks tool inputs, outputs, and a hashed call history so receipts can be built
+and cross-tool references resolved.
 
-- **estimate** what a call costs · **cap** any single call · **budget** the whole
-  run · **limit** how many times a tool may run.
+```ts
+import { createSession, recordInput, recordOutput, resolveRef } from "@npmsai/agentmint";
 
-```yaml
-version: "1.1"
-tools:
-  search_web:
-    cost: { estimate_usd: 0.03, max_cost_usd: 0.05, action: warn }
-    limits: { max_calls_per_run: 3, action: block }   # stop retry loops
-  browser_screenshot:
-    cost: { estimate_usd: 0.08, max_cost_usd: 0.10, action: block }
-breakers:
-  budget: { max_total_usd: 5.00, action: block }      # ceiling for the run
+const session = createSession();
+recordInput(session, "lookup_order", { order_id: "A-1001" });
+recordOutput(session, "lookup_order", { total_usd: 40 });
 ```
 
-Violations `warn` or `block`; `mode: 'shadow'` logs without blocking. Every
-block names the rule and the numbers:
+## What gets recorded
 
-```
-✗ browser_screenshot  est $0.18  run $0.29   over the $0.10 cap — blocked before it ran
-```
+Every receipt (`AERFRecord`) is JSONL-serializable evidence:
 
-Need dynamic or per-provider pricing? Pass code instead of YAML — code beats
-YAML, and a dynamic estimate beats a static one:
+| Field          | Description                                    | Example value            |
+| -------------- | ---------------------------------------------- | ------------------------ |
+| `runId`        | Unique id for the agent run                    | `"amr_abcd1234"`         |
+| `mode`         | `enforce` (blocking) or `shadow` (observe)     | `"enforce"`              |
+| `boundValues`  | Identity values pinned for the run             | `{ patient_id: "PT-100" }` |
+| `events[]`     | Each tool call: name, result, reason, params   | `{ tool: "issue_refund", result: "allowed" }` |
+| `summary`      | Calls, executed, blocked, held, cost, elapsed  | `{ calls: 4, blocked: 1 }` |
+| `evidenceRoot` | Merkle root over all events (when enabled)     | `"9f2c…"`                |
 
-```typescript
-const tools = harden(myTools, {
-  budget: 5.00,
-  costCaps: { browser_screenshot: 0.10 },
-  toolLimits: { search_web: { maxCallsPerRun: 3 } },
-  costEstimator: (tool, params) =>
-    tool === 'browser_screenshot' && params.fullPage ? 0.18 : 0.03,
-})
-```
+## Use cases
 
-**Why at the boundary, not a dashboard?** A dashboard reports spend once it's
-gone. Here the estimate and caps are checked in the call path, before the tool
-runs. The rule lives outside the model's context, so prompt injection can't
-argue past it — the model just gets a blocked response it can recover from. Same
-inputs, same decision, every run.
+- SOC 2 Type II evidence for agentic workflows
+- AIUC-1 / EU AI Act compliance artifacts
+- Healthcare agent billing audit trails
+- Multi-agent pipeline integrity checks
 
-## What it catches
+## Experimental modules
 
-| What happened | Rule | Result |
-|---|---|---|
-| Refunded without looking up the order | requires | blocked |
-| Wrote a file it never read | cross_ref | warned |
-| Refunded more than the order total | max_ref | warned |
-| Ran `rm -rf dist` | blocked_pattern | blocked |
-| Pushed to `main` | blocked_value | blocked |
-| Retried the same failing call 5× | loop_breaker | blocked |
-| 20 calls in 10 seconds | velocity_breaker | blocked |
-| Read `.env` credentials | blocked_pattern | blocked |
-| One call estimated over its cap | cost_cap | blocked |
-| Called an expensive tool too many times | usage_cap | blocked |
-| Next call would blow the run budget | budget_cap | blocked |
+Optional guardrails that build on the kernel but aren't part of the receipt
+wedge live in [`src/experimental/`](src/experimental/): budget caps, spec
+learning, the `harden()` one-line auto-wrapper, circuit breakers, enforcement,
+and framework adapters (OpenAI, Anthropic, LangChain, Vercel, raw). The
+always-on verification primitives they rely on live in
+[`src/kernel/`](src/kernel/).
 
-## Approve risky actions
+## License
 
-```typescript
-import { gate } from '@npmsai/agentmint'
-
-const ok = await gate({
-  action: 'delete_records',
-  context: { table: 'users', count: 4200 },
-  channel: 'slack',
-  ttl: 300,
-})
-if (ok.approved) deleteRecords()
-```
-
-## Receipts
-
-```typescript
-tools.__receipt()  // terminal receipt
-tools.__log()      // JSONL events: timestamp, tool, args, reason, cost
-tools.__state()    // counters
-```
-
-Boring, grep/jq-friendly JSONL, with an optional SHA-256 hash chain for tamper
-evidence.
-
-## More
-
-```
-npx @npmsai/agentmint init --example budget      scaffold a spec
-npx @npmsai/agentmint test --suite coding-agent  pre-built stress tests
-npx @npmsai/agentmint scan --dir ./src           generate a spec from code
-npx @npmsai/agentmint learn --from incident.jsonl turn failures into rules
-npx @npmsai/agentmint ci                          CI gate (exit 0/1)
-```
-
-Zero runtime dependencies. MIT.
+MIT
