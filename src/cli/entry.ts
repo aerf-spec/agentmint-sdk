@@ -18,6 +18,8 @@ const cmd = process.argv[2];
 const commands: Record<string, () => Promise<void>> = {
   demo: () => import("./demo.js").then((m) => m.runDemo()),
   test: () => import("./test.js").then((m) => m.runTest()),
+  gate: () => import("./gate.js").then((m) => m.runGate()),
+  scan: () => import("./scan.js").then((m) => m.runScan()),
   learn: () => import("./learn.js").then((m) => m.runLearn()),
   watch: () => import("./watch.js").then((m) => m.runWatch()),
   init: () => import("./init.js").then((m) => m.runInit()),
@@ -35,6 +37,8 @@ function showHelp(): void {
   console.log(`  ${fg("Commands:")}`);
   console.log(`    ${fg("demo")}       ${muted("Run demo scenarios (validation + breakers + receipts)")}`);
   console.log(`    ${fg("test")}       ${muted("Run a pre-built agent test suite")}`);
+  console.log(`    ${fg("gate")}       ${muted("Request human approval for an action")}`);
+  console.log(`    ${fg("scan")}       ${muted("Auto-generate a spec from your tool source")}`);
   console.log(`    ${fg("learn")}      ${muted("Generate a spec from past violations")}`);
   console.log(`    ${fg("watch")}      ${muted("Real-time validation against your spec")}`);
   console.log(`    ${fg("init")}       ${muted("Generate a starter agentmint.spec.yaml")}`);
@@ -46,6 +50,8 @@ function showHelp(): void {
   console.log(`  ${fg("Examples:")}`);
   console.log(`    ${dim("$")} agentmint demo a`);
   console.log(`    ${dim("$")} agentmint test --suite prior-auth`);
+  console.log(`    ${dim("$")} agentmint gate --action "deploy" --context '{"env":"production"}'`);
+  console.log(`    ${dim("$")} agentmint scan --dir ./src`);
   console.log(`    ${dim("$")} agentmint learn --from receipts/incident.jsonl`);
   console.log(`    ${dim("$")} agentmint init --example coding`);
   console.log(`    ${dim("$")} agentmint watch --spec ./agentmint.spec.yaml`);

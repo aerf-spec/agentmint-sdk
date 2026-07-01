@@ -1,78 +1,107 @@
 # AgentMint
 
-Tool-call enforcement for AI agents. One YAML spec defines what's allowed.
-One line instruments your tools. Every decision logged.
+Independent verification for AI agent tool calls and AI-generated code.
+Policy enforcement · human approval · tamper-evident receipts.
+One npm install. Framework-agnostic. Zero runtime dependencies.
 
-## Quick start
+## The problem
 
+The AI agent writes the code. Then writes the tests. The tests pass.
+But they validate what the agent built, not what you asked for.
+Meanwhile the agent's tool calls — refunds, database writes, git
+pushes — execute with no independent check.
+
+## Try it (10 seconds)
+
+```bash
 npx @npmsai/agentmint demo a
+```
 
-## Install
+## Verify your code
 
-npm install @npmsai/agentmint
+```bash
+agentmint verify --dir ./src --spec agentmint.spec.yaml
+```
 
-## Instrument your agent (one line)
+## Benchmark a framework
 
-import { harden } from "@npmsai/agentmint";
-const tools = harden(myTools);
+```bash
+agentmint bench --framework demo
+```
 
-## Add a spec
+## Test your agent before deploy
 
-import { harden, loadSpec } from "@npmsai/agentmint";
-const spec = loadSpec(`
-version: "1.0"
-tools:
-  issue_refund:
-    requires: [lookup_order]
-    input:
-      properties:
-        amount:
-          max_ref: lookup_order.output.total
-  delete_account:
-    action: block
-breakers:
-  loop:
-    max_identical_calls: 3
-`);
-const tools = harden(myTools, { spec });
+```bash
+agentmint test --suite coding-agent
+```
 
-## Test your agent
+## Add human approval
 
-npx @npmsai/agentmint test --suite prior-auth
-npx @npmsai/agentmint test --suite coding-agent
-npx @npmsai/agentmint test --suite refund-agent
+```typescript
+import { gate } from '@npmsai/agentmint'
+
+const result = await gate({
+  action: 'delete_records',
+  context: { table: 'users', count: 4200 },
+  channel: 'slack',
+  ttl: 300,
+})
+
+if (result.approved) executeAction()
+```
+
+## Auto-generate a spec
+
+```bash
+agentmint scan --dir ./src
+```
 
 ## Learn from failures
 
-npx @npmsai/agentmint learn --from receipts/incident.jsonl
+```bash
+agentmint learn --from receipts/incident.jsonl
+```
+
+## Add to your agent (one line)
+
+```typescript
+import { harden, loadSpec } from '@npmsai/agentmint'
+const tools = harden(myTools, { spec: loadSpec('./agentmint.spec.yaml') })
+```
+
+## What it catches
+
+| Rule | Example | Default |
+|------|---------|---------|
+| requires | Refund without lookup | block |
+| action: block | delete_account | block |
+| cross_ref | Wrong order ID | warn |
+| max_ref | Amount > order total | warn |
+| blocked_pattern | rm -rf | block |
+| blocked_value | push to main | block |
+| loop_breaker | 5 identical calls | block |
+| velocity | 15 calls in 30s | block |
+| gate | Unapproved action | block |
+| verify | Invariant violation | block |
 
 ## CLI
 
-agentmint demo [1|2|3|a]    Run demo scenarios
-agentmint test --suite <n>  Run pre-built test suite
-agentmint learn --from <f>  Generate spec from failures
-agentmint watch             Watch agent in real time
-agentmint init              Generate starter spec
-agentmint ci                Gate CI on violations
-agentmint diff              Compare two receipt files
+| Command | What |
+|---------|------|
+| verify | Independent verification with receipt |
+| bench | Governance analysis across frameworks |
+| test | Pre-built compliance test suites |
+| gate | Human approval workflow |
+| scan | Auto-generate spec from source |
+| learn | Generate spec from failure receipts |
+| demo | Rogue agent scenarios |
+| watch | Real-time validation |
+| init | Starter spec |
+| ci | CI gate (exit 0/1) |
+| diff | Compare two runs |
 
-## Spec reference
+## Works with everything
 
-- requires: [tool_a, tool_b] — tool_a and tool_b must run first
-- action: block | warn — block prevents execution, warn logs and continues
-- input.properties.<prop>.cross_ref — validate against prior tool output
-- input.properties.<prop>.max_ref — enforce value ceiling from prior output
-- input.properties.<prop>.blocked_patterns — glob patterns to reject
-- input.properties.<prop>.blocked_values — exact values to reject
-- breakers.loop.max_identical_calls — halt after N identical calls
-- breakers.velocity.max_calls_per_window — halt after N calls in window
-- bind: { key: value } — lock a parameter across all tools
-- deny: ["pattern*"] — block tools matching glob pattern
-- checkpoint: ["tool"] — require approval before execution
+OpenAI, Anthropic, Vercel AI, LangChain, Mastra, or plain async functions.
 
-## Adapters
-
-Works with OpenAI SDK, Anthropic SDK, Vercel AI SDK, LangChain,
-or any plain object of async functions.
-
-## Zero runtime dependencies. MIT license.
+## Zero runtime dependencies. MIT.

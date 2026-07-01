@@ -92,6 +92,12 @@ export interface AgentMintConfig {
   readonly budget?: number;
   readonly timeout?: number;
   readonly retryLimit?: number;
+  /** Human-in-the-loop approval for checkpointed tools (see gate()). */
+  readonly gate?: {
+    channel?: "console" | "slack" | "webhook";
+    ttl?: number;
+    webhookUrl?: string;
+  };
   readonly silent?: boolean;
   readonly evidenceChain?: boolean;
   readonly mode?: "enforce" | "shadow";

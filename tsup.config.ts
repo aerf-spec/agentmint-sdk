@@ -6,6 +6,8 @@ export default defineConfig({
     "src/cli/entry.ts",
     "src/cli/demo.ts",
     "src/cli/test.ts",
+    "src/cli/gate.ts",
+    "src/cli/scan.ts",
     "src/cli/learn.ts",
     "src/cli/watch.ts",
     "src/cli/init.ts",

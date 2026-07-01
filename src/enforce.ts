@@ -209,7 +209,31 @@ export async function enforce(
   if (config.checkpoint && matchesAny(tool, config.checkpoint)) {
     state.heldCount++;
     logEvent(state, tool, params, "held", { reason: "checkpoint_required" });
-    if (config.onCheckpoint) {
+    if (config.gate) {
+      const { gate } = await import("./gate.js");
+      const result = await gate({
+        action: tool,
+        context: params,
+        channel: config.gate.channel,
+        ttl: config.gate.ttl,
+        webhookUrl: config.gate.webhookUrl,
+      });
+      if (result.approved) {
+        logEvent(state, tool, params, "approved", { reason: "gate_approved" });
+      } else {
+        state.blockedCount++;
+        logEvent(state, tool, params, "rejected", {
+          reason: "gate_rejected",
+          details: result.reason,
+        });
+        config.onBlock?.(tool, "gate_rejected", result.reason);
+        const blocked = blockResponse(
+          tool,
+          `${tool} was not approved${result.reason ? ` (${result.reason})` : ""}.`,
+        );
+        if (!shadow) return blocked;
+      }
+    } else if (config.onCheckpoint) {
       const approved = await config.onCheckpoint(tool, params);
       if (approved) {
         logEvent(state, tool, params, "approved", { reason: "checkpoint_approved" });
