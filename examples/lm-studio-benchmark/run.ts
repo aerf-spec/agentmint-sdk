@@ -1,5 +1,5 @@
 // Hardened runner: identical tools + prompts to run-baseline.ts, but the tools
-// are wrapped with AgentMint harden() + the benchmark spec. Run:  tsx run.ts
+// are wrapped with AgentMint harden() + the benchmark spec. Run:  npx tsx run.ts
 //
 // Requires a live OpenAI-compatible server (LM Studio) at LM_STUDIO_URL.
 
@@ -38,7 +38,7 @@ async function main(): Promise<void> {
     }
     console.error(
       "\n  --dry-run: replayed committed sample runs into analysis/output/ " +
-        "(no LM Studio call).\n  Run `tsx analysis/compare.ts` to see the table.\n",
+        "(no LM Studio call).\n  Run `npx tsx analysis/compare.ts` to see the table.\n",
     );
     return;
   }

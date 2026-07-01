@@ -1,5 +1,7 @@
 # AgentMint × LM Studio benchmark
 
+> **No global installs required — all scripts use npx.**
+
 Run a local Qwen (or any OpenAI-compatible) model through the same set of tasks
 twice — once with tools wrapped by AgentMint's `harden()`, once with the raw
 tools — and diff what the agent actually did. The model is **live** (LM Studio);
@@ -14,7 +16,8 @@ exactly where it would in production: between the model's decision and the tool.
 3. In LM Studio, load the model and **start the local server** (Developer →
    Start Server). It listens on `http://localhost:1234/v1` by default.
 4. From the repo root, make sure deps are installed: `npm install` (this example
-   uses the repo's `openai` and `tsx`). No API keys, no `.env`, no cloud calls.
+   uses the repo's `openai` and `tsx`, both run through `npx` — nothing needs to
+   be installed globally). No API keys, no `.env`, no cloud calls.
 
 Config via env vars:
 

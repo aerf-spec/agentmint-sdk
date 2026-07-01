@@ -43,7 +43,8 @@
     "test:integration": "tsx --test tests/integration.test.ts",
     "typecheck": "tsc --noEmit",
     "demo": "tsx src/cli/demo.ts",
-    "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown"
+    "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
+    "benchmark:full": "cd examples/lm-studio-benchmark && npm run full"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

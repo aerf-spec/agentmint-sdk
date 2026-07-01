@@ -4,9 +4,9 @@
   "type": "module",
   "description": "Run a local Qwen (or any OpenAI-compatible) model through AgentMint and diff it against an unguarded baseline.",
   "scripts": {
-    "baseline": "tsx run-baseline.ts",
-    "bench": "tsx run.ts",
-    "compare": "tsx analysis/compare.ts",
+    "baseline": "npx tsx run-baseline.ts",
+    "bench": "npx tsx run.ts",
+    "compare": "npx tsx analysis/compare.ts",
     "full": "npm run baseline && npm run bench && npm run compare"
   },
   "dependencies": {
