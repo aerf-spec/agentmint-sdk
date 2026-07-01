@@ -18,7 +18,13 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { harden, loadSpec } from "../../src/index.ts";
+import {
+  harden,
+  loadSpec,
+  buildRecord,
+  type AERFRecord,
+  type AgentMintConfig,
+} from "../../src/index.ts";
 import { SPEC_YAML, priceOf } from "./tools.ts";
 import { createHeavyTools } from "./tools-heavy.ts";
 import { shapeTools, SHAPE_CFG } from "./shape.ts";
@@ -31,6 +37,14 @@ import {
   type DiagRun,
   type DiagToolSet,
 } from "./agent-diag.ts";
+import { verifyHardenedRun, type VerifyResult } from "../receipt-proof/verify-receipt.ts";
+import {
+  emitReceipt,
+  summarizeReceipts,
+  writeReceiptsSummary,
+  upsertReceiptsLine,
+  type ReceiptOutcome,
+} from "./receipts.ts";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = join(HERE, "analysis", "output");
@@ -55,47 +69,44 @@ const ALL_ARMS: ArmSpec[] = [
 const only = (process.env.ONLY ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 const ARMS = only.length ? ALL_ARMS.filter((a) => only.includes(a.key)) : ALL_ARMS;
 
-type HardenedTools = Record<
-  string,
-  (p: Record<string, unknown>) => Promise<unknown>
-> & {
-  __state(): {
-    blockedCount: number;
-    totalCost: number;
-    events: Array<{ result: string; reason?: string }>;
-  };
-  __receipt(): string;
-};
+// A DiagToolSet plus the receipt/evidence closures Prompt 3 needs. record() and
+// verify() are present only for enforced arms (hardened/shaped); baseline omits
+// them, so it emits no receipt.
+interface DiagToolSetPlus extends DiagToolSet {
+  record?: () => AERFRecord;
+  verify?: () => VerifyResult;
+}
 
-function buildToolSet(base: Arm): DiagToolSet {
+function buildToolSet(base: Arm): DiagToolSetPlus {
   const heavy = createHeavyTools();
 
   if (base === "baseline") return { fns: heavy };
 
-  if (base === "hardened") {
-    const spec = loadSpec(SPEC_YAML);
-    const h = harden(heavy, {
-      spec,
-      silent: true,
-      costEstimator: (tool: string) => priceOf(tool),
-    }) as unknown as HardenedTools;
-    return { fns: h, state: () => h.__state(), receipt: () => h.__receipt() };
-  }
-
-  // shaped: shaping inside, enforcement outside.
-  const spec = loadSpec(SPEC_YAML);
-  const shaped = shapeTools(heavy, SHAPE_CFG);
-  const h = harden(shaped.fns, {
-    spec,
+  // hardened + shaped share one config; shaped just wraps the tools with shaping
+  // first. evidenceChain is on so each run carries a Merkle evidence chain — this
+  // does not change enforcement, breakers, or budget in any way.
+  const config: AgentMintConfig = {
+    spec: loadSpec(SPEC_YAML),
     silent: true,
+    evidenceChain: true,
     costEstimator: (tool: string) => priceOf(tool),
-  }) as unknown as HardenedTools;
-  return {
-    fns: h,
+  };
+
+  const shaped = base === "shaped" ? shapeTools(heavy, SHAPE_CFG) : null;
+  const h = harden(shaped ? shaped.fns : heavy, config);
+
+  const set: DiagToolSetPlus = {
+    fns: h as unknown as DiagToolSet["fns"],
     state: () => h.__state(),
     receipt: () => h.__receipt(),
-    shapeStats: shaped.stats,
+    record: () => {
+      h.__receipt(); // mark the run completed before snapshotting the record
+      return buildRecord(h.__state(), config);
+    },
+    verify: () => verifyHardenedRun(h),
   };
+  if (shaped) set.shapeStats = shaped.stats;
+  return set;
 }
 
 async function main(): Promise<void> {
@@ -116,6 +127,9 @@ async function main(): Promise<void> {
     return;
   }
 
+  const RECEIPTS_DIR = join(OUT_DIR, "receipts");
+  const outcomes: ReceiptOutcome[] = [];
+
   const t0 = Date.now();
   for (const arm of ARMS) {
     const rawLog = join(OUT_DIR, `diag-${arm.key}-raw.jsonl`);
@@ -125,7 +139,8 @@ async function main(): Promise<void> {
     for (const task of TASKS) {
       process.stdout.write(`  > ${task.name} `);
       for (let i = 1; i <= RUNS; i++) {
-        const r = await runSingleDiag(client, buildToolSet(arm.base), task, {
+        const toolset = buildToolSet(arm.base);
+        const r = await runSingleDiag(client, toolset, task, {
           model: MODEL,
           arm: arm.base,
           rawLogPath: rawLog,
@@ -133,6 +148,17 @@ async function main(): Promise<void> {
           steering: arm.steering,
         });
         runs.push(r);
+        // Prompt 3: for the hardened/shaped arms only, emit + verify one AERF
+        // receipt per run. This runs AFTER the completion returns (never in the
+        // request path); baseline exposes no record/verify, so it is skipped.
+        if (toolset.record && toolset.verify) {
+          outcomes.push(
+            emitReceipt(RECEIPTS_DIR, arm.key, task.name, i, {
+              record: toolset.record,
+              verify: toolset.verify,
+            }),
+          );
+        }
         process.stdout.write(r.success ? "." : "x");
       }
       process.stdout.write("\n");
@@ -156,11 +182,19 @@ async function main(): Promise<void> {
     console.log(`  Wrote diag-${arm.key}.json (${runs.length} runs)`);
   }
 
+  // Post-benchmark: verification pass over every emitted receipt, then record
+  // the coexistence proof in RESULTS.md + a machine-readable summary.
+  const summary = summarizeReceipts(outcomes);
+  writeReceiptsSummary(OUT_DIR, summary);
+  upsertReceiptsLine(join(OUT_DIR, "RESULTS.md"), summary.line);
+
   const mins = ((Date.now() - t0) / 60000).toFixed(1);
   console.log(
     `\n  Done in ${mins} min. Now run:  npx tsx compare3.ts\n` +
       `  '.' = task success, 'x' = task failure (watch the shaped arms).\n` +
-      `  If promptTokens are all 0, LM Studio is not returning usage — fix that first.\n`,
+      `  If promptTokens are all 0, LM Studio is not returning usage — fix that first.\n` +
+      `\n  ${summary.line}\n` +
+      `  ${summary.emitted} AERF receipts in analysis/output/receipts/ · summary in receipts-summary.json\n`,
   );
 }
 
