@@ -1,6 +1,6 @@
 {
   "name": "@aerf-spec/agentmint-app",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Runtime guardrails for AI agents. Validation · Circuit breakers · Audit receipts.",
   "type": "module",
   "license": "MIT",

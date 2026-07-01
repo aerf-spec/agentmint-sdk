@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { enforce } from "./enforce.js";
 import { createRunState } from "./log.js";
-import type { AgentMintConfig, BlockResponse } from "./types.js";
+import type { AgentMintConfig, AgentMintSpec, BlockResponse } from "./types.js";
 
 const tool = async () => ({ ok: true });
 const isBlock = (r: unknown): r is BlockResponse =>
@@ -202,6 +202,70 @@ describe("enforce", () => {
     const result = await enforce("delete_records", {}, tool, config, state);
     expect(isBlock(result)).toBe(true);
     expect(state.events.at(-1)?.reason).toBe("denied");
+  });
+
+  it("bare_action_block_denies_tool", async () => {
+    const spec: AgentMintSpec = {
+      version: "1.0",
+      tools: { delete_account: { action: "block" } },
+    };
+    const config: AgentMintConfig = { spec };
+    const state = createRunState(config);
+    const result = await enforce("delete_account", {}, tool, config, state);
+    expect(isBlock(result)).toBe(true);
+    expect(state.blockedCount).toBe(1);
+    expect(state.executedCount).toBe(0);
+  });
+
+  it("bare_action_warn_executes", async () => {
+    const spec: AgentMintSpec = {
+      version: "1.0",
+      tools: { read_env: { action: "warn" } },
+    };
+    let warned = false;
+    const config: AgentMintConfig = { spec, onWarn: () => (warned = true) };
+    const state = createRunState(config);
+    const result = await enforce("read_env", {}, tool, config, state);
+    expect(result).toEqual({ ok: true });
+    expect(state.warnedCount).toBe(1);
+    expect(state.executedCount).toBe(1);
+    expect(warned).toBe(true);
+  });
+
+  it("action_block_with_requires_lets_requires_fire_first", async () => {
+    const spec: AgentMintSpec = {
+      version: "1.0",
+      tools: { issue_refund: { action: "block", requires: ["lookup_order"] } },
+    };
+    const config: AgentMintConfig = { spec };
+    const state = createRunState(config);
+    const result = await enforce("issue_refund", {}, tool, config, state);
+    expect(isBlock(result)).toBe(true);
+    expect(state.events.at(-1)?.reason).toBe("requires");
+  });
+
+  it("no_action_no_rules_executes", async () => {
+    const spec: AgentMintSpec = {
+      version: "1.0",
+      tools: { read_env: {} },
+    };
+    const config: AgentMintConfig = { spec };
+    const state = createRunState(config);
+    const result = await enforce("read_env", {}, tool, config, state);
+    expect(result).toEqual({ ok: true });
+    expect(state.executedCount).toBe(1);
+  });
+
+  it("tool_not_in_spec_executes", async () => {
+    const spec: AgentMintSpec = {
+      version: "1.0",
+      tools: { other_tool: { action: "block" } },
+    };
+    const config: AgentMintConfig = { spec };
+    const state = createRunState(config);
+    const result = await enforce("read_env", {}, tool, config, state);
+    expect(result).toEqual({ ok: true });
+    expect(state.executedCount).toBe(1);
   });
 
   it("shadow_mode", async () => {

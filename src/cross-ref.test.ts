@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   checkRequires,
+  matchPattern,
   validateInputCrossRefs,
   validateOutputCrossRefs,
 } from "./cross-ref.js";
@@ -55,6 +56,74 @@ describe("max_ref validation", () => {
     const v = validateInputCrossRefs("issue_refund", { amount: 75 }, spec, s);
     expect(v).toHaveLength(1);
     expect(v[0]!.type).toBe("max_ref");
+  });
+});
+
+describe("matchPattern (glob support)", () => {
+  it("matches a leading wildcard", () => {
+    expect(matchPattern("ceo@competitor.com", "*@competitor.com")).toBe(true);
+  });
+
+  it("matches a leading wildcard for any prefix", () => {
+    expect(matchPattern("anyone@competitor.com", "*@competitor.com")).toBe(true);
+  });
+
+  it("does not match a different suffix", () => {
+    expect(matchPattern("ceo@partner.com", "*@competitor.com")).toBe(false);
+  });
+
+  it("treats a pattern without `*` as a substring match", () => {
+    expect(matchPattern("rm -rf /tmp", "rm -rf")).toBe(true);
+  });
+
+  it("matches `*.env` against a bare `.env`", () => {
+    expect(matchPattern(".env", "*.env")).toBe(true);
+  });
+
+  it("matches `*.env` against a nested path", () => {
+    expect(matchPattern("path/to/.env", "*.env")).toBe(true);
+  });
+
+  it("anchors the glob so `*.env` does NOT match `.environment`", () => {
+    // Full-string match: `*` consumes any prefix but the value must END in `.env`.
+    expect(matchPattern(".environment", "*.env")).toBe(false);
+  });
+
+  it("still works as a plain substring when there is no `*`", () => {
+    expect(matchPattern("hello world", "lo wo")).toBe(true);
+  });
+
+  it("never matches an empty pattern", () => {
+    expect(matchPattern("anything", "")).toBe(false);
+  });
+
+  it("never matches an empty value", () => {
+    expect(matchPattern("", "*@competitor.com")).toBe(false);
+  });
+
+  it("flags a wildcard pattern inside blocked_patterns validation", () => {
+    const spec = specWith({
+      send_email: {
+        input: { properties: { to: { blocked_patterns: ["*@competitor.com"], action: "block" } } },
+      },
+    });
+    const s = createSession();
+    const v = validateInputCrossRefs("send_email", { to: "ceo@competitor.com" }, spec, s);
+    expect(v).toHaveLength(1);
+    expect(v[0]!.type).toBe("blocked_pattern");
+    expect(v[0]!.action).toBe("block");
+  });
+
+  it("passes a value that does not match the wildcard pattern", () => {
+    const spec = specWith({
+      send_email: {
+        input: { properties: { to: { blocked_patterns: ["*@competitor.com"] } } },
+      },
+    });
+    const s = createSession();
+    expect(
+      validateInputCrossRefs("send_email", { to: "ceo@partner.com" }, spec, s),
+    ).toHaveLength(0);
   });
 });
 

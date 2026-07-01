@@ -141,6 +141,32 @@ export async function enforce(
     if (!shadow) return blocked;
   }
 
+  // 7b. Spec: whole-tool action with no concrete rules (unconditional block/warn)
+  //    A bare `action: block`/`action: warn` on a tool that declares no
+  //    `requires` and no `input.properties` has no rule to attach to, so it
+  //    applies to the tool as a whole. `block` denies the call outright; `warn`
+  //    logs and proceeds. Tools that DO declare rules fall through to those
+  //    rules below (where `action` still acts as the severity fallback).
+  if (spec) {
+    const toolSpec = spec.tools?.[tool];
+    if (toolSpec?.action && !toolSpec.requires && !toolSpec.input?.properties) {
+      if (toolSpec.action === "block") {
+        state.blockedCount++;
+        logEvent(state, tool, params, "blocked", { reason: "action_block" });
+        config.onBlock?.(tool, "action_block");
+        const blocked = blockResponse(
+          tool,
+          `${tool} is blocked by the spec (action: block).`,
+        );
+        if (!shadow) return blocked;
+      } else {
+        state.warnedCount++;
+        logEvent(state, tool, params, "warned", { reason: "action_warn" });
+        config.onWarn?.(tool, "action_warn");
+      }
+    }
+  }
+
   // 8. Spec: requires
   if (spec) {
     const reqViolations = checkRequires(tool, spec, state.completedSteps);

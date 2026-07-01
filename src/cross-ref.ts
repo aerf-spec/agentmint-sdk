@@ -2,6 +2,25 @@ import type { AgentMintSpec, SessionStore, Violation } from "./types.js";
 import { resolveRef } from "./session.js";
 import { resolveAction } from "./spec.js";
 
+/**
+ * Match a value against a blocked pattern.
+ *
+ * If the pattern contains `*`, it is treated as a simple glob where `*`
+ * matches any sequence of characters (including none) and the match is
+ * anchored to the full string. Otherwise the pattern is a plain substring
+ * check, preserving backward compatibility.
+ *
+ * An empty pattern or empty value never matches.
+ */
+export function matchPattern(value: string, pattern: string): boolean {
+  if (pattern === "" || value === "") return false;
+  if (!pattern.includes("*")) return value.includes(pattern);
+  const escaped = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*/g, ".*");
+  return new RegExp(`^${escaped}$`).test(value);
+}
+
 export function validateInputCrossRefs(
   tool: string,
   params: Record<string, unknown>,
@@ -50,10 +69,10 @@ export function validateInputCrossRefs(
       }
     }
 
-    // blocked_patterns: substring match
+    // blocked_patterns: glob (with `*`) or substring match
     if (propConfig.blocked_patterns && typeof value === "string") {
       for (const pattern of propConfig.blocked_patterns) {
-        if (value.includes(pattern)) {
+        if (matchPattern(value, pattern)) {
           violations.push({
             type: "blocked_pattern",
             tool,
