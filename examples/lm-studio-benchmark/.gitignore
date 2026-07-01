@@ -1,0 +1,5 @@
+# Live run artifacts — regenerate by running the benchmark. The committed
+# sample runs live in results/ instead.
+analysis/output/*
+!analysis/output/.gitkeep
+node_modules/
