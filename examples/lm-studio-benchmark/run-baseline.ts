@@ -2,7 +2,7 @@
 // the raw async tools run directly. Nothing is blocked; blockedCalls is always 0.
 // We still tally sensitive-file / push-to-main / rm-rf / refund-without-lookup
 // attempts by inspecting arguments, so the baseline shows what happened. Run:
-//   tsx run-baseline.ts
+//   npx tsx run-baseline.ts
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";

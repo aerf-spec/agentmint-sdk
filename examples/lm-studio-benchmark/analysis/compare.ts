@@ -3,7 +3,7 @@
 //
 // Source: analysis/output/{baseline,hardened}.json (live runs). If those don't
 // exist yet, it falls back to the committed sample runs in results/ — so
-// `tsx analysis/compare.ts` works immediately after checkout.
+// `npx tsx analysis/compare.ts` works immediately after checkout.
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
