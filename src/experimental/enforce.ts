@@ -1,10 +1,22 @@
-import type { AgentMintConfig, RunState, Violation } from "../types.js";
+import type {
+  AgentMintConfig,
+  DecisionCheck,
+  DecisionVerdict,
+  RunState,
+  Violation,
+} from "../types.js";
 import { matchesAny } from "./matcher.js";
 import { blockResponse, logEvent } from "../log.js";
 import { recordInput, recordOutput } from "../session.js";
 import { validateInputCrossRefs, validateOutputCrossRefs, checkRequires } from "../kernel/cross-ref.js";
 import { checkBreakers } from "./breakers.js";
-import { checkBudgetGuardrails, guardrailsActive, staticEstimate, roundUsd } from "../kernel/budget.js";
+import {
+  checkBudgetGuardrails,
+  guardrailsActive,
+  staticEstimate,
+  roundUsd,
+  resolveBudget,
+} from "../kernel/budget.js";
 
 type BudgetContext = { estimate?: number; cumulative?: number; callIndex?: number };
 
@@ -41,6 +53,20 @@ export async function enforce(
   const spec = config.spec;
   const shadow = config.mode === "shadow";
 
+  // Decision trace (only assembled when a caller wants the gate internals).
+  // These record the REAL checks enforce evaluates and fire config.onDecision
+  // once, as the verdict is reached. When onDecision is unset, both are no-ops.
+  const trace: DecisionCheck[] | undefined = config.onDecision ? [] : undefined;
+  let decided = false;
+  const check = (name: string, passed: boolean, detail: string): void => {
+    trace?.push({ name, passed, detail });
+  };
+  const emit = (verdict: DecisionVerdict, reason?: string, detail?: string): void => {
+    if (!config.onDecision || decided) return;
+    decided = true;
+    config.onDecision({ tool, verdict, reason, detail, checks: trace ?? [] });
+  };
+
   // 0. Already dead — the run was killed by an earlier decision. The call never
   //    executes, but it MUST still be recorded: a silent drop here is exactly the
   //    gap a signed audit trail exists to close. Log the attempt before blocking.
@@ -49,6 +75,8 @@ export async function enforce(
       reason: "run_killed",
       details: state.killReason,
     });
+    check("run killed?", false, `yes (${state.killReason ?? "killed"})`);
+    emit("deny", "run_killed", state.killReason);
     return blockResponse(tool, "Run has been terminated.");
   }
 
@@ -66,6 +94,7 @@ export async function enforce(
       details: `$${state.totalCost.toFixed(2)} >= $${config.budget.toFixed(2)}`,
     });
     config.onKill?.("budget_exceeded", state);
+    emit("kill", "budget_exceeded", `$${state.totalCost.toFixed(2)} >= $${config.budget.toFixed(2)}`);
     return blockResponse(tool, `Run budget of $${config.budget.toFixed(2)} exceeded.`);
   }
 
@@ -81,6 +110,7 @@ export async function enforce(
         details: `${elapsed.toFixed(1)}s >= ${config.timeout}s`,
       });
       config.onKill?.("timeout", state);
+      emit("kill", "timeout", `${elapsed.toFixed(1)}s >= ${config.timeout}s`);
       return blockResponse(tool, `Run timeout of ${config.timeout}s exceeded.`);
     }
   }
@@ -94,8 +124,16 @@ export async function enforce(
       tool, params, state.session, spec.breakers, state.totalCost,
     );
     for (const v of breakerViolations) {
+      if (v.type === "loop_breaker") {
+        check("loop check?", false, `${v.actual} identical calls (limit: ${v.expected})`);
+      } else {
+        check(`${v.type}?`, false, v.details);
+      }
       const result = handleViolation(v, state, config, params, shadow);
-      if (result.shouldBlock) return result.response!;
+      if (result.shouldBlock) {
+        emit("deny", v.type, v.details);
+        return result.response!;
+      }
     }
   }
 
@@ -108,6 +146,8 @@ export async function enforce(
         reason: "retry_limit",
         details: `${tool} called ${count} times, limit is ${config.retryLimit}`,
       });
+      check("retry limit?", false, `${count} calls (limit: ${config.retryLimit})`);
+      emit("deny", "retry_limit", `${tool} called ${count} times, limit is ${config.retryLimit}`);
       return blockResponse(
         tool,
         `${tool} has been called ${count} times (limit: ${config.retryLimit}). Try a different approach.`,
@@ -127,7 +167,10 @@ export async function enforce(
           tool,
           `Access denied. ${field} must be "${expected}" for this run.`,
         );
-        if (!shadow) return blocked;
+        if (!shadow) {
+          emit("deny", "bind_violation", details);
+          return blocked;
+        }
         break;
       }
     }
@@ -135,20 +178,31 @@ export async function enforce(
 
   // 6. Deny
   if (config.deny && matchesAny(tool, config.deny)) {
+    check("deny list?", false, "yes");
     state.blockedCount++;
     logEvent(state, tool, params, "blocked", { reason: "denied" });
     config.onBlock?.(tool, "denied");
     const blocked = blockResponse(tool, `${tool} is not available.`);
-    if (!shadow) return blocked;
+    if (!shadow) {
+      emit("deny", "denied", `${tool} is denied`);
+      return blocked;
+    }
   }
 
   // 7. Allow
-  if (config.allow && config.allow.length > 0 && !matchesAny(tool, config.allow)) {
-    state.blockedCount++;
-    logEvent(state, tool, params, "blocked", { reason: "not_in_scope" });
-    config.onBlock?.(tool, "not_in_scope");
-    const blocked = blockResponse(tool, `${tool} is not available.`);
-    if (!shadow) return blocked;
+  if (config.allow && config.allow.length > 0) {
+    const inScope = matchesAny(tool, config.allow);
+    check("allow list?", inScope, inScope ? "yes" : "no");
+    if (!inScope) {
+      state.blockedCount++;
+      logEvent(state, tool, params, "blocked", { reason: "not_in_scope" });
+      config.onBlock?.(tool, "not_in_scope");
+      const blocked = blockResponse(tool, `${tool} is not available.`);
+      if (!shadow) {
+        emit("deny", "not_in_scope", `${tool} not in allow list`);
+        return blocked;
+      }
+    }
   }
 
   // 7b. Spec: whole-tool action with no concrete rules (unconditional block/warn)
@@ -159,8 +213,13 @@ export async function enforce(
   //    rules below (where `action` still acts as the severity fallback).
   if (spec) {
     const toolSpec = spec.tools?.[tool];
-    if (toolSpec?.action && !toolSpec.requires && !toolSpec.input?.properties) {
-      if (toolSpec.action === "block") {
+    const bareAction = !!toolSpec?.action && !toolSpec.requires && !toolSpec.input?.properties;
+    const bareBlock = bareAction && toolSpec!.action === "block";
+    // Record the spec-level deny check for every tool that reaches this stage,
+    // so a permitted tool shows "deny list? no" and a blocked one "yes".
+    check("deny list?", !bareBlock, bareBlock ? "yes (action: block)" : "no");
+    if (bareAction) {
+      if (toolSpec!.action === "block") {
         state.blockedCount++;
         logEvent(state, tool, params, "blocked", { reason: "action_block" });
         config.onBlock?.(tool, "action_block");
@@ -168,7 +227,10 @@ export async function enforce(
           tool,
           `${tool} is blocked by the spec (action: block).`,
         );
-        if (!shadow) return blocked;
+        if (!shadow) {
+          emit("deny", "action_block", `${tool} blocked by spec (action: block)`);
+          return blocked;
+        }
       } else {
         state.warnedCount++;
         logEvent(state, tool, params, "warned", { reason: "action_warn" });
@@ -179,10 +241,28 @@ export async function enforce(
 
   // 8. Spec: requires
   if (spec) {
+    if (trace) {
+      const reqs = spec.tools?.[tool]?.requires;
+      if (!reqs || reqs.length === 0) {
+        check("requires?", true, "none");
+      } else {
+        const missing = reqs.filter((r) => !state.completedSteps.has(r));
+        check(
+          "requires?",
+          missing.length === 0,
+          missing.length === 0
+            ? `${reqs.join(", ")} (satisfied)`
+            : `${reqs.join(", ")} (missing: ${missing.join(", ")})`,
+        );
+      }
+    }
     const reqViolations = checkRequires(tool, spec, state.completedSteps);
     for (const v of reqViolations) {
       const result = handleViolation(v, state, config, params, shadow);
-      if (result.shouldBlock) return result.response!;
+      if (result.shouldBlock) {
+        emit("deny", "requires", v.details);
+        return result.response!;
+      }
     }
   }
 
@@ -200,7 +280,10 @@ export async function enforce(
           tool,
           `Cannot execute ${tool}. Required step "${req}" has not been completed.`,
         );
-        if (!shadow) return blocked;
+        if (!shadow) {
+          emit("deny", "prerequisite_missing", `"${req}" must be completed first`);
+          return blocked;
+        }
         break;
       }
     }
@@ -210,8 +293,21 @@ export async function enforce(
   if (spec) {
     const inputViolations = validateInputCrossRefs(tool, params, spec, state.session);
     for (const v of inputViolations) {
+      if (trace) {
+        const propCfg = spec.tools?.[tool]?.input?.properties?.[v.field ?? ""];
+        const refPath = propCfg?.max_ref ?? propCfg?.cross_ref;
+        const refField = refPath ? refPath.split(".").pop() : "ref";
+        const detail =
+          v.type === "max_ref"
+            ? `${v.field} ${v.actual} > ${refField} ${v.expected} (cross_ref: ${v.type})`
+            : v.details;
+        check("input check?", false, detail);
+      }
       const result = handleViolation(v, state, config, params, shadow);
-      if (result.shouldBlock) return result.response!;
+      if (result.shouldBlock) {
+        emit("deny", v.type, v.details);
+        return result.response!;
+      }
     }
   }
 
@@ -228,9 +324,21 @@ export async function enforce(
       cumulative: decision.cumulative,
       callIndex: decision.callIndex,
     };
+    if (trace) {
+      const max = resolveBudget(spec, config).max;
+      const budgetStr = max !== undefined ? ` / $${max.toFixed(2)}` : "";
+      check(
+        "budget?",
+        decision.violations.length === 0,
+        `$${decision.estimate.toFixed(2)}${budgetStr}`,
+      );
+    }
     for (const v of decision.violations) {
       const result = handleViolation(v, state, config, params, shadow, budgetCtx);
-      if (result.shouldBlock) return result.response!;
+      if (result.shouldBlock) {
+        emit("deny", v.type, v.details);
+        return result.response!;
+      }
     }
   }
 
@@ -260,7 +368,11 @@ export async function enforce(
           tool,
           `${tool} was not approved${result.reason ? ` (${result.reason})` : ""}.`,
         );
-        if (!shadow) return blocked;
+        if (!shadow) {
+          check("approval?", false, `rejected${result.reason ? ` (${result.reason})` : ""}`);
+          emit("deny", "gate_rejected", result.reason);
+          return blocked;
+        }
       }
     } else if (config.onCheckpoint) {
       const approved = await config.onCheckpoint(tool, params);
@@ -271,7 +383,11 @@ export async function enforce(
         logEvent(state, tool, params, "rejected", { reason: "checkpoint_rejected" });
         config.onBlock?.(tool, "checkpoint_rejected");
         const blocked = blockResponse(tool, `${tool} was not approved.`);
-        if (!shadow) return blocked;
+        if (!shadow) {
+          check("approval?", false, "rejected");
+          emit("deny", "checkpoint_rejected");
+          return blocked;
+        }
       }
     } else {
       config.onBlock?.(tool, "checkpoint_required");
@@ -279,7 +395,11 @@ export async function enforce(
         tool,
         `${tool} requires approval. Provide an onCheckpoint callback.`,
       );
-      if (!shadow) return blocked;
+      if (!shadow) {
+        check("approval?", false, "no onCheckpoint callback");
+        emit("deny", "checkpoint_required");
+        return blocked;
+      }
     }
   }
 
@@ -293,6 +413,7 @@ export async function enforce(
       reason: "execution_error",
       details: err instanceof Error ? err.message : String(err),
     });
+    emit("allow", "execution_error", err instanceof Error ? err.message : String(err));
     throw err;
   }
   const durationMs = Date.now() - t0;
@@ -350,5 +471,6 @@ export async function enforce(
       : {}),
   });
 
+  emit("allow");
   return result;
 }

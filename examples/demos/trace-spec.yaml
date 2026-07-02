@@ -1,0 +1,27 @@
+version: "1.0"
+defaults:
+  action: warn
+breakers:
+  loop:
+    max_identical_calls: 2
+    action: block
+  budget:
+    max_total_usd: 2.0
+    action: block
+tools:
+  lookup_customer:
+    cost:
+      estimate_usd: 0.10
+  transfer_funds:
+    requires:
+      - lookup_customer
+    input:
+      properties:
+        amount:
+          max_ref: "lookup_customer.output.balance"
+          action: block
+  delete_audit_log:
+    action: block
+  generate_report:
+    cost:
+      estimate_usd: 0.80

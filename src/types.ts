@@ -18,6 +18,36 @@ export type EventResult =
   /** A tool call that arrived after the run was killed — logged, never executed. */
   | "attempted_after_kill";
 
+// ── Decision Trace (onDecision hook) ───────────────────────────────
+
+/** The verdict enforce() reached for a single call. */
+export type DecisionVerdict = "allow" | "deny" | "warn" | "hold" | "kill";
+
+/** One gate check that enforce() actually evaluated, with its real result. */
+export interface DecisionCheck {
+  /** Check label, e.g. "allow list?", "requires?", "budget?". */
+  name: string;
+  /** Whether the call passed this check. */
+  passed: boolean;
+  /** Human-readable detail of what the check saw, from real engine state. */
+  detail: string;
+}
+
+/**
+ * The full decision for one enforce() call, delivered to config.onDecision as
+ * the engine reaches its verdict. `checks` are the real checks that fired, in
+ * evaluation order — not a simulation.
+ */
+export interface DecisionInfo {
+  tool: string;
+  verdict: DecisionVerdict;
+  /** Rule/reason code for a non-allow verdict (e.g. "max_ref", "action_block"). */
+  reason?: string;
+  /** Human-readable detail from the deciding violation. */
+  detail?: string;
+  checks: DecisionCheck[];
+}
+
 // ── Spec Types ─────────────────────────────────────────────────────
 
 export interface SpecPropertyConfig {
@@ -148,6 +178,12 @@ export interface AgentMintConfig {
   readonly onBlock?: (tool: string, reason: string, details?: string) => void;
   readonly onWarn?: (tool: string, reason: string, details?: string) => void;
   readonly onKill?: (reason: string, state: Readonly<RunState>) => void;
+  /**
+   * Engine-internals hook: fired once per enforce() call as the verdict is
+   * reached, with the real checks that fired. Used to surface the gate pipeline
+   * (see the trace demo). Purely observational — it cannot change the decision.
+   */
+  readonly onDecision?: (info: DecisionInfo) => void;
   /**
    * Dynamic cost estimator. Beats static YAML `cost.estimate_usd`.
    *

@@ -33,13 +33,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsup",
-    "test": "vitest run",
-    "test:integration": "tsx --test tests/integration.test.ts",
-    "typecheck": "tsc --noEmit",
-    "demo": "tsx src/cli/demo.ts",
-    "demo:tamper": "tsx examples/demos/tamper.ts",
-    "demo:silence": "tsx examples/demos/silence.ts",
+    "build": "npx tsup",
+    "test": "npx vitest run",
+    "test:integration": "npx tsx --test tests/integration.test.ts",
+    "typecheck": "npx tsc --noEmit",
+    "demo": "npx tsx src/cli/demo.ts",
+    "demo:tamper": "npx tsx examples/demos/tamper.ts",
+    "demo:silence": "npx tsx examples/demos/silence.ts",
+    "demo:trace": "npx tsx examples/demos/trace.ts",
+    "demo:learn": "npx tsx examples/demos/learn.ts",
     "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
     "benchmark:full": "cd examples/lm-studio-benchmark && npm run full"
   },

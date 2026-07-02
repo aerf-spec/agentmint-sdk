@@ -21,7 +21,8 @@ type VioType =
   | "loop_breaker"
   | "velocity_breaker"
   | "cost_breaker"
-  | "bind_violation";
+  | "bind_violation"
+  | "action_block";
 
 const VIO_TYPES = new Set<string>([
   "requires",
@@ -33,6 +34,7 @@ const VIO_TYPES = new Set<string>([
   "velocity_breaker",
   "cost_breaker",
   "bind_violation",
+  "action_block",
 ]);
 
 interface Descriptor {
@@ -111,6 +113,10 @@ function parseDetails(
       const usd = d.match(/limit \$([\d.]+)/)?.[1];
       return { ...base, maxUsd: usd ? parseFloat(usd) : 0 };
     }
+    case "action_block":
+      // A tool blocked outright by a bare spec `action: block` — no details to
+      // parse; the rule is simply "this tool is denied".
+      return { ...base };
     case "bind_violation":
       // Bind is a run-time config constraint, not a spec rule — noted but not
       // representable in AgentMintSpec, so it does not shape the inferred spec.
@@ -235,6 +241,11 @@ export function inferSpec(events: JSONLEvent[]): AgentMintSpec {
           spec.breakers.cost = { max_usd: desc.maxUsd ?? 0, action: desc.action };
           break;
         }
+        case "action_block": {
+          const t = ensureTool(spec, desc.tool);
+          t.action = "block";
+          break;
+        }
         case "bind_violation":
           break;
       }
@@ -242,6 +253,25 @@ export function inferSpec(events: JSONLEvent[]): AgentMintSpec {
   }
 
   return spec;
+}
+
+/** True when an event records a policy violation that shapes the inferred spec. */
+export function isViolation(event: JSONLEvent): boolean {
+  return descriptorsFor(event).length > 0;
+}
+
+/** Count the distinct rules an inferred spec expresses (tools + breakers). */
+export function countRules(spec: AgentMintSpec): number {
+  let n = 0;
+  for (const t of Object.values(spec.tools ?? {})) {
+    if (t.action) n++;
+    if (t.requires && t.requires.length > 0) n++;
+    n += Object.keys(t.input?.properties ?? {}).length;
+    n += Object.keys(t.output?.properties ?? {}).length;
+  }
+  const b = spec.breakers;
+  if (b) n += (["loop", "velocity", "cost", "budget"] as const).filter((k) => b[k]).length;
+  return n;
 }
 
 // ── Merge ──────────────────────────────────────────────────────────
@@ -354,6 +384,139 @@ export function serializeSpec(spec: AgentMintSpec): string {
   }
 
   return lines.join("\n") + "\n";
+}
+
+// ── Regression-test generation ─────────────────────────────────────
+// From the same receipts we infer the spec, emit a self-contained vitest file
+// that reloads the spec, replays the recorded call sequence through harden(),
+// and asserts each blocked call is re-blocked (with its reason) and each allowed
+// call still passes. The file is runnable as-is: `npx vitest run <file>`.
+
+interface ReplayCall {
+  tool: string;
+  params: Record<string, unknown>;
+  result: string;
+  reason?: string;
+}
+
+/**
+ * Seed values for stub outputs referenced by cross_ref/max_ref rules. For a rule
+ * like `amount.max_ref: lookup_customer.output.balance`, the producing tool's
+ * stub must return a `balance` that reproduces the violation on replay. We read
+ * the exact figure back out of the recorded violation details.
+ */
+function outputSeeds(events: JSONLEvent[]): Record<string, Record<string, unknown>> {
+  const seeds: Record<string, Record<string, unknown>> = {};
+  const put = (tool: string, field: string, value: unknown) => {
+    (seeds[tool] ??= {})[field] = value;
+  };
+  for (const e of events) {
+    const d = e.details ?? "";
+    if (e.reason === "max_ref") {
+      const m = d.match(/exceeds max ([\d.]+) \(from ([\w.]+)\)/);
+      if (m) {
+        const [tool, kind, field] = m[2]!.split(".");
+        if (kind === "output" && tool && field) put(tool, field, Number(m[1]));
+      }
+    } else if (e.reason === "cross_ref") {
+      const m = d.match(/expected "([^"]*)" \(from ([\w.]+)\)/);
+      if (m) {
+        const [tool, kind, field] = m[2]!.split(".");
+        if (kind === "output" && tool && field) put(tool, field, m[1]);
+      }
+    }
+  }
+  return seeds;
+}
+
+export function generateTestFile(opts: {
+  events: JSONLEvent[];
+  spec: AgentMintSpec;
+  fromPath: string;
+  testPath: string;
+  timestamp: string;
+  importSpecifier?: string;
+}): string {
+  const { events, spec, fromPath, testPath, timestamp } = opts;
+  const importFrom = opts.importSpecifier ?? "@npmsai/agentmint";
+
+  const calls: ReplayCall[] = events.map((e) => ({
+    tool: e.tool,
+    params: e.params ?? {},
+    result: e.result,
+    ...(e.result !== "allowed" && e.reason ? { reason: e.reason } : {}),
+  }));
+
+  const violations = events.filter(isViolation).length;
+  const toolNames = [...new Set(events.map((e) => e.tool))];
+  const seeds = outputSeeds(events);
+
+  const stubLines = toolNames.map((name) => {
+    const ret = seeds[name] ?? { ok: true };
+    return `    ${JSON.stringify(name)}: async () => (${JSON.stringify(ret)}),`;
+  });
+
+  const yaml = serializeSpec(spec);
+
+  return `// generated by: agentmint learn --from ${fromPath} --test ${testPath}
+// source: ${events.length} events, ${violations} violations, ${timestamp}
+// re-run the learn command to regenerate after policy changes
+import { describe, it, expect } from "vitest";
+import { harden, loadSpec } from ${JSON.stringify(importFrom)};
+
+const SPEC = ${JSON.stringify(yaml)};
+
+// The recorded call sequence, replayed in order so stateful rules (requires,
+// cross_ref/max_ref, loop breakers) reproduce exactly.
+const CALLS = ${JSON.stringify(calls, null, 2)};
+
+// Stub tools. Return values don't matter for blocked calls (enforcement runs
+// before execution); outputs referenced by cross_ref/max_ref rules are seeded
+// so those rules re-fire on replay.
+function makeTools() {
+  return {
+${stubLines.join("\n")}
+  };
+}
+
+describe("learned policy regression (from ${fromPath})", () => {
+${calls
+  .map((c, i) =>
+    c.result === "allowed"
+      ? null
+      : `  it(${JSON.stringify(
+          `re-blocks ${c.tool} [${c.reason}] (call ${i + 1})`,
+        )}, async () => {
+    const tools = harden(makeTools(), { spec: loadSpec(SPEC), silent: true });
+    let last;
+    for (let k = 0; k <= ${i}; k++) {
+      const call = CALLS[k];
+      await (tools)[call.tool](call.params);
+      const log = (tools).__log();
+      last = log[log.length - 1];
+    }
+    expect(last.tool).toBe(${JSON.stringify(c.tool)});
+    expect(last.result).toBe(${JSON.stringify(c.result)});
+    expect(last.reason).toBe(${JSON.stringify(c.reason)});
+  });`,
+  )
+  .filter(Boolean)
+  .join("\n\n")}
+
+  it("still allows every call the policy does not forbid", async () => {
+    const tools = harden(makeTools(), { spec: loadSpec(SPEC), silent: true });
+    const seen = [];
+    for (const call of CALLS) {
+      await (tools)[call.tool](call.params);
+      const log = (tools).__log();
+      seen.push(log[log.length - 1]);
+    }
+    CALLS.forEach((call, i) => {
+      if (call.result === "allowed") expect(seen[i].result).toBe("allowed");
+    });
+  });
+});
+`;
 }
 
 function serializeProps(

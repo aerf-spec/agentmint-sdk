@@ -11,7 +11,7 @@ import type {
   EventResult,
   ReceiptChainVerification,
 } from "./types.js";
-import { canonicalBytes, sha256Hex } from "./kernel/canonical.js";
+import { canonicalBytes, canonicalizeLoose, sha256Hex } from "./kernel/canonical.js";
 import {
   privateKeyFromPem,
   publicKeyToPem,
@@ -54,7 +54,12 @@ export function createDecisionContext(opts: {
     privateKey,
     publicKeyPem: publicKeyToPem(publicKey),
     keyId: keyId(publicKey),
-    specHash: opts.spec ? sha256Hex(canonicalBytes(opts.spec)) : undefined,
+    // Loose canonicalization: a spec is a policy document that may carry
+    // fractional USD cost estimates, which strict (signed-payload) canonical
+    // JSON forbids. This hash is a stable policy identity, not a signed payload.
+    specHash: opts.spec
+      ? sha256Hex(Buffer.from(canonicalizeLoose(opts.spec), "utf-8"))
+      : undefined,
     seq: 0,
     previousHash: undefined,
     receipts: [],

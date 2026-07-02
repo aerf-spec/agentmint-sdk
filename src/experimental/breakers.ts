@@ -24,6 +24,8 @@ export function checkBreakers(
       violations.push({
         type: "loop_breaker",
         tool,
+        expected: String(breakers.loop.max_identical_calls),
+        actual: String(identicalCount),
         details: `${tool} called ${identicalCount} times with identical args (limit: ${breakers.loop.max_identical_calls})`,
         action: breakers.loop.action ?? "block",
       });

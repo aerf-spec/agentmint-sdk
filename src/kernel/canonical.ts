@@ -88,19 +88,25 @@ function encodeString(value: string): string {
   return out + '"';
 }
 
-function encodeNumber(value: number, path: string): string {
+function encodeNumber(value: number, path: string, loose: boolean): string {
   if (!Number.isFinite(value)) {
     throw new TypeError(
       `Non-finite number (${value}) at JSON path ${path}: canonical JSON forbids NaN/Infinity`,
     );
   }
-  if (!Number.isInteger(value)) {
-    throw new TypeError(
-      `Non-integer finite number (${value}) at JSON path ${path}: canonical JSON ` +
-        `cannot round-trip fractional numbers — use integer micro-units or a string`,
-    );
-  }
   if (Object.is(value, -0)) return "0";
+  if (!Number.isInteger(value)) {
+    // Signed payloads (receipts) forbid fractional numbers — JS can't round-trip
+    // them losslessly. Loose mode is for hashing policy/config objects (e.g. a
+    // spec's USD cost estimates), where a stable decimal identity is all we need.
+    if (!loose) {
+      throw new TypeError(
+        `Non-integer finite number (${value}) at JSON path ${path}: canonical JSON ` +
+          `cannot round-trip fractional numbers — use integer micro-units or a string`,
+      );
+    }
+    return String(value);
+  }
   if (!Number.isSafeInteger(value)) {
     throw new TypeError(
       `Unsafe integer (${value}) at JSON path ${path}: exceeds Number.MAX_SAFE_INTEGER — use a string`,
@@ -113,16 +119,16 @@ function joinKey(path: string, key: string): string {
   return path === "$" ? `$.${key}` : `${path}.${key}`;
 }
 
-function encode(value: unknown, path: string): string {
+function encode(value: unknown, path: string, loose: boolean): string {
   if (value === null) return "null";
   if (value === true) return "true";
   if (value === false) return "false";
   if (typeof value === "string") return encodeString(value);
-  if (typeof value === "number") return encodeNumber(value, path);
+  if (typeof value === "number") return encodeNumber(value, path, loose);
   if (isRawNumberLexeme(value)) return value.value;
   if (typeof value === "bigint") return value.toString();
   if (Array.isArray(value)) {
-    return "[" + value.map((entry, i) => encode(entry, `${path}[${i}]`)).join(",") + "]";
+    return "[" + value.map((entry, i) => encode(entry, `${path}[${i}]`, loose)).join(",") + "]";
   }
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>;
@@ -141,7 +147,7 @@ function encode(value: unknown, path: string): string {
     return (
       "{" +
       keys
-        .map((k) => encodeString(k.norm) + ":" + encode(obj[k.raw], joinKey(path, k.norm)))
+        .map((k) => encodeString(k.norm) + ":" + encode(obj[k.raw], joinKey(path, k.norm), loose))
         .join(",") +
       "}"
     );
@@ -162,7 +168,17 @@ function compareCodePoints(a: string, b: string): number {
 
 /** Canonicalize a value to a JCS string per AERF SPEC.md §5.1. */
 export function canonicalize(value: unknown): string {
-  return encode(value, "$");
+  return encode(value, "$", false);
+}
+
+/**
+ * Like {@link canonicalize}, but emits finite non-integer numbers as their
+ * decimal string instead of throwing. For hashing policy/config objects (e.g. a
+ * spec's USD cost estimates) into a stable identity — NEVER for signed payloads,
+ * which must stay integer-only.
+ */
+export function canonicalizeLoose(value: unknown): string {
+  return encode(value, "$", true);
 }
 
 /** Canonicalize a value to UTF-8 bytes — the exact bytes that get signed. */
