@@ -281,6 +281,23 @@ export class Notary {
     return child;
   }
 
+  /**
+   * Export every receipt issued for a plan as a portable evidence zip. The
+   * archive verifies standalone: `unzip && node verify.mjs`.
+   */
+  async exportEvidence(planId: string, outPath: string): Promise<string> {
+    const plan = this.plans.get(planId);
+    if (!plan) throw new AerfReceiptError(`no plan ${planId} — call createPlan() first`);
+    const { EvidencePackage } = await import("./evidence.js");
+    const pkg = new EvidencePackage({
+      plan,
+      publicKeyPem: this.publicKeyPem,
+      signingKey: this.key,
+    });
+    for (const r of this.receipts(planId)) pkg.add(r);
+    return pkg.export(outPath);
+  }
+
   /** The delegation tree rooted at a plan id. */
   auditTree(planId: string): { plan_id: string; children: unknown[] } {
     return {

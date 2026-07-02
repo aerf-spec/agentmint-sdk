@@ -26,6 +26,7 @@ const commands: Record<string, () => Promise<void>> = {
   init: () => import("./init.js").then((m) => m.runInit()),
   ci: () => import("./ci.js").then((m) => m.runCi()),
   diff: () => import("./diff.js").then((m) => m.runDiff()),
+  export: () => import("./export.js").then((m) => m.runExport()),
 };
 
 function showHelp(): void {
@@ -46,6 +47,7 @@ function showHelp(): void {
   console.log(`    ${fg("init")}       ${muted("Generate a starter agentmint.spec.yaml")}`);
   console.log(`    ${fg("ci")}         ${muted("Validate receipts against spec (exit 0/1)")}`);
   console.log(`    ${fg("diff")}       ${muted("Compare behavior between two runs")}`);
+  console.log(`    ${fg("export")}     ${muted("Bundle receipts into a self-verifying evidence zip")}`);
   console.log(`    ${fg("help")}       ${muted("Show this help message")}`);
   console.log(`    ${fg("version")}    ${muted("Print version number")}`);
   console.log("");

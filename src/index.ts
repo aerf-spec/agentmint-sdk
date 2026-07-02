@@ -31,6 +31,9 @@ export * from "./chain.js";
 // notary — issue plans + chained evidence receipts with persistent state
 export * from "./notary.js";
 
+// evidence — portable evidence package export (self-verifying zip)
+export * from "./evidence.js";
+
 // verify — check a receipt or a chain of receipts against its claims
 export * from "./verify.js";
 
