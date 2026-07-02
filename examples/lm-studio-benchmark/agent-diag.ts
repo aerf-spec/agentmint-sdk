@@ -9,7 +9,8 @@
 //   4. Per-task success heuristics so savings that break tasks are visible.
 // Raw per-run records; compare3.ts aggregates. Reviewed offline, not executed.
 
-import { appendFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import OpenAI from "openai";
 import { TOOL_SCHEMAS, isSensitivePath, isRmRf } from "./tools.ts";
 import type { Task } from "./tasks/index.ts";
@@ -336,6 +337,41 @@ export async function runSingleDiag(
   };
 
   const verdict = judgeSuccess(task.name, flags, completed, hitTurnCap);
+
+  // Full transcript dump (purely additive; no effect on scoring or metrics).
+  // One JSON line per message in the conversation, full untruncated content,
+  // then a trailing _meta line carrying the judge's verdict. The transcripts
+  // dir is derived from rawLogPath so it lands beside diag-<arm>-raw.jsonl.
+  const transcriptsDir = join(dirname(ctx.rawLogPath), "transcripts");
+  mkdirSync(transcriptsDir, { recursive: true });
+  const transcriptLines = messages.map((m) => {
+    const mm = m as {
+      role: string;
+      content?: unknown;
+      tool_calls?: unknown;
+      tool_call_id?: unknown;
+      name?: unknown;
+    };
+    const line: Record<string, unknown> = { role: mm.role, content: mm.content ?? null };
+    if (mm.tool_calls) line.tool_calls = mm.tool_calls;
+    if (mm.tool_call_id) line.tool_call_id = mm.tool_call_id;
+    if (mm.role === "tool" && mm.name) line.name = mm.name;
+    return JSON.stringify(line);
+  });
+  transcriptLines.push(
+    JSON.stringify({
+      _meta: true,
+      task: task.name,
+      arm: ctx.arm,
+      run: ctx.runIndex,
+      judgeVerdict: verdict.success ? "success" : "fail",
+      judgeRationale: verdict.basis,
+    }),
+  );
+  writeFileSync(
+    join(transcriptsDir, `${task.name}-${ctx.arm}-run${ctx.runIndex}.jsonl`),
+    transcriptLines.join("\n") + "\n",
+  );
 
   return {
     task: task.name,

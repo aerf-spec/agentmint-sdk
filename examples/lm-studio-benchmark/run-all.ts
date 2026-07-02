@@ -157,14 +157,23 @@ function writeArmFile(arm: ArmSpec, runs: DiagRun[]): void {
 
 async function main(): Promise<void> {
   mkdirSync(OUT_DIR, { recursive: true });
+  const TRANSCRIPTS_DIR = join(OUT_DIR, "transcripts");
+  mkdirSync(TRANSCRIPTS_DIR, { recursive: true });
 
   // Clear stale diag artifacts before writing anything this run: arm files
   // (diag-<arm>.json) and raw logs (diag-<arm>-raw.jsonl) left over from a
-  // previous model or arm subset contaminate the next analysis if kept.
+  // previous model or arm subset contaminate the next analysis if kept. Old
+  // per-run transcripts are wiped alongside them for the same reason.
   let cleared = 0;
   for (const f of readdirSync(OUT_DIR)) {
     if (/^diag-/.test(f) && (f.endsWith(".json") || f.endsWith(".jsonl"))) {
       unlinkSync(join(OUT_DIR, f));
+      cleared++;
+    }
+  }
+  for (const f of readdirSync(TRANSCRIPTS_DIR)) {
+    if (f.endsWith(".jsonl")) {
+      unlinkSync(join(TRANSCRIPTS_DIR, f));
       cleared++;
     }
   }
