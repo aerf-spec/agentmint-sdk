@@ -25,6 +25,12 @@ export * from "./receipt-aerf.js";
 // plan — signed policy envelopes receipts bind to
 export * from "./plan.js";
 
+// chain — per-plan receipt chain verification (signature / hash-link / seq)
+export * from "./chain.js";
+
+// notary — issue plans + chained evidence receipts with persistent state
+export * from "./notary.js";
+
 // verify — check a receipt or a chain of receipts against its claims
 export * from "./verify.js";
 
