@@ -1,0 +1,50 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_rapwt0u0",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:45:05.173Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "git_push",
+      "result": "blocked",
+      "reason": "blocked_value",
+      "details": "branch has blocked value \"main\""
+    },
+    {
+      "tool": "git_push",
+      "result": "blocked",
+      "reason": "velocity_breaker",
+      "details": "5 calls in last 10s (limit: 5)"
+    }
+  ],
+  "summary": {
+    "calls": 6,
+    "executed": 4,
+    "blocked": 2,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.11,
+    "budget": 1,
+    "elapsedSeconds": 78.8
+  },
+  "evidenceRoot": "30afe7b990a8e2acddd47c9e8e1cb9d4125b00074aecbae12142402b0239e20b"
+}

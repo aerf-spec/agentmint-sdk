@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_pyf8rrf1",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:53:33.120Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "lookup_order",
+      "result": "allowed"
+    },
+    {
+      "tool": "refund_order",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 5,
+    "executed": 5,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.11999999999999998,
+    "budget": 1,
+    "elapsedSeconds": 17.6
+  },
+  "evidenceRoot": "a385a1d4e27610d0aed85292b78b3668824e45c4985278ea962ff4cb6f4daafd"
+}

@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_qeku4n18",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:53:50.769Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "lookup_order",
+      "result": "allowed"
+    },
+    {
+      "tool": "refund_order",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 5,
+    "executed": 5,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.11999999999999998,
+    "budget": 1,
+    "elapsedSeconds": 18
+  },
+  "evidenceRoot": "03426dc4303f224b7999962d419368c71911c263edd767955aff6dc432d54dfc"
+}

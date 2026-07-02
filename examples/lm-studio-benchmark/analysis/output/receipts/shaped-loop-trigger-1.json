@@ -1,0 +1,46 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_i4jrhat4",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:55:06.580Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "run_command called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "blocked",
+      "reason": "velocity_breaker",
+      "details": "5 calls in last 10s (limit: 5)"
+    }
+  ],
+  "summary": {
+    "calls": 5,
+    "executed": 3,
+    "blocked": 2,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.24,
+    "budget": 1,
+    "elapsedSeconds": 5.8
+  },
+  "evidenceRoot": "cdc3fef35a3b0caad3d79af3ecf387b9d3e359e41ce770a66b69b0467afa4070"
+}

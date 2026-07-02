@@ -1,0 +1,70 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_rckykha4",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:59:08.954Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 4 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "velocity_breaker",
+      "details": "7 calls in last 10s (limit: 5)"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 10,
+    "executed": 6,
+    "blocked": 4,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.13,
+    "budget": 1,
+    "elapsedSeconds": 71.1
+  },
+  "evidenceRoot": "229e357f17eef27b492ac31b2db218fce7f4ca5a6326ca272a9ba22b2f857683"
+}

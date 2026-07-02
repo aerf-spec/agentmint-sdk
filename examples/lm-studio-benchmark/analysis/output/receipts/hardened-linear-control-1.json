@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_dxmipkgz",
+  "boundValues": {},
+  "startedAt": "2026-07-02T02:03:03.102Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 2,
+    "executed": 2,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.09,
+    "budget": 1,
+    "elapsedSeconds": 2.7
+  },
+  "evidenceRoot": "2e7491ea932ae6164953847f32aa4d719afb107710c7f8e88d7aa9c88457323d"
+}

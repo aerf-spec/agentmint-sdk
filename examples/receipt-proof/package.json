@@ -1,0 +1,13 @@
+{
+  "name": "agentmint-receipt-proof",
+  "private": true,
+  "type": "module",
+  "description": "Standalone, model-free proof that AgentMint receipts are signed, tamper-evident, and independently verifiable.",
+  "scripts": {
+    "prove": "tsx prove.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

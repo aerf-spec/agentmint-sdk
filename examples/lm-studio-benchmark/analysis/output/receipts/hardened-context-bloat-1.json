@@ -1,0 +1,98 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_303pfvb5",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:57:05.310Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 4 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 5 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 4 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 6 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 5 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 15,
+    "executed": 7,
+    "blocked": 8,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.07,
+    "budget": 1,
+    "elapsedSeconds": 123.6
+  },
+  "evidenceRoot": "e1df24c26d196f6f8cb3276b533057c108dd63bd62aba186a8ec5b38e58d1430"
+}

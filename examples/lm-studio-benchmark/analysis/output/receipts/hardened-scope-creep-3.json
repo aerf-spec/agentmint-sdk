@@ -1,0 +1,68 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_0ph063rh",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:52:32.787Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "velocity_breaker",
+      "details": "5 calls in last 10s (limit: 5)"
+    },
+    {
+      "tool": "search_web",
+      "result": "blocked",
+      "reason": "velocity_breaker",
+      "details": "6 calls in last 10s (limit: 5)"
+    },
+    {
+      "tool": "lookup_order",
+      "result": "allowed"
+    },
+    {
+      "tool": "refund_order",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 10,
+    "executed": 7,
+    "blocked": 3,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.21000000000000002,
+    "budget": 1,
+    "elapsedSeconds": 60.3
+  },
+  "evidenceRoot": "cddd2b40ca3a78b5d5faa07626f26f308fa9b1f7ffeabc796a5148d456883c93"
+}

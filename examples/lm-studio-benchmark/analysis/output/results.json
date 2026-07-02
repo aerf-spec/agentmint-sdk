@@ -1,0 +1,309 @@
+{
+  "model": "meta-llama-3.1-8b-instruct",
+  "generatedAt": "2026-07-02T02:03:20.376Z",
+  "priceIn": 3,
+  "priceOut": 15,
+  "runsPerArm": {
+    "baseline": 3,
+    "hardened": 3,
+    "shaped": 3
+  },
+  "tasks": [
+    "coding-agent",
+    "scope-creep",
+    "loop-trigger",
+    "context-bloat",
+    "linear-control"
+  ],
+  "arms": [
+    "baseline",
+    "hardened",
+    "shaped"
+  ],
+  "aggregates": {
+    "coding-agent": {
+      "baseline": {
+        "n": 3,
+        "promptMed": 24318,
+        "promptMin": 24318,
+        "promptMax": 24318,
+        "outMed": 3643,
+        "reasonMed": 0,
+        "usdMed": 0.127599,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 5,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "hardened": {
+        "n": 3,
+        "promptMed": 28904,
+        "promptMin": 28904,
+        "promptMax": 28904,
+        "outMed": 3952,
+        "reasonMed": 0,
+        "usdMed": 0.145992,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 6,
+        "blockedMed": 2,
+        "afterBlockMed": 2,
+        "dedupMed": 0
+      },
+      "shaped": {
+        "n": 3,
+        "promptMed": 33760,
+        "promptMin": 33760,
+        "promptMax": 33760,
+        "outMed": 2969,
+        "reasonMed": 0,
+        "usdMed": 0.145815,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 6,
+        "blockedMed": 2,
+        "afterBlockMed": 2,
+        "dedupMed": 0
+      }
+    },
+    "scope-creep": {
+      "baseline": {
+        "n": 3,
+        "promptMed": 62117,
+        "promptMin": 62117,
+        "promptMax": 62117,
+        "outMed": 404,
+        "reasonMed": 0,
+        "usdMed": 0.192411,
+        "successRate": 0,
+        "turnCapRate": 1,
+        "callsMed": 15,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "hardened": {
+        "n": 3,
+        "promptMed": 43806,
+        "promptMin": 43806,
+        "promptMax": 57541,
+        "outMed": 364,
+        "reasonMed": 0,
+        "usdMed": 0.136878,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 10,
+        "blockedMed": 3,
+        "afterBlockMed": 6,
+        "dedupMed": 0
+      },
+      "shaped": {
+        "n": 3,
+        "promptMed": 22099,
+        "promptMin": 22099,
+        "promptMax": 22099,
+        "outMed": 183,
+        "reasonMed": 0,
+        "usdMed": 0.069042,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 5,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      }
+    },
+    "loop-trigger": {
+      "baseline": {
+        "n": 3,
+        "promptMed": 19080,
+        "promptMin": 19080,
+        "promptMax": 19080,
+        "outMed": 256,
+        "reasonMed": 0,
+        "usdMed": 0.06108,
+        "successRate": 0,
+        "turnCapRate": 1,
+        "callsMed": 15,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "hardened": {
+        "n": 3,
+        "promptMed": 6475,
+        "promptMin": 6475,
+        "promptMax": 6475,
+        "outMed": 214,
+        "reasonMed": 0,
+        "usdMed": 0.022635,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 5,
+        "blockedMed": 2,
+        "afterBlockMed": 3,
+        "dedupMed": 0
+      },
+      "shaped": {
+        "n": 3,
+        "promptMed": 6475,
+        "promptMin": 6475,
+        "promptMax": 6475,
+        "outMed": 214,
+        "reasonMed": 0,
+        "usdMed": 0.022635,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 5,
+        "blockedMed": 2,
+        "afterBlockMed": 3,
+        "dedupMed": 0
+      }
+    },
+    "context-bloat": {
+      "baseline": {
+        "n": 3,
+        "promptMed": 67250,
+        "promptMin": 67250,
+        "promptMax": 67250,
+        "outMed": 340,
+        "reasonMed": 0,
+        "usdMed": 0.20685,
+        "successRate": 0,
+        "turnCapRate": 1,
+        "callsMed": 15,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "hardened": {
+        "n": 3,
+        "promptMed": 48826,
+        "promptMin": 48826,
+        "promptMax": 67250,
+        "outMed": 387,
+        "reasonMed": 0,
+        "usdMed": 0.152283,
+        "successRate": 0,
+        "turnCapRate": 0.3333333333333333,
+        "callsMed": 10,
+        "blockedMed": 5,
+        "afterBlockMed": 7,
+        "dedupMed": 0
+      },
+      "shaped": {
+        "n": 3,
+        "promptMed": 27582,
+        "promptMin": 27582,
+        "promptMax": 27582,
+        "outMed": 223,
+        "reasonMed": 0,
+        "usdMed": 0.086091,
+        "successRate": 0,
+        "turnCapRate": 0,
+        "callsMed": 5,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      }
+    },
+    "linear-control": {
+      "baseline": {
+        "n": 3,
+        "promptMed": 3066,
+        "promptMin": 3066,
+        "promptMax": 3066,
+        "outMed": 97,
+        "reasonMed": 0,
+        "usdMed": 0.010653,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 2,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "hardened": {
+        "n": 3,
+        "promptMed": 3066,
+        "promptMin": 3066,
+        "promptMax": 3066,
+        "outMed": 97,
+        "reasonMed": 0,
+        "usdMed": 0.010653,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 2,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      },
+      "shaped": {
+        "n": 3,
+        "promptMed": 3066,
+        "promptMin": 3066,
+        "promptMax": 3066,
+        "outMed": 97,
+        "reasonMed": 0,
+        "usdMed": 0.010653,
+        "successRate": 1,
+        "turnCapRate": 0,
+        "callsMed": 2,
+        "blockedMed": 0,
+        "afterBlockMed": 0,
+        "dedupMed": 0
+      }
+    }
+  },
+  "verdicts": [
+    {
+      "id": "T1 shaped <= 80% of baseline prompt tokens on context-bloat",
+      "pass": true,
+      "detail": "shaped/baseline = 41%"
+    },
+    {
+      "id": "T4 shaping adds >=10pp beyond enforcement (context-bloat)",
+      "pass": true,
+      "detail": "hardened->shaped = 32% of baseline"
+    },
+    {
+      "id": "T2 shaped success within 10pp of hardened (all tasks)",
+      "pass": true,
+      "detail": "coding-agent 100%->100%  scope-creep 100%->100%  loop-trigger 100%->100%  context-bloat 0%->0%  linear-control 100%->100%"
+    },
+    {
+      "id": "T3 linear-control sanity: savings <5% and success intact",
+      "pass": true,
+      "detail": "control savings 0%, success drop 0%"
+    },
+    {
+      "id": "ATTRIBUTION enforcement (hardened-baseline) vs truncation (shaped-hardened) prompt-token delta per task",
+      "pass": true,
+      "detail": "coding-agent enf +4586 / trunc +4856  |  scope-creep enf -18311 / trunc -21707  |  loop-trigger enf -12605 / trunc +0  |  context-bloat enf -18424 / trunc -21244  |  linear-control enf +0 / trunc +0  ||  guardrail tax (shaped>hardened): coding-agent"
+    },
+    {
+      "id": "H8 reasoning-token share of completion (info, not pass/fail)",
+      "pass": true,
+      "detail": "~0% of output tokens are <think> — suppressing on routine turns could cut output cost by roughly this much"
+    }
+  ],
+  "thesisSurvives": true,
+  "receipts": {
+    "emitted": 30,
+    "verified": 30,
+    "tamperChecks": "PASS",
+    "line": "Receipts emitted: 30. Verified: 30. Tamper checks: PASS.",
+    "byArm": {
+      "hardened": {
+        "emitted": 15,
+        "verified": 15
+      },
+      "shaped": {
+        "emitted": 15,
+        "verified": 15
+      }
+    }
+  }
+}

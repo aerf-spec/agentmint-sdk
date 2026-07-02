@@ -3,11 +3,13 @@
   "private": true,
   "type": "module",
   "description": "Run a local Qwen (or any OpenAI-compatible) model through AgentMint and diff it against an unguarded baseline.",
+  "//diag": "Multi-model sweep: run `LM_STUDIO_MODEL=<id> npm run diag` once per model (e.g. qwen2.5-7b-instruct, llama-3.1-8b-instruct, qwen2.5-32b-instruct). Each writes analysis/output/RESULTS.md + results.json; diff results.json across models to see whether the thesis generalizes.",
   "scripts": {
     "baseline": "npx tsx run-baseline.ts",
     "bench": "npx tsx run.ts",
     "compare": "npx tsx analysis/compare.ts",
-    "full": "npm run baseline && npm run bench && npm run compare"
+    "full": "npm run baseline && npm run bench && npm run compare",
+    "diag": "tsx run-all.ts && tsx compare3.ts --md"
   },
   "dependencies": {
     "openai": "^6.45.0"

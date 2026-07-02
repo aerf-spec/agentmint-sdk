@@ -1,0 +1,30 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_jedqi7h2",
+  "boundValues": {},
+  "startedAt": "2026-07-02T02:03:16.998Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 2,
+    "executed": 2,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.09,
+    "budget": 1,
+    "elapsedSeconds": 2.6
+  },
+  "evidenceRoot": "ace6ff020a66ebe5401416a945e4cf26f7c256e02d9638bf878901b71f759f16"
+}

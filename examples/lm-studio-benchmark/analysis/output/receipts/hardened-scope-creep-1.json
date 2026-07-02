@@ -1,0 +1,82 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_z7suze3g",
+  "boundValues": {},
+  "startedAt": "2026-07-02T01:49:11.812Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 4 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "run_command",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "run_command called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "read_file",
+      "result": "blocked",
+      "reason": "loop_breaker",
+      "details": "read_file called 3 times with identical args (limit: 3)"
+    },
+    {
+      "tool": "search_web",
+      "result": "allowed"
+    },
+    {
+      "tool": "lookup_order",
+      "result": "allowed"
+    },
+    {
+      "tool": "refund_order",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 13,
+    "executed": 9,
+    "blocked": 4,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.25,
+    "budget": 1,
+    "elapsedSeconds": 123
+  },
+  "evidenceRoot": "d81d9bde767c5ffb7e733039c356b5fe9cc99486c65b58a91e43a21290c542bc"
+}

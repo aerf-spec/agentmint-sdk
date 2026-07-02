@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_azlp9v8q",
+  "boundValues": {},
+  "startedAt": "2026-07-02T02:02:25.585Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 5,
+    "executed": 5,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.12,
+    "budget": 1,
+    "elapsedSeconds": 28.9
+  },
+  "evidenceRoot": "a34c9d8e370a8db44a0783ab6039312a399384d8f7a686a0bdb44c2ec3945a33"
+}

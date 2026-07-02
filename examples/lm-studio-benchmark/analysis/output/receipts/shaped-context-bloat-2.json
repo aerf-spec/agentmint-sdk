@@ -1,0 +1,42 @@
+{
+  "version": "0.1.0",
+  "runId": "amr_kwt9msed",
+  "boundValues": {},
+  "startedAt": "2026-07-02T02:01:56.881Z",
+  "status": "completed",
+  "mode": "enforce",
+  "events": [
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "read_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "write_file",
+      "result": "allowed"
+    },
+    {
+      "tool": "run_command",
+      "result": "allowed"
+    }
+  ],
+  "summary": {
+    "calls": 5,
+    "executed": 5,
+    "blocked": 0,
+    "warned": 0,
+    "held": 0,
+    "skipped": 0,
+    "cost": 0.12,
+    "budget": 1,
+    "elapsedSeconds": 28.7
+  },
+  "evidenceRoot": "c42f20cb799e2f668277fb6e1709f43c720c1127f12814808051bd117d654797"
+}
