@@ -166,19 +166,25 @@ function computeVerdicts(
     }
   }
 
-  // H1 steering: compare hardened vs hardened-steer on turnsAfterFirstBlock.
-  if (has("hardened") && has("hardened-steer")) {
-    const base: number[] = [];
-    const steer: number[] = [];
+  // ATTRIBUTION (info): split the two effects on prompt tokens, per task.
+  //   enforcement effect = hardened - baseline  (guardrail/spec overhead)
+  //   truncation effect  = shaped - hardened     (dedup/truncation shaping)
+  // A task where shaped > hardened is a guardrail tax: shaping cost tokens
+  // instead of saving them.
+  if (has("baseline") && has("hardened") && has("shaped")) {
+    const sgn = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+    const parts: string[] = [];
+    const taxed: string[] = [];
     for (const task of tasks) {
-      base.push(A[task]!.hardened!.afterBlockMed);
-      steer.push(A[task]!["hardened-steer"]!.afterBlockMed);
+      const enf = A[task]!.hardened!.promptMed - A[task]!.baseline!.promptMed;
+      const trunc = A[task]!.shaped!.promptMed - A[task]!.hardened!.promptMed;
+      parts.push(`${task} enf ${sgn(enf)} / trunc ${sgn(trunc)}`);
+      if (A[task]!.shaped!.promptMed > A[task]!.hardened!.promptMed) taxed.push(task);
     }
-    const b = median(base), s = median(steer);
     verdicts.push({
-      id: "H1 steering block messages reduce post-block turns",
-      pass: s < b,
-      detail: `median turnsAfterFirstBlock ${b} -> ${s}`,
+      id: "ATTRIBUTION enforcement (hardened-baseline) vs truncation (shaped-hardened) prompt-token delta per task",
+      pass: true,
+      detail: `${parts.join("  |  ")}  ||  guardrail tax (shaped>hardened): ${taxed.length ? taxed.join(", ") : "none"}`,
     });
   }
 
@@ -277,6 +283,23 @@ async function main(): Promise<void> {
   const keys = Object.keys(files);
   if (!keys.length) {
     console.log("  No diag-*.json in analysis/output/. Run run-all.ts first.");
+    return;
+  }
+  // Refuse to mix models: every loaded diag file must report the same model,
+  // otherwise the table would silently average across families. Name the
+  // mismatched files and bail instead of rendering.
+  const byModel = new Map<string, string[]>();
+  for (const k of keys) {
+    const m = files[k]!.model;
+    (byModel.get(m) ?? byModel.set(m, []).get(m)!).push(`diag-${k}.json`);
+  }
+  if (byModel.size > 1) {
+    console.error("\n  x Refusing to render: analysis/output/ mixes multiple models.");
+    for (const [m, fs] of byModel) {
+      console.error(`      ${m}: ${fs.join(", ")}`);
+    }
+    console.error("    Clear analysis/output/ and re-run a single model.\n");
+    process.exitCode = 1;
     return;
   }
   const model = files[keys[0]!]!.model;

@@ -19,7 +19,7 @@
 // data for finished tasks. Steer arms run only on blocking tasks. Also writes
 // raw per-run records and, for enforced arms, one AERF receipt per run.
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -88,8 +88,12 @@ const ALL_ARMS: ArmSpec[] = [
   { key: "shaped-steer", base: "shaped", steering: true },
 ];
 
+// Default arms are recentered on baseline/hardened/shaped — the steer variants
+// are excluded from the default set (their code paths remain and are reachable
+// only when explicitly named via ONLY=).
+const DEFAULT_ARMS: ArmSpec[] = ALL_ARMS.filter((a) => !a.steering);
 const only = (process.env.ONLY ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-const ARMS = only.length ? ALL_ARMS.filter((a) => only.includes(a.key)) : ALL_ARMS;
+const ARMS = only.length ? ALL_ARMS.filter((a) => only.includes(a.key)) : DEFAULT_ARMS;
 
 // A DiagToolSet plus the receipt/evidence closures Prompt 3 needs. record() and
 // verify() are present only for enforced arms (hardened/shaped); baseline omits
@@ -153,6 +157,19 @@ function writeArmFile(arm: ArmSpec, runs: DiagRun[]): void {
 
 async function main(): Promise<void> {
   mkdirSync(OUT_DIR, { recursive: true });
+
+  // Clear stale diag artifacts before writing anything this run: arm files
+  // (diag-<arm>.json) and raw logs (diag-<arm>-raw.jsonl) left over from a
+  // previous model or arm subset contaminate the next analysis if kept.
+  let cleared = 0;
+  for (const f of readdirSync(OUT_DIR)) {
+    if (/^diag-/.test(f) && (f.endsWith(".json") || f.endsWith(".jsonl"))) {
+      unlinkSync(join(OUT_DIR, f));
+      cleared++;
+    }
+  }
+  console.log(`  cleared ${cleared} stale files`);
+
   const client = makeClient();
 
   console.log(`\n  AgentMint diagnostic — model: ${MODEL}`);
