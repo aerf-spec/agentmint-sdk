@@ -196,6 +196,32 @@ describe("enforce", () => {
     expect(isBlock(result)).toBe(true);
   });
 
+  it("post_kill_attempts_are_logged", async () => {
+    // Kill by budget, then call two more tools. Both attempts must be recorded
+    // as "attempted_after_kill" — a killed run no longer executes, but a silent
+    // drop is exactly the audit gap we must close.
+    const config: AgentMintConfig = { budget: 1, costEstimator: () => 1 };
+    const state = createRunState(config);
+
+    await enforce("read", {}, tool, config, state); // allowed, totalCost -> 1
+    await enforce("read", {}, tool, config, state); // killed (totalCost >= budget)
+    expect(state.status).toBe("killed");
+    expect(state.killReason).toBe("budget_exceeded");
+
+    const r1 = await enforce("delete", {}, tool, config, state);
+    const r2 = await enforce("exfiltrate", {}, tool, config, state);
+    expect(isBlock(r1)).toBe(true);
+    expect(isBlock(r2)).toBe(true);
+
+    const postKill = state.events.filter((e) => e.result === "attempted_after_kill");
+    expect(postKill.length).toBe(2);
+    expect(postKill.map((e) => e.tool)).toEqual(["delete", "exfiltrate"]);
+    for (const e of postKill) {
+      expect(e.reason).toBe("run_killed");
+      expect(e.details).toBe("budget_exceeded");
+    }
+  });
+
   it("pipeline_order", async () => {
     const config: AgentMintConfig = { allow: ["delete_*"], deny: ["delete_*"] };
     const state = createRunState(config);

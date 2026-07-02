@@ -1,13 +1,22 @@
 import { enforce } from "./enforce.js";
 import { formatReceipt } from "../receipt.js";
 import { createRunState } from "../log.js";
+import { verifyDecisionReceipts } from "../receipt-decision.js";
 import { validateGuardrails } from "../kernel/budget.js";
 import { wrapAll as rawWrapAll } from "./adapters/raw.js";
 import { wrapAll as openaiWrapAll } from "./adapters/openai.js";
 import { wrapAll as anthropicWrapAll } from "./adapters/anthropic.js";
 import { wrapAll as langchainWrapAll } from "./adapters/langchain.js";
 import { wrapAll as vercelWrapAll } from "./adapters/vercel.js";
-import type { AgentMintConfig, RunState, Event, EnforcerFn, MerkleProof } from "../types.js";
+import type {
+  AgentMintConfig,
+  RunState,
+  Event,
+  EnforcerFn,
+  MerkleProof,
+  DecisionReceipt,
+  ReceiptChainVerification,
+} from "../types.js";
 
 /** Built evidence chain handle, returned by __evidence() when evidenceChain is enabled */
 export interface EvidenceChain {
@@ -24,6 +33,8 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
   __receipt(): string;
   __log(): Event[];
   __evidence(): EvidenceChain | null;
+  __receipts(): DecisionReceipt[];
+  __verifyReceipts(): ReceiptChainVerification;
 } {
   // Fail loudly at setup if budget guardrails are misconfigured, rather than
   // surfacing a confusing decision mid-run.
@@ -101,6 +112,20 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
       },
       enumerable: false,
     },
+    __receipts: {
+      value: (): DecisionReceipt[] => state.decisionContext?.receipts ?? [],
+      enumerable: false,
+    },
+    __verifyReceipts: {
+      value: (): ReceiptChainVerification => {
+        const ctx = state.decisionContext;
+        if (!ctx) {
+          return { ok: false, reason: "signing not enabled (config.signing missing)" };
+        }
+        return verifyDecisionReceipts(ctx.receipts, ctx.publicKeyPem);
+      },
+      enumerable: false,
+    },
   });
 
   return wrapped as T & {
@@ -108,5 +133,7 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
     __receipt(): string;
     __log(): Event[];
     __evidence(): EvidenceChain | null;
+    __receipts(): DecisionReceipt[];
+    __verifyReceipts(): ReceiptChainVerification;
   };
 }
