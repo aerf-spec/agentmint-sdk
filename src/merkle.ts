@@ -26,10 +26,15 @@ export function hashInternal(leftHex: string, rightHex: string): string {
 }
 
 /**
- * Recompute the root from a leaf hash and an RFC 6962 audit path (hex in,
- * hex out), mirroring the Go verifier's walkAuditPath: the sibling sits left
- * of the current node when the current index is odd; the last node at an
- * odd-sized level is promoted without combining.
+ * Recompute the root from a leaf hash and an RFC 6962 inclusion proof,
+ * following RFC 9162 §2.1.3.2 exactly. Returns "" for a structurally invalid
+ * proof (wrong path length for the index/size), which can never equal a root.
+ *
+ * Agrees with the Go reference verifier's walkAuditPath on every conformance
+ * vector; where they differ is Go's right-edge promote branch, which consumes
+ * a path entry without hashing it and rejects valid standard proofs for the
+ * last leaf of a non-power-of-two tree. Standard semantics win here (the
+ * reference proof BUILDER in the aerf repo emits standard RFC 6962 paths).
  */
 export function walkAuditPath(
   leafHashHex: string,
@@ -37,20 +42,27 @@ export function walkAuditPath(
   leafIndex: number,
   treeSize: number,
 ): string {
-  let node = leafHashHex;
-  let idx = leafIndex;
-  let last = treeSize - 1;
-  for (const sibling of pathHex) {
-    if (idx === last && idx % 2 === 0) {
-      idx = Math.floor(idx / 2);
-      last = Math.floor(last / 2);
-      continue;
+  if (leafIndex < 0 || treeSize < 1 || leafIndex >= treeSize) return "";
+  let fn = leafIndex;
+  let sn = treeSize - 1;
+  let r = leafHashHex;
+  for (const p of pathHex) {
+    if (sn === 0) return "";
+    if (fn % 2 === 1 || fn === sn) {
+      r = hashInternal(p, r);
+      if (fn % 2 === 0) {
+        while (fn % 2 === 0 && fn !== 0) {
+          fn = Math.floor(fn / 2);
+          sn = Math.floor(sn / 2);
+        }
+      }
+    } else {
+      r = hashInternal(r, p);
     }
-    node = idx % 2 === 1 ? hashInternal(sibling, node) : hashInternal(node, sibling);
-    idx = Math.floor(idx / 2);
-    last = Math.floor(last / 2);
+    fn = Math.floor(fn / 2);
+    sn = Math.floor(sn / 2);
   }
-  return node;
+  return sn === 0 ? r : "";
 }
 
 interface RawNumberLexeme {
@@ -456,84 +468,102 @@ export function canonicalizeJsonToBytes(input: string): Uint8Array {
   return Buffer.from(canonicalizeJson(input), "utf8");
 }
 
+// ── RFC 6962 Merkle tree ────────────────────────────────────────────
+//
+// Correct RFC 6962 semantics throughout (matching the AERF reference
+// primitives in the aerf repo's tools/aerf_primitives.py and the Go
+// verifier's leaf/interior hashes):
+//
+//  - leaf hash     = SHA-256(0x00 || data)
+//  - interior hash = SHA-256(0x01 || left || right)
+//  - split rule: the left subtree holds the largest power of two < n
+//    leaves; NO padding leaves are ever inserted
+//  - inclusion proofs are standard RFC 6962 audit paths, verifiable by
+//    walkAuditPath and by any RFC 9162 checker
+//
+// Domain separation makes second-preimage splicing impossible: an interior
+// node's bytes hash differently as a leaf (0x00 prefix) than as an interior
+// node (0x01 prefix), so a subtree cannot be presented as a single leaf.
+
+/** MTH of a slice of leaf HASHES (hex), per RFC 6962 §2.1. */
+function merkleRoot(leafHashes: readonly string[]): string {
+  if (leafHashes.length === 0) return sha256("");
+  if (leafHashes.length === 1) return leafHashes[0]!;
+  const mid = largestPowerOfTwoBelow(leafHashes.length);
+  return hashInternal(merkleRoot(leafHashes.slice(0, mid)), merkleRoot(leafHashes.slice(mid)));
+}
+
+/** Largest power of two strictly less than n (n >= 2). */
+function largestPowerOfTwoBelow(n: number): number {
+  let k = 1;
+  while (k * 2 < n) k *= 2;
+  return k;
+}
+
+/** RFC 6962 audit path (sibling hashes leaf→root) with positions. */
+function auditPathWithPositions(
+  leafHashes: readonly string[],
+  index: number,
+): Array<{ hash: string; position: "left" | "right" }> {
+  if (leafHashes.length <= 1) return [];
+  const mid = largestPowerOfTwoBelow(leafHashes.length);
+  if (index < mid) {
+    return [
+      ...auditPathWithPositions(leafHashes.slice(0, mid), index),
+      { hash: merkleRoot(leafHashes.slice(mid)), position: "right" },
+    ];
+  }
+  return [
+    ...auditPathWithPositions(leafHashes.slice(mid), index - mid),
+    { hash: merkleRoot(leafHashes.slice(0, mid)), position: "left" },
+  ];
+}
+
 export class MerkleTree {
   private leaves: string[] = [];
-  private layers: string[][] = [];
 
-  addLeaf(data: string): number {
-    this.leaves.push(sha256(data));
+  /** Append a leaf; stores SHA-256(0x00 || data). Returns the leaf index. */
+  addLeaf(data: string | Uint8Array): number {
+    this.leaves.push(logLeafHash(data));
     return this.leaves.length - 1;
   }
 
-  build(): string {
-    if (this.leaves.length === 0) {
-      return sha256("");
-    }
-
-    let level = [...this.leaves];
-    const empty = sha256("");
-
-    while (level.length > 1 && (level.length & (level.length - 1)) !== 0) {
-      level.push(empty);
-    }
-
-    if (level.length === 1) {
-      level.push(empty);
-    }
-
-    this.layers = [level];
-
-    while (level.length > 1) {
-      const next: string[] = [];
-
-      for (let i = 0; i < level.length; i += 2) {
-        next.push(sha256(level[i]! + level[i + 1]!));
-      }
-
-      this.layers.push(next);
-      level = next;
-    }
-
-    return level[0]!;
+  /** Number of leaves appended so far. */
+  get leafCount(): number {
+    return this.leaves.length;
   }
 
+  /** Compute the RFC 6962 root. Empty tree hashes to SHA-256(""). */
+  build(): string {
+    return merkleRoot(this.leaves);
+  }
+
+  /** Standard RFC 6962 inclusion proof for the leaf at `index`. */
   getProof(leafIndex: number): MerkleProof {
-    if (this.layers.length === 0) {
-      throw new Error("Call build() before getProof()");
+    if (leafIndex < 0 || leafIndex >= this.leaves.length) {
+      throw new RangeError(`leaf index ${leafIndex} out of range [0, ${this.leaves.length})`);
     }
+    return {
+      leaf: this.leaves[leafIndex]!,
+      index: leafIndex,
+      siblings: auditPathWithPositions(this.leaves, leafIndex),
+      root: this.build(),
+    };
+  }
 
-    const siblings: Array<{ hash: string; position: "left" | "right" }> = [];
-    let idx = leafIndex;
-
-    for (let level = 0; level < this.layers.length - 1; level += 1) {
-      const isRight = idx % 2 === 1;
-      const siblingIdx = isRight ? idx - 1 : idx + 1;
-      const layer = this.layers[level]!;
-
-      if (siblingIdx < layer.length) {
-        siblings.push({
-          hash: layer[siblingIdx]!,
-          position: isRight ? "left" : "right",
-        });
-      }
-
-      idx = Math.floor(idx / 2);
-    }
-
-    const root = this.layers[this.layers.length - 1]![0]!;
-    return { leaf: this.leaves[leafIndex]!, index: leafIndex, siblings, root };
+  /** Bare RFC 6962 audit path (hashes only), e.g. for a log_inclusion_proof. */
+  auditPath(leafIndex: number): string[] {
+    return this.getProof(leafIndex).siblings.map((s) => s.hash);
   }
 
   static verify(proof: MerkleProof): boolean {
     let hash = proof.leaf;
-
     for (const sibling of proof.siblings) {
       hash =
         sibling.position === "left"
-          ? sha256(sibling.hash + hash)
-          : sha256(hash + sibling.hash);
+          ? hashInternal(sibling.hash, hash)
+          : hashInternal(hash, sibling.hash);
     }
-
     return hash === proof.root;
   }
 }

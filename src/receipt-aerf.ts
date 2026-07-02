@@ -26,7 +26,7 @@ import {
   signedPayloadBytes,
   privateKeyFromPem,
 } from "./kernel/sign.js";
-import { logLeafHash, walkAuditPath } from "./merkle.js";
+import { logLeafHash, walkAuditPath, MerkleTree } from "./merkle.js";
 
 // ── Constants (mirror notary.py) ────────────────────────────────────
 
@@ -606,6 +606,38 @@ function numberField(v: unknown): number | undefined {
     if (Number.isSafeInteger(n)) return n;
   }
   return undefined;
+}
+
+/**
+ * Commit a set of receipts to an RFC 6962 log and attach a
+ * log_inclusion_proof to one of them (SPEC §15). The leaf set is the §8.4
+ * stripped canonical payload of each receipt; the STH is signed by the log's
+ * key. Post-issuance: the receipt's issuer signature and chain hash are
+ * unchanged.
+ */
+export function attachLogInclusionProof<T extends Record<string, unknown>>(
+  receipts: readonly Record<string, unknown>[],
+  leafIndex: number,
+  opts: { logId: string; logPrivateKey: string | KeyObject; sthTimestamp?: string },
+): T & { log_inclusion_proof: LogInclusionProof } {
+  const tree = new MerkleTree();
+  for (const r of receipts) tree.addLeaf(signedPayloadBytes(r));
+  const sth = {
+    tree_size: tree.leafCount,
+    root_hash: tree.build(),
+    timestamp: opts.sthTimestamp ?? isoNowUtc(),
+  };
+  const sthSignature = edSign(null, canonicalBytes(sth), asPrivateKey(opts.logPrivateKey)).toString("hex");
+  const proof: LogInclusionProof = {
+    log_id: opts.logId,
+    leaf_hash: logLeafHash(signedPayloadBytes(receipts[leafIndex]!)),
+    leaf_index: leafIndex,
+    tree_size: tree.leafCount,
+    audit_path: tree.auditPath(leafIndex),
+    sth,
+    sth_signature: sthSignature,
+  };
+  return { ...(receipts[leafIndex] as T), log_inclusion_proof: proof };
 }
 
 // ── Timestamp helper ────────────────────────────────────────────────

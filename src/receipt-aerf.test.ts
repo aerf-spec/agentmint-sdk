@@ -7,6 +7,7 @@ import {
   verifyAerfReceipt,
   aerfChainHash,
   evidenceHashSha512,
+  attachLogInclusionProof,
   isoNowUtc,
   AerfReceiptError,
   AIUC_CONTROLS,
@@ -191,6 +192,69 @@ describe("aerfChainHash (SPEC §8.4)", () => {
     expect(second.previous_receipt_hash).toBe(
       sha256Hex(canonicalBytes({ ...(genesis as unknown as Record<string, unknown>), signature: undefined })),
     );
+  });
+});
+
+describe("log inclusion round-trip (SPEC §15)", () => {
+  it("attaches a proof that verifies, and rejects a tampered path (vectors 09/10 semantics)", () => {
+    const issuer = newKeys();
+    const log = newKeys();
+    const receipts = Array.from({ length: 5 }, (_, i) =>
+      buildAerfReceipt(
+        { ...baseInit, action: `submit:claim:CLM-${i}` },
+        { issuerPrivateKey: issuer.privateKeyPem },
+      ),
+    ) as unknown as Record<string, unknown>[];
+
+    for (let i = 0; i < receipts.length; i++) {
+      const withProof = attachLogInclusionProof(receipts, i, {
+        logId: "test-log-001",
+        logPrivateKey: log.privateKeyPem,
+      });
+      const res = verifyAerfReceipt(withProof, {
+        issuerPublicKey: issuer.publicKeyPem,
+        logPublicKey: log.publicKeyPem,
+      });
+      expect(res.ok, `leaf ${i}: ${res.failReason}`).toBe(true);
+      expect(res.log).toBe("passed");
+
+      // Tampered audit path → log_inclusion failure (vector 10).
+      const tampered = {
+        ...withProof,
+        log_inclusion_proof: {
+          ...withProof.log_inclusion_proof,
+          audit_path: withProof.log_inclusion_proof.audit_path.map((h, j) =>
+            j === 0 ? "0".repeat(64) : h,
+          ),
+        },
+      };
+      const bad = verifyAerfReceipt(tampered, {
+        issuerPublicKey: issuer.publicKeyPem,
+        logPublicKey: log.publicKeyPem,
+      });
+      expect(bad.ok).toBe(false);
+      expect(bad.failCategory).toBe("log_inclusion");
+      // The issuer signature is untouched — the proof is post-issuance.
+      expect(bad.issuerOk).toBe(true);
+    }
+  });
+
+  it("rejects an STH signed by the wrong log key", () => {
+    const issuer = newKeys();
+    const log = newKeys();
+    const receipts = [
+      buildAerfReceipt(baseInit, { issuerPrivateKey: issuer.privateKeyPem }),
+    ] as unknown as Record<string, unknown>[];
+    const withProof = attachLogInclusionProof(receipts, 0, {
+      logId: "test-log-001",
+      logPrivateKey: log.privateKeyPem,
+    });
+    const res = verifyAerfReceipt(withProof, {
+      issuerPublicKey: issuer.publicKeyPem,
+      logPublicKey: newKeys().publicKeyPem,
+    });
+    expect(res.ok).toBe(false);
+    expect(res.failReason).toContain("sth signature");
   });
 });
 
