@@ -211,7 +211,7 @@ const config: AgentMintConfig = {
     // Simulate physician review
     const decision = (params as any).decision;
     if (decision === "approve" || decision === "approved") {
-      console.log(`     ✓ Approved by dr.kim@ochsner.org\n`);
+      console.log(`     ✓ Approved by dr.kim@example-health.org\n`);
       return true;
     }
     console.log(`     ✗ Physician wants to review criteria first\n`);
