@@ -41,8 +41,14 @@ export async function enforce(
   const spec = config.spec;
   const shadow = config.mode === "shadow";
 
-  // 0. Already dead
+  // 0. Already dead — the run was killed by an earlier decision. The call never
+  //    executes, but it MUST still be recorded: a silent drop here is exactly the
+  //    gap a signed audit trail exists to close. Log the attempt before blocking.
   if (state.status === "killed") {
+    logEvent(state, tool, params, "attempted_after_kill", {
+      reason: "run_killed",
+      details: state.killReason,
+    });
     return blockResponse(tool, "Run has been terminated.");
   }
 

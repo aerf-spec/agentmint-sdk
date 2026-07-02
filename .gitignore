@@ -10,3 +10,4 @@ coverage/
 .npm
 .vendor/
 .DS_Store
+examples/demos/out/

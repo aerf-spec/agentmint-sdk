@@ -37,4 +37,5 @@ export const icons: Record<EventResult, string> = {
   rejected: red("✗"),
   killed: red("⊘"),
   skipped: dim("↷"),
+  attempted_after_kill: red("⊘"),
 };

@@ -14,7 +14,9 @@ export type EventResult =
   | "approved"
   | "rejected"
   | "killed"
-  | "skipped";
+  | "skipped"
+  /** A tool call that arrived after the run was killed — logged, never executed. */
+  | "attempted_after_kill";
 
 // ── Spec Types ─────────────────────────────────────────────────────
 
@@ -131,6 +133,12 @@ export interface AgentMintConfig {
   };
   readonly silent?: boolean;
   readonly evidenceChain?: boolean;
+  /**
+   * Enable signed decision receipts. When present, every enforce() decision
+   * emits one Ed25519-signed, hash-chained {@link DecisionReceipt}, retrievable
+   * via harden()'s __receipts() / __verifyReceipts().
+   */
+  readonly signing?: { privateKeyPem: string };
   readonly mode?: "enforce" | "shadow";
   readonly receiptsDir?: string;
   readonly onCheckpoint?: (
@@ -180,6 +188,8 @@ export interface RunState {
   session: SessionStore;
   /** Merkle evidence chain, present only when config.evidenceChain is enabled */
   evidence?: MerkleTree;
+  /** Signed decision-receipt context, present only when config.signing is enabled. */
+  decisionContext?: import("./receipt-decision.js").DecisionContext;
 }
 
 // ── Event ──────────────────────────────────────────────────────────
@@ -255,6 +265,50 @@ export interface AERFRecord {
   requiredSteps?: Array<{ tool: string; completed: boolean }>;
   /** Merkle root over all events, present only when evidenceChain is enabled */
   evidenceRoot?: string;
+}
+
+// ── Decision Receipt ───────────────────────────────────────────────
+
+/**
+ * A signed, hash-chained receipt for a single enforce() decision. Emitted once
+ * per decision when config.signing is enabled. Stores a HASH of the params,
+ * never the raw params. Ed25519 signature covers the canonical receipt minus
+ * the post-issuance fields (here, only `signature`).
+ */
+export interface DecisionReceipt {
+  /** Unique receipt id (crypto.randomUUID). */
+  id: string;
+  /** The run this receipt belongs to. */
+  run_id: string;
+  /** Monotonic, 1-based sequence number within the run. */
+  seq: number;
+  /** The tool the decision was about. */
+  action: string;
+  /** SHA-256 hex of canonical(params) — never the raw params. */
+  params_hash: string;
+  /** True ONLY for allowed/approved decisions. */
+  in_policy: boolean;
+  /** Human-readable rule name or kill reason. Required for every non-allowed result. */
+  policy_reason: string;
+  /** SHA-256 hex of canonical(spec), present only when a spec is configured. */
+  spec_hash?: string;
+  /** ISO 8601 timestamp the decision was observed. */
+  observed_at: string;
+  /** Issuer key id (first 16 hex of SHA-256(raw public key)). */
+  key_id: string;
+  /** SHA-256 hex of the previous receipt's canonical bytes (incl. its signature). Omitted on genesis. */
+  previous_receipt_hash?: string;
+  /** Ed25519 signature, lowercase hex, over the canonical stripped receipt. */
+  signature: string;
+}
+
+/** Result of verifying a chain of decision receipts. */
+export interface ReceiptChainVerification {
+  ok: boolean;
+  /** 0-based index of the first broken receipt, when ok is false. */
+  brokenAt?: number;
+  /** Human-readable explanation of the break. */
+  reason?: string;
 }
 
 export type AERFPostIssuanceField =

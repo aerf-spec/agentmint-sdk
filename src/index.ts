@@ -15,6 +15,9 @@ export { loadSpec } from "./kernel/spec.js";
 // receipt — build a signed, tamper-evident record of an agent action
 export * from "./receipt.js";
 
+// receipt-decision — signed, hash-chained receipts for individual decisions
+export * from "./receipt-decision.js";
+
 // verify — check a receipt or a chain of receipts against its claims
 export * from "./verify.js";
 

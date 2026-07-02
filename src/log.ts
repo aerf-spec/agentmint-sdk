@@ -9,6 +9,7 @@ import type {
 import { redact } from "./kernel/redact.js";
 import { createSession } from "./session.js";
 import { MerkleTree, canonicalize } from "./merkle.js";
+import { createDecisionContext, buildDecisionReceipt } from "./receipt-decision.js";
 
 const CHARSET = "abcdefghijklmnopqrstuvwxyz0123456789";
 
@@ -19,8 +20,9 @@ export function generateRunId(): string {
 }
 
 export function createRunState(config: AgentMintConfig): RunState {
+  const runId = generateRunId();
   return {
-    runId: generateRunId(),
+    runId,
     startedAt: Date.now(),
     status: "running",
     totalCost: 0,
@@ -38,6 +40,15 @@ export function createRunState(config: AgentMintConfig): RunState {
     retrievedData: [],
     session: createSession(),
     ...(config.evidenceChain ? { evidence: new MerkleTree() } : {}),
+    ...(config.signing
+      ? {
+          decisionContext: createDecisionContext({
+            runId,
+            privateKeyPem: config.signing.privateKeyPem,
+            spec: config.spec,
+          }),
+        }
+      : {}),
   };
 }
 
@@ -76,6 +87,10 @@ export function logEvent(
   // Append a tamper-evident leaf to the Merkle evidence chain when enabled
   if (state.evidence) {
     state.evidence.addLeaf(canonicalize(event));
+  }
+  // Emit a signed, hash-chained decision receipt when signing is enabled.
+  if (state.decisionContext) {
+    buildDecisionReceipt(event, state.decisionContext);
   }
   return event;
 }

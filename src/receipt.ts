@@ -15,6 +15,7 @@ const ICONS: Record<EventResult, string> = {
   rejected: "✗",
   killed: "⊘",
   skipped: "↷",
+  attempted_after_kill: "⊘",
 };
 
 const SUFFIXES: Record<EventResult, string> = {
@@ -26,6 +27,7 @@ const SUFFIXES: Record<EventResult, string> = {
   skipped: "  skipped",
   approved: "  approved",
   allowed: "",
+  attempted_after_kill: "  AFTER-KILL",
 };
 
 const INNER_WIDTH = 64;
