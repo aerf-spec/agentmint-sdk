@@ -1,0 +1,7 @@
+node_modules/
+receipts/
+verification/*.tmp
+.eve/
+.workflow-data/
+.env
+.env.local

@@ -1,0 +1,14 @@
+{
+  "name": "agentmint-prior-auth-eve",
+  "private": true,
+  "type": "module",
+  "description": "Prior-auth compliance agent on Vercel eve, guarded and receipted by AgentMint.",
+  "scripts": {
+    "dev": "npx eve dev --no-ui"
+  },
+  "dependencies": {
+    "ai": "^7.0.17",
+    "eve": "^0.22.0",
+    "zod": "^4.4.3"
+  }
+}
