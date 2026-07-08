@@ -1,0 +1,31 @@
+version: "1.0"
+
+# A refund agent's guardrails. The Vercel integration reads this spec:
+#  - `requires` / `max_ref` enforce ordering and bound the refund amount,
+#  - `requires_approval` routes issue_refund through gate() for human approval.
+tools:
+  lookup_order:
+    # read-only, always allowed
+
+  issue_refund:
+    # must look the order up first, and the refund can't exceed the order total
+    requires: [lookup_order]
+    requires_approval: true
+    input:
+      properties:
+        amount:
+          max_ref: lookup_order.output.total
+          action: block
+
+  send_email:
+    input:
+      properties:
+        to:
+          # never email a competitor domain
+          blocked_patterns: ["*@competitor.com"]
+          action: block
+
+breakers:
+  loop:
+    max_identical_calls: 3
+    action: block

@@ -1,0 +1,18 @@
+{
+  "name": "agentmint-vercel-ai-sdk-example",
+  "private": true,
+  "type": "module",
+  "description": "A refund agent on the Vercel AI SDK, guarded by AgentMint — one receipt per run, gate() behind the SDK's tool-approval flow.",
+  "scripts": {
+    "start": "npx tsx run.ts",
+    "start:live": "npx tsx run.ts --live"
+  },
+  "dependencies": {
+    "ai": "^7.0.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

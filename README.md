@@ -226,6 +226,37 @@ $ agentmint learn --from run.jsonl --check edited.yaml   # exit 1 if an edit reo
 benchmark with expected output. [`THREAT-MODEL.md`](THREAT-MODEL.md) states
 what the receipts defend against and what they do not.
 
+## Vercel AI SDK
+
+`harden()` already wraps an AI SDK `ToolSet`. For a first-class binding — one
+signed receipt per `generateText` / `streamText` run, `gate()` behind the SDK's
+tool-approval flow, and step/model/usage metadata on the receipt — use the
+`@npmsai/agentmint/vercel` subpath:
+
+```ts
+import { withAgentMint } from "@npmsai/agentmint/vercel";
+import { generateText, stepCountIs } from "ai";
+
+const am = withAgentMint({ spec: "agentmint.spec.yaml", mode: "enforce" });
+
+const result = await generateText({
+  model,
+  tools: am.tools({ lookupOrder, issueRefund }), // wrapped, types preserved
+  toolApproval: am.toolApproval("spec"),          // gate() behind SDK approval
+  onStepFinish: am.onStepFinish,                  // step / model / usage
+  stopWhen: stepCountIs(5),
+});
+
+const receipt = am.receipt();       // one AERFRecord for the whole run
+am.writeJSONL("./receipts/run.jsonl");
+```
+
+Blocked calls return a structured denial to the model by default (set
+`onBlock: "throw"` to abort instead). Each receipt line carries the AI SDK's
+`toolCallId` (`callRef`), so an auditor can line a receipt up against the SDK
+trace. Zero runtime dependency: `ai` stays a devDependency. Runnable example
+with expected output: [`examples/vercel-ai-sdk/`](examples/vercel-ai-sdk/).
+
 ## Verify it yourself
 
 ```

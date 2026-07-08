@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0]
+
+- **New:** first-class Vercel AI SDK integration, exposed as the
+  `@npmsai/agentmint/vercel` subpath. `withAgentMint()` binds one signed receipt
+  to one `generateText` / `streamText` / Agent run (including multi-step tool
+  loops): `am.tools()` wraps a `ToolSet` while preserving its TypeScript types,
+  `am.onStepFinish` captures per-step model id / token usage / finish reason, and
+  `am.receipt()` / `am.writeJSONL()` emit one record for the whole run.
+- **New:** `am.toolApproval(policy)` bridges AgentMint's hash-chained `gate()`
+  into the AI SDK's tool-approval flow. Policies are spec-driven (tools marked
+  `action: block` or `requires_approval: true`) or explicit (`{ tools, when }`);
+  every decision is chained onto the gate hash chain and recorded on the receipt.
+  `am.recordApproval()` chains out-of-band (`useChat`) decisions.
+- **New:** `requires_approval` field on a tool in `agentmint.spec.yaml`.
+- **Fix:** the Vercel adapter now forwards the AI SDK's `execute(input, options)`
+  second argument to the wrapped tool. The previous adapter dropped it, silently
+  breaking `abortSignal` cancellation and discarding `toolCallId` / `messages`.
+  This is user-visible behaviour: tools can now be cancelled, and each receipt
+  event carries the originating `toolCallId` as `callRef`.
+- `ai` and `zod` added as devDependencies (types, tests, and the example only);
+  `dependencies` stays empty — shipped runtime code uses structural typing and
+  never imports `ai`.
+
 ## [0.2.0]
 
 - **New:** `agentmint verify` — independent, deterministic verification of a git

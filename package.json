@@ -1,6 +1,6 @@
 {
   "name": "@npmsai/agentmint",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Cryptographic receipts and audit trails for agentic workflows",
   "type": "module",
   "license": "MIT",

@@ -28,6 +28,9 @@ Current constraints:
   `harden.ts` (one-line auto-wrapper), `enforce.ts`, `breakers.ts`, `learn.ts`,
   `report.ts`, `matcher.ts`, `test-runner.ts`, `adapters/` (OpenAI, Anthropic,
   LangChain, Vercel, Raw, Generic), `suites/`.
+- **`src/experimental/vercel/`** — first-class Vercel AI SDK integration
+  (`withAgentMint()` run binding + the `gate()` ↔ tool-approval bridge), shipped
+  as the `@npmsai/agentmint/vercel` subpath export; zero runtime dep on `ai`.
 - **`src/cli/`** — CLI commands (see below).
 
 ## Canonical files (read in this order)
