@@ -1,10 +1,10 @@
-# Live-verification error log (Phase 2)
+# Live-verification error log
 
 Every error hit while bringing the agent up under a real `eve dev --no-ui`
-server, its root cause, and the fix. All are resolved; the app boots, both the
-approve and deny paths run over HTTP, and the receipts verify (see the
-`transcript-*.ndjson` and `receipt-*.{json,jsonl,txt}` artifacts here). This
-doubles as the "log the delta vs the task notes" the PLAN asked for.
+server, its root cause, and the fix — the eve gotchas worth knowing before you
+build on it. All are resolved; the app boots, both the approve and deny paths
+run over HTTP, and the receipts verify (see the `transcript-*.ndjson` and
+`receipt-*.{json,jsonl,txt}` artifacts here).
 
 | # | Symptom | Root cause | Fix |
 |---|---------|-----------|-----|

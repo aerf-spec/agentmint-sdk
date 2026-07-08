@@ -5,8 +5,8 @@
  * strict subset of them — every field is named to match the SDK so an AI
  * SDK-shaped value satisfies the interface without adaptation.
  *
- * Verified against `ai@7.0.17` (see ./PLAN.md). The fields below are stable
- * across AI SDK 6 and 7 for the surface we use.
+ * Verified against `ai@7.0.17` (see the module doc in ./index.ts). The fields
+ * below are stable across AI SDK 6 and 7 for the surface we use.
  */
 
 /**

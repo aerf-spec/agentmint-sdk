@@ -8,6 +8,7 @@
 //   3. generate_report  → ALLOW   (spends the run budget)
 //   4. generate_report  → KILL    (budget kill — the runaway second call)
 //   5. exfiltrate       → DENY    (attempted AFTER the kill — logged, not run)
+import { fileURLToPath } from "node:url";
 import { harden } from "../../src/experimental/harden.js";
 import { generateKeyPair, privateKeyToPem, publicKeyToPem } from "../../src/kernel/sign.js";
 import type { AgentMintConfig, AgentMintSpec, DecisionReceipt } from "../../src/types.js";
@@ -79,4 +80,14 @@ export function verdict(r: DecisionReceipt): string {
 /** Format one receipt as: `seq  ALLOW/DENY  action  reason`. */
 export function receiptLine(r: DecisionReceipt): string {
   return `  ${String(r.seq).padEnd(3)}  ${verdict(r)}  ${r.action.padEnd(16)}  ${r.policy_reason}`;
+}
+
+// This module is the shared fixture behind the tamper + silence demos. Run it
+// directly to print the scripted session on its own — non-interactive, no stdin.
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  runDemoSession().then((s) => {
+    console.log("\n  Scripted agent session (shared by the tamper + silence demos):\n");
+    for (const r of s.receipts) console.log(receiptLine(r));
+    console.log(`\n  Chain verifies: ${JSON.stringify(s.verify())}\n`);
+  });
 }

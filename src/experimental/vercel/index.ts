@@ -11,6 +11,12 @@
  * interfaces in ./types.js. The `ai` package is a devDependency used only by
  * tests and the example.
  *
+ * Verified against `ai@7.0.17`. Per-tool `needsApproval` is deprecated in AI SDK
+ * 6/7; approval lives on `generateText`/`streamText` as `toolApproval`, which
+ * `am.toolApproval()` bridges to `gate()` (AI SDK 7 adds opt-in HMAC-signed
+ * approvals, surfaced behind `options.signature`). Future work: a durable
+ * `WorkflowAgent` binding that receipts each workflow step, not just tool calls.
+ *
  * @example
  * ```ts
  * import { withAgentMint } from "@npmsai/agentmint/vercel";

@@ -2,8 +2,9 @@
  * @kernel
  * Ed25519 signing + key handling for AERF receipts.
  *
- * Semantics fixed by the ground truth (docs/SESSION-PREAMBLE.txt) and mirrored
- * from the Python producer (_derive_key_id / _canonical_json) and Go verifier:
+ * Semantics fixed by AERF SPEC.md and the conformance oracle
+ * (test/aerf-verify-poc.mjs), mirrored from the Python producer (_derive_key_id
+ * / _canonical_json) and Go verifier; see docs/parity.md:
  *
  *  - Ed25519 via node:crypto only: generateKeyPairSync("ed25519"),
  *    sign(null, bytes, key), verify(null, bytes, pub, sig).
