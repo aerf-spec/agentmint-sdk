@@ -80,6 +80,13 @@ export interface SpecLimitsConfig {
 export interface SpecToolConfig {
   requires?: string[];
   action?: RuleAction;
+  /**
+   * Marks this tool as requiring human approval before it runs. Consumed by the
+   * Vercel integration's spec-driven `toolApproval` policy (see
+   * `src/experimental/vercel/`); tools with `requires_approval: true` (or a bare
+   * `action: block`) are routed through `gate()`.
+   */
+  requires_approval?: boolean;
   input?: { properties?: Record<string, SpecPropertyConfig> };
   output?: { properties?: Record<string, SpecPropertyConfig> };
   cost?: SpecCostConfig;

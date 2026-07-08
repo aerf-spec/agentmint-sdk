@@ -44,9 +44,16 @@ import { loadSpec } from "../../kernel/spec.js";
 import { validateGuardrails } from "../../kernel/budget.js";
 import { enforce } from "../enforce.js";
 import { wrapAll } from "../adapters/vercel.js";
+import {
+  createApprovalBridge,
+  type ApprovalDecision,
+  type ToolApprovalOptions,
+  type ToolApprovalPolicy,
+} from "./approval.js";
 import type {
   VercelOnStepFinish,
   VercelStepResult,
+  VercelToolApproval,
   VercelToolSet,
 } from "./types.js";
 
@@ -120,6 +127,22 @@ export interface AgentMintRun {
   tools<T extends Record<string, unknown>>(toolSet: T): T;
   /** Composable `onStepFinish` — see {@link OnStepFinish}. */
   readonly onStepFinish: OnStepFinish;
+  /**
+   * Build the AI SDK `toolApproval` hook, with `gate()` as the decision-maker.
+   * Pass a policy (`"spec"` — the default — or `{ tools, when }`) and optional
+   * gate/HMAC options. Every decision is chained onto the gate hash chain and
+   * recorded on this run's receipt.
+   */
+  toolApproval(
+    policy?: ToolApprovalPolicy,
+    options?: ToolApprovalOptions,
+  ): VercelToolApproval;
+  /**
+   * Chain an out-of-band approval decision (e.g. from a `useChat` server route)
+   * onto this run's receipt. Records the same `held` → `approved`/`rejected`
+   * events as the `toolApproval` bridge.
+   */
+  recordApproval(decision: ApprovalDecision): void;
   /** Build the single {@link AERFRecord} for the whole run. */
   receipt(): AERFRecord;
   /** The rendered terminal receipt box for this run. */
@@ -167,6 +190,7 @@ export function withAgentMint(options: WithAgentMintOptions = {}): AgentMintRun 
 
   const state = createRunState(config);
   const steps: StepAnnotation[] = [];
+  const approval = createApprovalBridge(state, config);
 
   const enforcer: EnforcerFn = async (tool, params, exec, meta) => {
     const result = await enforce(tool, params, exec, config, state, meta);
@@ -208,6 +232,8 @@ export function withAgentMint(options: WithAgentMintOptions = {}): AgentMintRun 
   return {
     runId: state.runId,
     onStepFinish,
+    toolApproval: approval.toolApproval,
+    recordApproval: approval.recordApproval,
     tools<T extends Record<string, unknown>>(toolSet: T): T {
       return wrapAll(toolSet as unknown as VercelToolSet, enforcer) as unknown as T;
     },
@@ -236,9 +262,19 @@ export function withAgentMint(options: WithAgentMintOptions = {}): AgentMintRun 
 }
 
 export type {
+  ApprovalBridge,
+  ApprovalDecision,
+  ToolApprovalOptions,
+  ToolApprovalPolicy,
+} from "./approval.js";
+
+export type {
   VercelTool,
   VercelToolSet,
   VercelToolCallOptions,
   VercelStepResult,
   VercelOnStepFinish,
+  VercelToolApproval,
+  VercelApprovalStatus,
+  VercelApprovalArgs,
 } from "./types.js";

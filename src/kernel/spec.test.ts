@@ -97,6 +97,14 @@ describe("loadSpec", () => {
       /version/,
     );
   });
+
+  it("parses requires_approval on a tool as a boolean", () => {
+    const spec = loadSpec(
+      `version: "1.0"\ntools:\n  issue_refund:\n    requires_approval: true\n  lookup_order:\n    requires_approval: false\n`,
+    );
+    expect(spec.tools?.issue_refund?.requires_approval).toBe(true);
+    expect(spec.tools?.lookup_order?.requires_approval).toBe(false);
+  });
 });
 
 describe("resolveAction", () => {
