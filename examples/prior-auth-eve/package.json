@@ -4,11 +4,17 @@
   "type": "module",
   "description": "Prior-auth compliance agent on Vercel eve, guarded and receipted by AgentMint.",
   "scripts": {
-    "dev": "npx eve dev --no-ui"
+    "dev": "npx eve dev --no-ui",
+    "typecheck": "npx tsc --noEmit",
+    "test": "npx vitest run"
   },
   "dependencies": {
+    "@npmsai/agentmint": "file:../..",
     "ai": "^7.0.17",
     "eve": "^0.22.0",
     "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.10"
   }
 }

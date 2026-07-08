@@ -27,6 +27,11 @@
       "types": "./dist/experimental/vercel/index.d.ts",
       "import": "./dist/experimental/vercel/index.js",
       "require": "./dist/experimental/vercel/index.cjs"
+    },
+    "./enforce": {
+      "types": "./dist/experimental/enforce.d.ts",
+      "import": "./dist/experimental/enforce.js",
+      "require": "./dist/experimental/enforce.cjs"
     }
   },
   "bin": {

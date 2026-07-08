@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/experimental/vercel/index.ts",
+    "src/experimental/enforce.ts",
     "src/cli/entry.ts",
     "src/cli/verify.ts",
     "src/cli/demo.ts",

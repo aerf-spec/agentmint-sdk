@@ -1,0 +1,52 @@
+version: "1.0"
+
+# Prior-authorization guardrails, ported from src/experimental/suites/prior-auth.ts.
+# Enforced by AgentMint inside every eve tool via lib/agentmint.ts.
+#
+# Cross-patient protection is a cross_ref rule, NOT a config-time bind: the bound
+# patient isn't known until check_eligibility runs, so every later tool's
+# patient_id is cross-referenced against the one check_eligibility saw. action:
+# block makes a mismatch a hard denial (the suite left it at the warn default).
+tools:
+  # 42 CFR Part 2 protected substance-use records — the tool exists so the
+  # receipt can show the DENIAL, not merely the absence of a capability.
+  read_patient_sud_records:
+    action: block
+
+  read_clinical_notes:
+    requires:
+      - check_eligibility
+    input:
+      properties:
+        patient_id:
+          cross_ref: check_eligibility.input.patient_id
+          action: block
+
+  match_criteria:
+    requires:
+      - read_clinical_notes
+      - read_coverage_policy
+    input:
+      properties:
+        patient_id:
+          cross_ref: check_eligibility.input.patient_id
+          action: block
+
+  submit_determination:
+    requires:
+      - check_eligibility
+      - match_criteria
+    input:
+      properties:
+        patient_id:
+          cross_ref: check_eligibility.input.patient_id
+          action: block
+
+breakers:
+  loop:
+    max_identical_calls: 3
+    action: block
+  velocity:
+    max_calls_per_window: 12
+    window_seconds: 30
+    action: block
