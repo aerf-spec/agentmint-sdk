@@ -23,6 +23,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./notary": {
+      "types": "./dist/exports/notary.d.ts",
+      "import": "./dist/exports/notary.js",
+      "require": "./dist/exports/notary.cjs"
+    },
     "./vercel": {
       "types": "./dist/experimental/vercel/index.d.ts",
       "import": "./dist/experimental/vercel/index.js",

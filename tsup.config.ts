@@ -3,6 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: [
     "src/index.ts",
+    "src/exports/notary.ts",
     "src/experimental/vercel/index.ts",
     "src/experimental/enforce.ts",
     "src/cli/entry.ts",

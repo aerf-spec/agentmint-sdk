@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **Breaking (minor, 0.x):** the plan-bound AERF layer moved off the package
+  root to the `@npmsai/agentmint/notary` subpath, so the root exports only the
+  wedge (harden → signed receipt → verify). `Notary`, `FileReceiptSink`,
+  `buildPlan`/`signPlan`/`verifyPlan`/`evaluatePolicy`, `buildAerfReceipt`/
+  `verifyAerfReceipt`, `EvidencePackage`, and the other plan/AERF/evidence
+  symbols are no longer at the root. Migration:
+
+  ```diff
+  - import { Notary, buildPlan } from "@npmsai/agentmint";
+  + import { Notary, buildPlan } from "@npmsai/agentmint/notary";
+  ```
+
+  `harden`, `loadSpec`, `verify`, `gate`, the signed decision receipts
+  (`verifyDecisionReceipts`), and chain verification stay at the root.
 - **New:** `@npmsai/agentmint/enforce` subpath — the core enforcement pipeline
   (`enforce`) exposed as a framework-agnostic primitive, so an integration can
   drive one `RunState` per session by hand (`createRunState` + `enforce`).

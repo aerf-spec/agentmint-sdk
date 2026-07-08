@@ -1,9 +1,16 @@
 // AgentMint SDK — cryptographic receipts for agent actions.
 //
-// This is the public surface. It exposes the wedge (wrap an agent action, get a
-// signed receipt, verify it later) plus the two primary entry points every user
-// imports: harden() and loadSpec(). Everything else in ./experimental and
-// ./kernel is internal.
+// This root exports the WEDGE: wrap an agent action with harden(), get a signed,
+// hash-chained decision receipt, verify it later. That's the story these modules
+// tell — instrumentation (harden/loadSpec), the run + receipt (log, receipt,
+// jsonl, session, merkle), the signed decision layer (receipt-decision, chain),
+// verification (verify), pre-flight approval (gate), and the shared types.
+//
+// Two layers live off subpaths so the root stays the wedge:
+//   - `@npmsai/agentmint/notary` — plan-bound AERF evidence (Notary, plans,
+//     cross-implementation receipts, evidence bundles).
+//   - `@npmsai/agentmint/vercel`  — the Vercel AI SDK integration.
+// Everything under ./experimental and ./kernel is internal.
 
 // harden — one-line auto-wrapper: instrument all your tools at once.
 //          THE primary public API — `const tools = harden(myTools)`.
@@ -18,21 +25,8 @@ export * from "./receipt.js";
 // receipt-decision — signed, hash-chained receipts for individual decisions
 export * from "./receipt-decision.js";
 
-// receipt-aerf — full AERF evidence receipts (wire-format parity with the
-// Python producer and Go verifier)
-export * from "./receipt-aerf.js";
-
-// plan — signed policy envelopes receipts bind to
-export * from "./plan.js";
-
 // chain — per-plan receipt chain verification (signature / hash-link / seq)
 export * from "./chain.js";
-
-// notary — issue plans + chained evidence receipts with persistent state
-export * from "./notary.js";
-
-// evidence — portable evidence package export (self-verifying zip)
-export * from "./evidence.js";
 
 // verify — check a receipt or a chain of receipts against its claims
 export * from "./verify.js";

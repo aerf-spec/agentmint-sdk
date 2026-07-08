@@ -38,6 +38,22 @@ the emitter.
   signed root commitment, so an auditor can pin the whole set
   (`src/evidence.test.ts`).
 
+## Proof layers
+
+Three layers stack, each with a distinct guarantee. The **per-run Merkle
+evidence chain** (`merkle.ts`/`evidence.ts`) proves a single run's event log is
+intact — every recorded event hashes into one root, so no event can be altered
+or dropped without changing it. The **per-decision signed receipts**
+(`chain.ts`/`sign.ts`/`receipt-decision.ts`) prove each individual allow/deny:
+each is Ed25519-signed over its canonical bytes and hash-chained to the previous
+one, so a receipt stands alone as evidence and a removed one breaks the chain at
+a named index. The **AERF notary receipts**
+(`notary.ts`/`plan.ts`/`receipt-aerf.ts`, shipped as `@npmsai/agentmint/notary`)
+bind decisions to a human-approved, signed plan and verify across independent
+implementations (this TS SDK, the Python producer, the Go verifier), so an
+outside auditor can confirm a run stayed inside an authorized policy without
+trusting — or running — any of our code.
+
 ## What it does not prove
 
 - That the policy was correct or sufficient. A receipt under a bad policy
