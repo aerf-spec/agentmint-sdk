@@ -24,7 +24,9 @@ function ctx(sessionId: string, callId = "call-1"): GuardCtx {
 
 afterEach(() => {
   for (const id of sessions.splice(0)) {
-    rmSync(new URL(`../receipts/${id}.jsonl`, import.meta.url), { force: true });
+    for (const ext of ["jsonl", "receipt.json", "receipt.txt"]) {
+      rmSync(new URL(`../receipts/${id}.${ext}`, import.meta.url), { force: true });
+    }
   }
 });
 

@@ -45,4 +45,9 @@ export default defineAgent({
       return { toolCalls: [{ name: step.name, input: step.input }] };
     },
   }),
+  // A mock model carries no AI Gateway metadata; this escape hatch supplies the
+  // context-window size verbatim so eve's compaction skips the gateway lookup at
+  // build time. Swap the whole `model` for a gateway id (e.g.
+  // "anthropic/claude-opus-4.8") and drop this to run live — see README.
+  modelContextWindowTokens: 200_000,
 });

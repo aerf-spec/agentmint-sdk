@@ -1,0 +1,25 @@
+╔════════════════════════════════════════════════════════════════╗
+║  AgentMint Receipt                                             ║
+║  Run: amr_30a1888fa110                                         ║
+╠════════════════════════════════════════════════════════════════╣
+║  ✓ check_eligibility                                           ║
+║  ✗ read_patient_sud_records  BLOCKED                           ║
+║    ↳ action_block                                              ║
+║  ✓ read_clinical_notes                                         ║
+║  ✓ read_coverage_policy                                        ║
+║  ✓ match_criteria                                              ║
+║  ⏸ submit_determination  HELD                                  ║
+║    ↳ approval_requested                                        ║
+║  ✓ submit_determination  approved                              ║
+║    ↳ eve_approval_granted: by local-dev · session wrun_01KX17J…║
+║  ✗ submit_determination  BLOCKED                               ║
+║    ↳ cross_ref: patient_id: expected "PT-4827" (from check_eli…║
+║  ⏸ submit_determination  HELD                                  ║
+║    ↳ approval_requested                                        ║
+║  ✗ submit_determination  REJECTED                              ║
+║    ↳ eve_approval_denied: by local-dev · session wrun_01KX17JF…║
+║                                                                ║
+║  Calls: 6 · Blocked: 3                                         ║
+║  Evidence: 72e5227e9762eb7a…                                   ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝

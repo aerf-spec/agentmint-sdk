@@ -1,7 +1,9 @@
 node_modules/
 receipts/
-verification/*.tmp
 .eve/
+.output/
+.nitro/
 .workflow-data/
 .env
 .env.local
+verification/dev-server.log
