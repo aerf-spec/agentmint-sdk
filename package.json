@@ -47,13 +47,14 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "ai": "^7.0.17",
     "openai": "^6.45.0",
     "tsup": "^8.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.0"
+    "vitest": "^3.2.0",
+    "zod": "^4.4.3"
   },
-  "dependencies": {},
   "repository": {
     "type": "git",
     "url": "https://github.com/aerf-spec/agentmint-app.git"
