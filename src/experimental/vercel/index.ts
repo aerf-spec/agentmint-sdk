@@ -50,6 +50,7 @@ import { loadSpec } from "../../kernel/spec.js";
 import { validateGuardrails } from "../../kernel/budget.js";
 import { enforce } from "../enforce.js";
 import { wrapAll } from "../adapters/vercel.js";
+import type { EvidenceChain } from "../harden.js";
 import {
   createApprovalBridge,
   type ApprovalDecision,
@@ -159,6 +160,12 @@ export interface AgentMintRun {
   writeJSONL(path: string): void;
   /** AI SDK step metadata captured via {@link onStepFinish}. */
   steps(): StepAnnotation[];
+  /**
+   * The run's Merkle evidence chain — the same {@link EvidenceChain} handle
+   * `harden()`'s `__evidence()` returns — for a per-event inclusion proof.
+   * `null` when the chain is off (pass `evidenceChain: true` to enable it).
+   */
+  evidence(): EvidenceChain | null;
   /** The live run state (advanced / testing). */
   state(): RunState;
   /** The run id. */
@@ -260,6 +267,15 @@ export function withAgentMint(options: WithAgentMintOptions = {}): AgentMintRun 
     },
     steps(): StepAnnotation[] {
       return steps.map((s) => ({ ...s }));
+    },
+    evidence(): EvidenceChain | null {
+      const tree = state.evidence;
+      if (!tree) return null;
+      return {
+        root: tree.build(),
+        leafCount: state.events.length,
+        getProof: (index: number) => tree.getProof(index),
+      };
     },
     state(): RunState {
       return state;

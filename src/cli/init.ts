@@ -258,6 +258,10 @@ export async function runInit(): Promise<void> {
     console.log(`    ${dim("•")} Uncomment tool rules to activate`);
   }
   console.log("");
+  console.log(`  ${muted("Instrument your tools (one line — this + the spec above is the whole change):")}`);
+  console.log(`    ${dim("import { harden, loadSpec } from \"@npmsai/agentmint\";")}`);
+  console.log(`    ${dim(`const tools = harden(myTools, { spec: loadSpec("${fileName}") });`)}`);
+  console.log("");
   console.log(`  ${muted("Next steps:")}`);
   console.log(`    ${dim("$")} agentmint demo a         ${muted("# see all three scenarios")}`);
   console.log(`    ${dim("$")} agentmint watch           ${muted("# validate against your agent")}`);

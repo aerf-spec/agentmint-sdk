@@ -43,11 +43,16 @@ describe("harden", () => {
   });
 
   it("zero_config", async () => {
-    const tools = harden({ foo: async () => 1 });
-    await (tools as any).foo();
+    // No spec, no keys, no guardrails: harden(tools) is observe-and-receipt.
+    // Every tool call runs, is recorded, and renders a receipt — nothing throws.
+    const tools = harden({ foo: async (p: any) => ({ echoed: p?.x ?? null }) });
+    const result = await (tools as any).foo({ x: 7 });
+    expect(result).toEqual({ echoed: 7 }); // execute ran, result passed through
     const log = (tools as any).__log();
     expect(log).toHaveLength(1);
     expect(log[0].result).toBe("allowed");
+    expect((tools as any).__receipt()).toContain("AgentMint Receipt"); // renders
+    expect((tools as any).__evidence()).toBeNull(); // chain off by default
   });
 
   it("bind_enforcement", async () => {

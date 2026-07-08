@@ -234,3 +234,32 @@ describe("withAgentMint — receipt output", () => {
     expect(typeof receipt.runId).toBe("string");
   });
 });
+
+describe("withAgentMint — evidence chain", () => {
+  it("evidence() is null when the chain is off (default)", async () => {
+    const am = withAgentMint();
+    const tools = am.tools(refundTools());
+    await driveLoop(tools, [
+      { tool: "lookup_order", input: { order_id: "ORD-1" }, toolCallId: "c1" },
+    ]);
+    expect(am.evidence()).toBeNull();
+  });
+
+  it("evidence() returns a proof-yielding chain when evidenceChain is on", async () => {
+    const am = withAgentMint({ evidenceChain: true });
+    const tools = am.tools(refundTools());
+    await driveLoop(tools, [
+      { tool: "lookup_order", input: { order_id: "ORD-1" }, toolCallId: "c1" },
+      { tool: "issue_refund", input: { amount: 42 }, toolCallId: "c2" },
+    ]);
+
+    const chain = am.evidence();
+    expect(chain).not.toBeNull();
+    expect(chain!.leafCount).toBe(2);
+    expect(chain!.root).toMatch(/^[0-9a-f]{64}$/);
+    // a per-event inclusion proof, same shape as harden()'s __evidence()
+    const proof = chain!.getProof(0);
+    expect(proof.root).toBe(chain!.root);
+    expect(proof.index).toBe(0);
+  });
+});
