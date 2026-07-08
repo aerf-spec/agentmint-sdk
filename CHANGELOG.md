@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+- **New:** `@npmsai/agentmint/enforce` subpath — the core enforcement pipeline
+  (`enforce`) exposed as a framework-agnostic primitive, so an integration can
+  drive one `RunState` per session by hand (`createRunState` + `enforce`).
+- **New:** `examples/prior-auth-eve/` — a prior-auth compliance agent on Vercel
+  **eve** (durable agents), with AgentMint enforcing inside each eve tool and one
+  hash-chained receipt per session, retrievable over HTTP. Demonstrates the
+  durable-execution design AgentMint needs there: enforcement state persisted in
+  eve's `defineState` and rehydrated per step, idempotent event keys for step
+  replay, eve's native `approval` recorded on the receipt (grants and denials),
+  and the default harness disabled. eve is not a dependency of the SDK.
+
 ## [0.3.0]
 
 - **New:** first-class Vercel AI SDK integration, exposed as the

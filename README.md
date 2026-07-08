@@ -257,6 +257,19 @@ Blocked calls return a structured denial to the model by default (set
 trace. Zero runtime dependency: `ai` stays a devDependency. Runnable example
 with expected output: [`examples/vercel-ai-sdk/`](examples/vercel-ai-sdk/).
 
+## Framework integrations
+
+| Framework | What it shows | Example |
+|---|---|---|
+| Vercel AI SDK | One signed receipt per `generateText` run; `gate()` behind the SDK's tool-approval flow; `toolCallId` correlation | [`examples/vercel-ai-sdk/`](examples/vercel-ai-sdk/) |
+| Vercel **eve** (durable agents) | One receipt per durable session; enforcement state in eve's `defineState`; eve's native approval recorded on the receipt; receipts retrievable over HTTP | [`examples/prior-auth-eve/`](examples/prior-auth-eve/) |
+
+The eve example is a medical prior-auth agent that runs a poisoned referral
+through eve's durable model loop: the spec blocks a 42 CFR Part 2 SUD read and a
+cross-patient determination (even after a physician approves it), while the
+legitimate determination pauses for eve's durable approval — all on one
+hash-chained receipt served from a `GET /receipt/:sessionId` channel.
+
 ## Verify it yourself
 
 ```
