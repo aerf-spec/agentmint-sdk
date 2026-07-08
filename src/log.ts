@@ -67,6 +67,7 @@ export function logEvent(
     estimate?: number;
     cumulative?: number;
     callIndex?: number;
+    callRef?: string;
     violations?: ReadonlyArray<ReceiptViolation>;
   },
 ): Event {
@@ -85,6 +86,7 @@ export function logEvent(
     ...(opts?.estimate !== undefined && { estimate: opts.estimate }),
     ...(opts?.cumulative !== undefined && { cumulative: opts.cumulative }),
     ...(opts?.callIndex !== undefined && { callIndex: opts.callIndex }),
+    ...(opts?.callRef !== undefined && { callRef: opts.callRef }),
     ...(opts?.violations !== undefined &&
       opts.violations.length > 0 && { violations: opts.violations.map((v) => ({ ...v })) }),
   };

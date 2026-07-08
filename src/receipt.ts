@@ -70,6 +70,7 @@ export function buildRecord(
         ...(event.reason !== undefined ? { reason: event.reason } : {}),
         ...(event.details !== undefined ? { details: event.details } : {}),
         ...(Object.keys(boundParams).length > 0 ? { boundParams } : {}),
+        ...(event.callRef !== undefined ? { callRef: event.callRef } : {}),
       };
     }),
     summary: {

@@ -284,6 +284,12 @@ export interface Event {
   readonly cumulative?: number;
   /** 1-based index of this call among calls to the same tool this run. */
   readonly callIndex?: number;
+  /**
+   * Framework tool-call id (e.g. the Vercel AI SDK's `toolCallId`), threaded
+   * through so an auditor can correlate this receipt line to an exact tool call
+   * in the framework's own trace. Optional — absent for calls that carry no id.
+   */
+  readonly callRef?: string;
   /** Structured rule firings behind a non-allowed result (never a bare string). */
   readonly violations?: ReadonlyArray<ReceiptViolation>;
 }
@@ -298,10 +304,17 @@ export interface BlockResponse {
 
 // ── Function Signatures ────────────────────────────────────────────
 
+/** Optional per-call metadata an adapter can hand to the enforcer. */
+export interface EnforcerMeta {
+  /** Framework tool-call id (e.g. the Vercel AI SDK's `toolCallId`). */
+  toolCallId?: string;
+}
+
 export type EnforcerFn = (
   tool: string,
   params: Record<string, unknown>,
   execute: () => Promise<unknown>,
+  meta?: EnforcerMeta,
 ) => Promise<unknown>;
 
 // ── Report ─────────────────────────────────────────────────────────
@@ -326,6 +339,8 @@ export interface AERFRecord {
     reason?: string;
     details?: string;
     boundParams?: Record<string, string>;
+    /** Framework tool-call id, when the call carried one. */
+    callRef?: string;
   }>;
   summary: {
     calls: number;
@@ -419,6 +434,8 @@ export interface JSONLEvent {
   estimate?: number;
   cumulative?: number;
   callIndex?: number;
+  callRef?: string;
+  // NOTE: callRef mirrors Event.callRef — the framework tool-call id.
   violations?: Array<{
     type: string;
     field?: string;

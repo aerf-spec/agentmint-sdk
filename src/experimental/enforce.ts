@@ -2,6 +2,9 @@ import type {
   AgentMintConfig,
   DecisionCheck,
   DecisionVerdict,
+  EnforcerMeta,
+  Event,
+  EventResult,
   RunState,
   Violation,
 } from "../types.js";
@@ -19,7 +22,12 @@ import {
   resolveBudget,
 } from "../kernel/budget.js";
 
-type BudgetContext = { estimate?: number; cumulative?: number; callIndex?: number };
+type BudgetContext = {
+  estimate?: number;
+  cumulative?: number;
+  callIndex?: number;
+  callRef?: string;
+};
 
 function handleViolation(
   v: Violation,
@@ -59,10 +67,22 @@ export async function enforce(
   execute: () => Promise<unknown>,
   config: Readonly<AgentMintConfig>,
   state: RunState,
+  meta?: EnforcerMeta,
 ): Promise<unknown> {
   state.callCount++;
   const spec = config.spec;
   const shadow = config.mode === "shadow";
+
+  // Framework tool-call id (e.g. the Vercel AI SDK's `toolCallId`), stamped
+  // onto every event this call emits so an auditor can correlate a receipt line
+  // to the exact tool call in the framework's own trace. When absent, events
+  // are byte-identical to before.
+  const callRef = meta?.toolCallId;
+  const logCall = (
+    result: EventResult,
+    opts?: Parameters<typeof logEvent>[4],
+  ): Event =>
+    logEvent(state, tool, params, result, callRef ? { ...opts, callRef } : opts);
 
   // Decision trace (only assembled when a caller wants the gate internals).
   // These record the REAL checks enforce evaluates and fire config.onDecision
@@ -82,7 +102,7 @@ export async function enforce(
   //    executes, but it MUST still be recorded: a silent drop here is exactly the
   //    gap a signed audit trail exists to close. Log the attempt before blocking.
   if (state.status === "killed") {
-    logEvent(state, tool, params, "attempted_after_kill", {
+    logCall("attempted_after_kill", {
       reason: "run_killed",
       details: state.killReason,
     });
@@ -100,7 +120,7 @@ export async function enforce(
     state.status = "killed";
     state.killReason = "budget_exceeded";
     state.killedCount++;
-    logEvent(state, tool, params, "killed", {
+    logCall("killed", {
       reason: "budget_exceeded",
       details: `$${state.totalCost.toFixed(2)} >= $${config.budget.toFixed(2)}`,
     });
@@ -116,7 +136,7 @@ export async function enforce(
       state.status = "killed";
       state.killReason = "timeout";
       state.killedCount++;
-      logEvent(state, tool, params, "killed", {
+      logCall("killed", {
         reason: "timeout",
         details: `${elapsed.toFixed(1)}s >= ${config.timeout}s`,
       });
@@ -137,7 +157,7 @@ export async function enforce(
     check("plan policy?", evaluation.inPolicy, evaluation.reason);
     if (!evaluation.inPolicy) {
       state.blockedCount++;
-      logEvent(state, tool, params, "blocked", {
+      logCall("blocked", {
         reason: "plan_policy",
         details: evaluation.reason,
         violations: [
@@ -164,7 +184,7 @@ export async function enforce(
       } else {
         check(`${v.type}?`, false, v.details);
       }
-      const result = handleViolation(v, state, config, params, shadow);
+      const result = handleViolation(v, state, config, params, shadow, { callRef });
       if (result.shouldBlock) {
         emit("deny", v.type, v.details);
         return result.response!;
@@ -177,7 +197,7 @@ export async function enforce(
     const count = state.retryCounts[tool] ?? 0;
     if (count >= config.retryLimit) {
       state.skippedCount++;
-      logEvent(state, tool, params, "skipped", {
+      logCall("skipped", {
         reason: "retry_limit",
         details: `${tool} called ${count} times, limit is ${config.retryLimit}`,
       });
@@ -196,7 +216,7 @@ export async function enforce(
       if (params[field] !== undefined && params[field] !== expected) {
         const details = `${field}: expected "${expected}", got "${String(params[field])}"`;
         state.blockedCount++;
-        logEvent(state, tool, params, "blocked", {
+        logCall("blocked", {
           reason: "bind_violation",
           details,
           violations: [
@@ -229,7 +249,7 @@ export async function enforce(
   if (config.deny && matchesAny(tool, config.deny)) {
     check("deny list?", false, "yes");
     state.blockedCount++;
-    logEvent(state, tool, params, "blocked", {
+    logCall("blocked", {
       reason: "denied",
       violations: [
         { type: "denied", tool, details: `${tool} is on the deny list`, action: "block" },
@@ -249,7 +269,7 @@ export async function enforce(
     check("allow list?", inScope, inScope ? "yes" : "no");
     if (!inScope) {
       state.blockedCount++;
-      logEvent(state, tool, params, "blocked", {
+      logCall("blocked", {
         reason: "not_in_scope",
         violations: [
           { type: "not_in_scope", tool, details: `${tool} not in allow list`, action: "block" },
@@ -280,7 +300,7 @@ export async function enforce(
     if (bareAction) {
       if (toolSpec!.action === "block") {
         state.blockedCount++;
-        logEvent(state, tool, params, "blocked", {
+        logCall("blocked", {
           reason: "action_block",
           violations: [
             {
@@ -302,7 +322,7 @@ export async function enforce(
         }
       } else {
         state.warnedCount++;
-        logEvent(state, tool, params, "warned", {
+        logCall("warned", {
           reason: "action_warn",
           violations: [
             {
@@ -337,7 +357,7 @@ export async function enforce(
     }
     const reqViolations = checkRequires(tool, spec, state.completedSteps);
     for (const v of reqViolations) {
-      const result = handleViolation(v, state, config, params, shadow);
+      const result = handleViolation(v, state, config, params, shadow, { callRef });
       if (result.shouldBlock) {
         emit("deny", "requires", v.details);
         return result.response!;
@@ -350,7 +370,7 @@ export async function enforce(
     for (const req of config.require) {
       if (!state.completedSteps.has(req)) {
         state.blockedCount++;
-        logEvent(state, tool, params, "blocked", {
+        logCall("blocked", {
           reason: "prerequisite_missing",
           details: `"${req}" must be completed first`,
           violations: [
@@ -391,7 +411,7 @@ export async function enforce(
             : v.details;
         check("input check?", false, detail);
       }
-      const result = handleViolation(v, state, config, params, shadow);
+      const result = handleViolation(v, state, config, params, shadow, { callRef });
       if (result.shouldBlock) {
         emit("deny", v.type, v.details);
         return result.response!;
@@ -411,6 +431,7 @@ export async function enforce(
       estimate: decision.estimate,
       cumulative: decision.cumulative,
       callIndex: decision.callIndex,
+      callRef,
     };
     if (trace) {
       const max = resolveBudget(spec, config).max;
@@ -433,7 +454,7 @@ export async function enforce(
   // 11. Checkpoint
   if (config.checkpoint && matchesAny(tool, config.checkpoint)) {
     state.heldCount++;
-    logEvent(state, tool, params, "held", { reason: "checkpoint_required" });
+    logCall("held", { reason: "checkpoint_required" });
     if (config.gate) {
       const { gate } = await import("../gate.js");
       const result = await gate({
@@ -444,10 +465,10 @@ export async function enforce(
         webhookUrl: config.gate.webhookUrl,
       });
       if (result.approved) {
-        logEvent(state, tool, params, "approved", { reason: "gate_approved" });
+        logCall("approved", { reason: "gate_approved" });
       } else {
         state.blockedCount++;
-        logEvent(state, tool, params, "rejected", {
+        logCall("rejected", {
           reason: "gate_rejected",
           details: result.reason,
         });
@@ -465,10 +486,10 @@ export async function enforce(
     } else if (config.onCheckpoint) {
       const approved = await config.onCheckpoint(tool, params);
       if (approved) {
-        logEvent(state, tool, params, "approved", { reason: "checkpoint_approved" });
+        logCall("approved", { reason: "checkpoint_approved" });
       } else {
         state.blockedCount++;
-        logEvent(state, tool, params, "rejected", { reason: "checkpoint_rejected" });
+        logCall("rejected", { reason: "checkpoint_rejected" });
         config.onBlock?.(tool, "checkpoint_rejected");
         const blocked = blockResponse(tool, `${tool} was not approved.`);
         if (!shadow) {
@@ -497,7 +518,7 @@ export async function enforce(
   try {
     result = await execute();
   } catch (err) {
-    logEvent(state, tool, params, "allowed", {
+    logCall("allowed", {
       reason: "execution_error",
       details: err instanceof Error ? err.message : String(err),
     });
@@ -515,7 +536,7 @@ export async function enforce(
     for (const v of outputViolations) {
       // Output violations can only warn (tool already executed)
       state.warnedCount++;
-      logEvent(state, tool, params, "warned", {
+      logCall("warned", {
         reason: v.type,
         details: v.details,
         violations: [v],
@@ -555,7 +576,7 @@ export async function enforce(
 
   // 16. Log — include the pre-flight estimate and the actual running total so
   //     receipts explain exactly what this call was projected and did cost.
-  logEvent(state, tool, params, "allowed", {
+  logCall("allowed", {
     cost,
     durationMs,
     ...(budgetOn

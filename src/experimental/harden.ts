@@ -8,6 +8,7 @@ import { wrapAll as openaiWrapAll } from "./adapters/openai.js";
 import { wrapAll as anthropicWrapAll } from "./adapters/anthropic.js";
 import { wrapAll as langchainWrapAll } from "./adapters/langchain.js";
 import { wrapAll as vercelWrapAll } from "./adapters/vercel.js";
+import type { VercelToolSet } from "./vercel/types.js";
 import type {
   AgentMintConfig,
   RunState,
@@ -42,8 +43,8 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
 
   const state = createRunState(config);
 
-  const enforcer: EnforcerFn = (tool, params, exec) =>
-    enforce(tool, params, exec, config, state);
+  const enforcer: EnforcerFn = (tool, params, exec, meta) =>
+    enforce(tool, params, exec, config, state, meta);
 
   let wrapped: unknown;
 
@@ -77,7 +78,7 @@ export function harden<T extends Record<string, unknown> | unknown[]>(
       first !== null &&
       "execute" in (first as object)
     ) {
-      wrapped = vercelWrapAll(tools as Record<string, { execute?: (...args: unknown[]) => Promise<unknown>; [key: string]: unknown }>, enforcer);
+      wrapped = vercelWrapAll(tools as unknown as VercelToolSet, enforcer);
     } else {
       wrapped = rawWrapAll(tools as Record<string, (...args: unknown[]) => Promise<unknown>>, enforcer);
     }
