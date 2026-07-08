@@ -22,6 +22,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./vercel": {
+      "types": "./dist/experimental/vercel/index.d.ts",
+      "import": "./dist/experimental/vercel/index.js",
+      "require": "./dist/experimental/vercel/index.cjs"
     }
   },
   "bin": {

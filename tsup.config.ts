@@ -3,6 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: [
     "src/index.ts",
+    "src/experimental/vercel/index.ts",
     "src/cli/entry.ts",
     "src/cli/verify.ts",
     "src/cli/demo.ts",
