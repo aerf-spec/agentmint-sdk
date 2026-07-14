@@ -1,37 +1,32 @@
 # agentmint
 
-Cryptographic receipts for AI agent actions. Wrap a tool call, get a signed,
-hash-chained receipt; an auditor verifies it later — offline, with no
-agentmint code and no trust in the agent, the app, or us.
+Every agent action gets a signed, tamper-evident receipt that a third party can
+verify offline — no agentmint code, no network, no trust in the agent, the app,
+or us. Wrap a tool call, get an Ed25519-signed, hash-chained receipt; an auditor
+checks it later, independently.
 
 Zero runtime dependencies (`node:crypto` only). Dual ESM/CJS. Node ≥ 18. MIT.
 Install with `npm install @npmsai/agentmint`.
 
-## The problem
+## What a receipt is
 
-Agents act — they call tools, move money, touch records — and the record of
-what they did is usually a mutable log line the same process could rewrite or
-quietly drop. That gap is now a named one: the EU AI Act requires high-risk
-systems to keep tamper-evident event records ([Article 12](https://artificialintelligenceact.eu/article/12/)),
-the [OWASP GenAI Security Project](https://genai.owasp.org/) lists
-repudiation and untraceable agent actions among its core agentic threats, and
-audit frameworks (SOC 2, AIUC-1) increasingly ask for evidence that a control
-*ran*, not a claim that it exists.
+A receipt is a signed record of one tool decision:
 
-agentmint applies old, boring primitives — Ed25519 signatures, hash chains, and
-RFC 6962 Merkle trees — at the tool boundary, implementing the [AERF receipt
-format](https://github.com/aerf-spec/aerf) so receipts verify across independent
-implementations (this SDK, a Python producer, a Go verifier).
+- **Signed** — Ed25519 over a canonical payload; change any field and the
+  signature breaks.
+- **Hash-chained** — each receipt commits to the previous one's hash and a
+  sequence number, so a deleted receipt breaks the chain *and* the numbering.
+- **Offline-verifiable** — verification needs only the public key and the bytes.
 
-We won't oversell it: a receipt proves what was observed and signed, not what
-*should* have happened. If every signer sees the same poisoned input, they all
-sign it honestly. What receipts make impossible is silent revision: a changed
-field breaks a signature, and a deleted receipt breaks the hash chain *and* the
-sequence numbers.
+A receipt proves what was observed and signed, not what *should* have happened;
+what it makes impossible is silent revision. The primitives are old and boring —
+Ed25519, hash chains, RFC 6962 Merkle trees — applied at the tool boundary per
+the [AERF format](https://github.com/aerf-spec/aerf), so receipts verify across
+independent implementations (this SDK, a Python producer, a Go verifier).
 
-## Start here — one line, zero config
+## Wrap, receipt, verify
 
-No spec, no keys, no setup: every call is recorded and you get a receipt.
+No spec, no keys — every call is recorded and you get a receipt:
 
 ```ts
 import { harden } from "@npmsai/agentmint";
@@ -41,12 +36,42 @@ await tools.charge_card({ amount: 4000 });
 console.log(tools.__receipt());         // a rendered receipt box for the run
 ```
 
-Run it now — `npm run demo:tamper` signs a five-decision run, flips one byte, and
-shows the chain catch it (real signed output, no install).
+Pass a key and every decision emits an Ed25519-signed, hash-chained receipt;
+`__verifyReceipts()` checks signatures, hash links, and sequence numbers:
 
-## Add a spec — turn observation into a guardrail
+```ts
+import { generateKeyPairSync } from "node:crypto";
+const privateKeyPem = generateKeyPairSync("ed25519").privateKey
+  .export({ type: "pkcs8", format: "pem" }) as string;
 
-A spec makes calls *fail* on a rule. The signature rule, `max_ref`, bounds an argument by a prior tool's output — so a refund can't exceed the order:
+const tools = harden(myTools, { signing: { privateKeyPem } });
+await tools.send_email({ to: "ops@example.com" });
+tools.__verifyReceipts(); // { ok: true } — or the exact break index and why
+```
+
+`npm run demo:tamper` signs a five-decision run, flips one byte, and shows the
+chain catch it — real signed output, no install.
+
+## Export — hand an auditor a self-verifying bundle
+
+The product for a compliance or InfoSec buyer. `agentmint export` bundles
+receipts, the signed plan, and a Merkle root into a zip with a standalone Node
+verifier — no agentmint, no network:
+
+```
+$ agentmint export --from receipts/ --out evidence.zip --plan plan.json --key notary_key.pem
+$ unzip evidence.zip && node verify.mjs   # standalone: plan sig, receipt sigs, chain, root
+```
+
+For plan-bound AERF evidence directly, use the `Notary` on the
+[`@npmsai/agentmint/notary`](docs/cookbook.md) subpath.
+
+## What the receipt is checked against — the plan and gate
+
+Before a call runs, a deterministic gate checks it against a signed spec: scope
+(allow/deny), checkpoints (`requires`), and block rules; the receipt records
+that decision. The `max_ref` rule bounds an argument by a prior tool's output —
+so a refund can't exceed the order:
 
 ```ts
 import { harden, loadSpec } from "@npmsai/agentmint";
@@ -67,45 +92,7 @@ await tools.lookup_order({ order_id: "ord_1" });
 await tools.refund({ amount: 500 }); // blocked: 500 > 40 — refund never runs
 ```
 
-## Learn the spec from receipts
-
-When a run trips a rule, its receipts become the policy: `learn` infers spec YAML from past violations and generates a hermetic regression test that flags any later edit reopening a caught hole.
-
-```
-$ agentmint learn --from receipts/incident.jsonl --out policy.yaml --test policy.test.ts
-$ agentmint learn --from receipts/ --check edited.yaml   # exit 1 if an edit reopened a hole
-```
-
-## Sign — receipts nobody can revise
-
-Pass a key and every decision emits an Ed25519-signed, hash-chained receipt; `__verifyReceipts()` checks signatures, hash links, and sequence numbers.
-
-```ts
-import { generateKeyPairSync } from "node:crypto";
-const privateKeyPem = generateKeyPairSync("ed25519").privateKey
-  .export({ type: "pkcs8", format: "pem" }) as string;
-
-const tools = harden(myTools, { signing: { privateKeyPem } });
-await tools.send_email({ to: "ops@example.com" });
-tools.__verifyReceipts(); // { ok: true } — or the exact break index and why
-```
-
-## Export — hand an auditor a self-verifying bundle
-
-`agentmint export` bundles receipts, the signed plan, and a Merkle root into a zip with a standalone Node verifier — no agentmint, no network:
-
-```
-$ agentmint export --from receipts/ --out evidence.zip --plan plan.json --key notary_key.pem
-$ unzip evidence.zip && node verify.mjs   # standalone: plan sig, receipt sigs, chain, root
-```
-
-For plan-bound AERF evidence directly (signed plans, chained receipts that
-survive restarts, cross-implementation verification), use the `Notary` on the
-[`@npmsai/agentmint/notary`](docs/cookbook.md) subpath.
-
-## Cookbook
-
-Every recipe runs as written — full versions in [`docs/cookbook.md`](docs/cookbook.md).
+More rules, each one line — full versions in [`docs/cookbook.md`](docs/cookbook.md):
 
 | Recipe | The line that matters |
 |---|---|
@@ -115,18 +102,26 @@ Every recipe runs as written — full versions in [`docs/cookbook.md`](docs/cook
 | Per-run budget cap | `harden(tools, { budget: 5, costEstimator })` |
 | Shadow mode (record, don't block) | `harden(tools, { mode: "shadow" })` |
 
-## Framework integrations
+## How it improves over time — learn
 
-For the Vercel AI SDK, `withAgentMint()` binds one signed receipt to a `generateText` run and puts `gate()` behind the SDK's tool-approval flow.
+The regression loop, not a headline feature: when a run trips a rule, its
+receipts become the policy. `learn` infers spec YAML from past violations and
+generates a hermetic regression test that flags any later edit reopening a
+caught hole.
 
-```ts
-import { withAgentMint } from "@npmsai/agentmint/vercel";
-const am = withAgentMint({ spec: "agentmint.spec.yaml" });
-const result = await generateText({ model, tools: am.tools(myTools), onStepFinish: am.onStepFinish });
-am.writeJSONL("./receipts/run.jsonl"); // one AERFRecord for the whole run
+```
+$ agentmint learn --from receipts/incident.jsonl --out policy.yaml --test policy.test.ts
+$ agentmint learn --from receipts/ --check edited.yaml   # exit 1 if an edit reopened a hole
 ```
 
-`harden()` already wraps raw, OpenAI, Anthropic, and LangChain shapes. Runnable examples: [Vercel AI SDK](examples/vercel-ai-sdk/) · [eve durable agents](examples/prior-auth-eve/).
+## Compliance
+
+Auditors now ask for evidence that a control *ran*, not a claim that it exists.
+The EU AI Act requires tamper-evident event records for high-risk systems
+([Article 12](https://artificialintelligenceact.eu/article/12/)); the [OWASP
+GenAI Security Project](https://genai.owasp.org/) lists repudiation among its
+core agentic threats; SOC 2, HIPAA, and AIUC-1 reviews want proof a decision
+happened. A signed receipt is that proof.
 
 ## Verify it yourself
 
@@ -136,13 +131,16 @@ $ npx vitest run                  # full suite, incl. cross-producer byte-match 
 $ npm run demo:trace              # control vs hardened run, gate internals
 ```
 
-The three proof layers — per-run Merkle evidence, per-decision signed receipts, and plan-bound AERF notary receipts — and what the receipts do and don't defend against are in [`THREAT-MODEL.md`](THREAT-MODEL.md#proof-layers); [`docs/parity.md`](docs/parity.md) has the wire-format guarantees.
+`harden()` wraps raw, OpenAI, Anthropic, and LangChain tool shapes; bindings for
+the [Vercel AI SDK](examples/vercel-ai-sdk/) and [durable agents](examples/prior-auth-eve/)
+live in `examples/`. The proof layers and what receipts do and don't defend
+against are in [`THREAT-MODEL.md`](THREAT-MODEL.md#proof-layers);
+[`docs/parity.md`](docs/parity.md) has the wire-format guarantees.
 
 ## Contributing
 
-Honest bar: the oracle stays 12/12 and `npx vitest run` stays green, or the
-change doesn't land. Bugs — open an issue with a receipt or vector that
-reproduces it. Wire-format changes belong in the
-[AERF spec](https://github.com/aerf-spec/aerf) first; the kernel stays
-zero-dependency. Reach me at [aniketh@agentmint.run](mailto:aniketh@agentmint.run)
-· [@aniketh745](https://x.com/aniketh745). MIT licensed.
+The oracle stays 12/12 and `npx vitest run` stays green, or the change doesn't
+land. Wire-format changes belong in the [AERF
+spec](https://github.com/aerf-spec/aerf) first; the kernel stays zero-dependency.
+Reach me at [aniketh@agentmint.run](mailto:aniketh@agentmint.run) ·
+[@aniketh745](https://x.com/aniketh745). MIT licensed.
