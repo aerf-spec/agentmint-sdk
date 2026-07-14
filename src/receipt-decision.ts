@@ -150,7 +150,7 @@ export function verifyDecisionReceipts(
       return {
         ok: false,
         brokenAt: i,
-        reason: `Receipt [${i}] (seq ${r.seq}): signature verification failed — a signed field was tampered.`,
+        reason: `Receipt [${i}] (seq ${r.seq}): signature verification failed. A signed field was tampered.`,
       };
     }
 
@@ -166,7 +166,7 @@ export function verifyDecisionReceipts(
         reason:
           `Receipt [${i}] missing: chain expected prev_hash ` +
           `[${(expectedPrev ?? "<genesis:absent>").slice(0, 12)}...], got ` +
-          `[${(actualPrev ?? "<absent>").slice(0, 12)}...]${seqGap} — a decision was deleted. ` +
+          `[${(actualPrev ?? "<absent>").slice(0, 12)}...]${seqGap}. A decision was deleted. ` +
           `Logs can omit; chains cannot.`,
       };
     }
@@ -176,7 +176,7 @@ export function verifyDecisionReceipts(
       return {
         ok: false,
         brokenAt: i,
-        reason: `Receipt [${i}]: seq gap — expected ${i + 1}, got ${r.seq}. A decision was deleted.`,
+        reason: `Receipt [${i}]: seq gap: expected ${i + 1}, got ${r.seq}. A decision was deleted.`,
       };
     }
   }

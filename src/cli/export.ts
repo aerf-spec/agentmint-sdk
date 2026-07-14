@@ -97,9 +97,11 @@ export async function runExport(): Promise<void> {
   const path = pkg.export(resolve(out));
 
   const summary = pkg.receipts.filter((r) => !r.in_policy).length;
+  const zipName = out.split("/").pop() || out;
   console.log("");
-  console.log(`  ${green("✓")} Exported ${fg(String(receipts.length))} receipt${receipts.length === 1 ? "" : "s"} to ${fg(path)}`);
-  if (summary > 0) console.log(`    ${muted(`${summary} out-of-policy receipt(s) included — flagged in receipt_index.json`)}`);
-  console.log(`    ${muted("Auditor: unzip, then `node verify.mjs` — no AgentMint required")}`);
+  console.log(`  ${green("✓")} Exported ${fg(String(receipts.length))} receipt${receipts.length === 1 ? "" : "s"} to ${fg(path)}.`);
+  if (summary > 0) console.log(`    ${muted(`${summary} out-of-policy receipt(s) are included and flagged in receipt_index.json.`)}`);
+  console.log("");
+  console.log(`  ${muted(`Next: send ${zipName} to your buyer. They verify with: unzip ${zipName} && node verify.mjs. They do not need agentmint installed.`)}`);
   console.log("");
 }

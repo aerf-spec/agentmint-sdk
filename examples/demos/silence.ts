@@ -19,7 +19,7 @@ const outDir = join(here, "out");
 async function main() {
   const { receipts, publicKeyPem, keyId, specHash } = await runDemoSession();
 
-  console.log("\nAgentMint — silence demo");
+  console.log("\nAgentMint silence demo");
   console.log("A decision was blocked. Can the agent hide that it ever happened?\n");
   console.log("  seq  verdict  action            reason");
   console.log("  ───  ───────  ────────────────  ──────");
@@ -31,10 +31,10 @@ async function main() {
 
   const before = verifyDecisionReceipts(receipts, publicKeyPem);
   if (!before.ok) {
-    console.error(`\nUnexpected: fresh chain did not verify — ${before.reason}`);
+    console.error(`\nUnexpected: fresh chain did not verify: ${before.reason}`);
     process.exit(1);
   }
-  console.log(`\nChain verify: VALID — key_id: ${keyId}, spec_hash: ${specHash}`);
+  console.log(`\nChain verify: VALID, key_id: ${keyId}, spec_hash: ${specHash}`);
 
   // Silently REMOVE the DENY receipt for the blocked transfer (index 1).
   const denyIdx = receipts.findIndex((r) => r.action === "transfer_funds");

@@ -132,7 +132,7 @@ export async function runLearn(): Promise<void> {
     const suggestion = suggestRepair(events, existing);
     console.log("");
     if (!hasMissingRules(suggestion.missing)) {
-      console.log(`  ${green("✓")} ${fg(repair)} already covers every failure in the corpus — nothing to repair`);
+      console.log(`  ${green("✓")} ${fg(repair)} already covers every failure in the corpus. Nothing to repair`);
       console.log("");
       return;
     }
