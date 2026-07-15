@@ -1,7 +1,5 @@
 # agentmint
 
-[![CI](https://github.com/aerf-spec/agentmint-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/aerf-spec/agentmint-sdk/actions/workflows/ci.yml)
-
 Every agent action gets a signed receipt. Anyone can verify the chain, offline, without trusting the agent, the app, or us.
 
 Your agent acts on records and money. The usual record of what it did is a log the same process could rewrite after the fact. The people evaluating you know that, so your word is not evidence.
