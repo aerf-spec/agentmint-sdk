@@ -1,136 +1,107 @@
-# For reviewers: verifying an evidence packet
+# You received an evidence packet
 
-You received a file called `evidence.zip` from a vendor. This page explains how
-to check it yourself, on your own machine, in about a minute. You do not need to
-be a developer, and you do not need to trust the vendor's word for what their
-agent did.
+Someone sent you `evidence.zip` and asked you to confirm what their AI agent
+did. This page is everything you need. You do not have to be a developer, and
+you do not have to trust the vendor. You check their claims yourself.
 
-You do not need to install agentmint, or anything from the vendor, to verify a
-packet. The only requirement is Node 18 or newer, which you very likely already
-have. Nothing else.
+You do not need to install their software, create an account, or connect to the
+internet. You need Node 18 or newer, which you may already have.
 
 ## What is in the packet
 
-Unzipping `evidence.zip` gives you a small set of files:
+Unzip it and you will find:
 
-- **The receipts** (`receipts/*.json`). One signed receipt per action the agent
-  took. Each records what the action was, when it happened, whether it was
-  allowed under the vendor's policy, and the reason. Each receipt is signed and
-  carries the fingerprint of the receipt before it, so the set forms a chain.
-- **The signed plan** (`plan.json`). The policy the session ran under: what the
-  agent was allowed to do, and which actions required a human to approve them.
-  It is signed too, so it cannot be swapped out after the fact.
-- **The public key** (`public_key.pem`). The key that checks every signature.
-  Signatures were made with the vendor's private key, which they hold and you
-  never see. The public key only lets you verify; it cannot create a receipt.
-- **The standalone verifier** (`verify.mjs`). A single short script that does
-  the checking. It uses only Node's built-in cryptography. It does not call the
-  vendor, it does not call us, and it does not go online.
-- **The index** (`receipt_index.json`). A plain table of contents listing every
-  receipt, plus the chain's root fingerprint.
+- **Receipts.** One signed record per action the agent took.
+- **The signed plan.** The statement of what the agent was allowed to do.
+- **The public key.** The single value that lets you check every signature.
+- **A standalone verifier**, `verify.mjs`. It uses only Node. It does not call anyone.
 
 ## The one command
 
-Open a terminal, go to the folder where you saved the file, and run:
+Open a terminal in the folder where you saved the file.
 
 ```
-unzip evidence.zip && node verify.mjs
+unzip evidence.zip -d packet
+node packet/verify.mjs
 ```
 
-That unpacks the packet and runs the verifier. There is nothing else to set up.
+That is the whole check. It either passes or it fails, and it tells you which.
 
-## What PASS means
-
-A passing run prints one `ok` line for the plan, one `ok` line for each receipt,
-one `ok` line for the chain root, and ends like this:
+## What a pass looks like
 
 ```
   ok    plan signature
-  ok    signature  c0000000  read:patient_record:PT-4821
-  ok    signature  c0000000  submit:prior_auth:PA-2210
-  ok    signature  c0000000  read:patient_record:PT-4498
-  ok    signature  c0000000  submit:appeal:APL-1103
-  ok    signature  c0000000  approve:appeal:APL-1103
-  ok    signature  c0000000  submit:appeal:APL-1103
-  ok    chain root 4d7ac49c0a162b2f...
+  ok    signature  a1000001  read:patient_record:PT-4821
+  ok    signature  a2000002  submit:prior_auth:PA-2210
+  ok    signature  a3000003  read:patient_record:PT-4498
+  ok    signature  a4000004  submit:appeal:APL-1103
+  ok    signature  a5000005  submit:appeal:APL-1103
+  ok    signature  a6000006  submit:appeal:APL-1103
+  ok    chain root 2093f65124f37dc4…
 
 All checks passed: 6 receipt(s), chain intact.
 ```
 
-When you see `All checks passed`, three things are true at once:
+Line by line:
 
-1. **Every receipt signature holds.** Each receipt was signed by the holder of
-   the private key, and not one signed field has been changed since. If anyone
-   edited an amount, a patient id, a timestamp, or a verdict, the signature on
-   that receipt would no longer match.
-2. **The chain is unbroken.** Each receipt names the exact fingerprint of the
-   one before it, and the sequence numbers run without a gap. If a receipt had
-   been removed or reordered, the link would not line up.
-3. **Nothing was altered or deleted after signing.** The two checks above,
-   taken together, mean the record you are looking at is the record that was
-   created at the time, in the order it was created.
+- `plan signature` confirms the plan was signed by the key and not edited afterward.
+- Each `signature` line confirms that one receipt was signed by the same key and no field in it changed after signing.
+- The short code, like `a3000003`, names the receipt. The text after it is the action it recorded.
+- `chain root` confirms the receipts are in one unbroken sequence, with none removed.
+- The final line is the verdict. A pass means every check above held.
 
-The verifier exits with code 0 on a pass, so it also works inside a script or a
-pipeline if you want to automate the check.
+The command also exits with code 0 on a pass, so you can wire it into your own review tooling.
 
-## What FAIL looks like
+## What a fail looks like
 
-If anything was changed, the verifier says so and names the exact receipt. For
-example, if someone had edited the billed amount on the prior auth receipt from
-40 to 500, the run would read:
+If anyone changes a receipt after the fact, the check fails and points at the
+exact receipt. Here is a real failure, after one receipt's action field was
+edited from `read:patient_record:PT-4498` to a different record:
 
 ```
   ok    plan signature
-  ok    signature  c0000000  read:patient_record:PT-4821
-  FAIL  signature INVALID for c0000000-0000-4000-8000-000000000002
-  ok    signature  c0000000  read:patient_record:PT-4498
-  FAIL  chain link broken at c0000000-0000-4000-8000-000000000003 (a receipt was removed or reordered)
-  ok    signature  c0000000  submit:appeal:APL-1103
-  ...
+  ok    signature  a1000001  read:patient_record:PT-4821
+  ok    signature  a2000002  submit:prior_auth:PA-2210
+  FAIL  signature INVALID for a3000003-0000-4000-8000-000000000003
+  ok    signature  a4000004  submit:appeal:APL-1103
+  FAIL  chain link broken at a4000004-0000-4000-8000-000000000004 (a receipt was removed or reordered)
+  ok    signature  a5000005  submit:appeal:APL-1103
+  ok    signature  a6000006  submit:appeal:APL-1103
 
 2 check(s) FAILED
 ```
 
-The `FAIL` line points straight at the receipt whose signature no longer
-matches, by its full id. Because every later receipt is chained to that one, the
-break also shows up as a broken link at the next receipt, so you can see exactly
-where the record stopped being trustworthy. A failing run exits with code 1.
+The edited receipt, `a3000003`, fails its signature check. The receipt right
+after it also fails, because each receipt is linked to the one before, so a
+change ripples forward. The command exits with code 1. You do not have to find
+the tampering. The check finds it and names it.
 
-If verification fails, the honest reading is simple: the packet in your hands is
-not the packet that was signed. Ask the vendor for the original, and treat the
-altered copy as unproven.
+## What a pass proves
+
+- Each receipt was signed by the holder of the key, and no signed field changed after signing.
+- The receipts are complete and in order. If one had been removed, the chain would break at a named point.
+- The actions on the receipts are the actions the agent took under a plan that was itself signed.
 
 ## What a receipt does not prove
 
-A passing packet is strong evidence, and it is important to be clear about its
-edges. The following is drawn from the project's
-[threat model](THREAT-MODEL.md), which states these limits in full.
+Be precise about the limits. Sourced from the project's
+[THREAT-MODEL.md](THREAT-MODEL.md).
 
-A receipt proves what was observed and signed, not what should have happened. It
-does not prove the vendor's policy was correct or sufficient: a faithful receipt
-under a bad policy is still a faithful record of a bad decision. It does not
-prove the agent was free of manipulation upstream: if a compromised model
-requested an in-scope action, the receipt honestly records an in-scope action.
-It does not prove the tool did what it claimed: the receipt records the call and
-the declared result, not the real-world side effect. And a valid packet, on its
-own, does not prove it is the most recent one; to rule out an old but genuine
-chain being presented as current, anchor the chain root against a copy you
-receive and record independently. What a receipt does make impossible is silent
-revision: no field can be changed, and no action can be dropped, without the
-verification you just ran failing and naming where.
+- It does not prove the plan was the right plan. A faithful receipt under a weak policy is still a faithful record of a weak decision.
+- It does not prove the agent was not manipulated. If the agent was tricked into an in-scope action, the receipt honestly records an in-scope action.
+- It does not prove the tool did what it reported. The receipt records the call and the reported result, not the real-world effect.
+- It does not, by itself, prove this is the latest packet. To rule out an old but valid packet being resent, compare its chain root against one the vendor published earlier.
 
-## Mapping receipts to your controls
+What a receipt makes impossible is silent revision. The record cannot be changed
+after the fact without this check catching it and naming what changed.
 
-If you are checking the packet against a specific control, such as HIPAA access
-controls or the clinician determination requirement, see the
-[compliance crosswalk](docs/compliance-crosswalk.md). It lists, for each
-control, the question you are asking, the receipt field that answers it, and how
-to confirm it in the packet.
+## Requirements
 
-## Try it on the sample
+- Node 18 or newer.
+- Nothing else. No agentmint install. No account. No network.
 
-If you would like to see a real passing packet before you verify the vendor's,
-this repository ships one at
-[`examples/sample-evidence-packet/`](examples/sample-evidence-packet/). It is a
-prior authorization session with the same shape as the transcripts above. Unzip
-its `evidence.zip` and run `node verify.mjs` exactly as here.
+## Mapping this to your controls
+
+To connect the receipt fields to specific control questions, HIPAA, the
+clinician determination requirement, and audit trail controls, see
+[docs/compliance-crosswalk.md](docs/compliance-crosswalk.md).

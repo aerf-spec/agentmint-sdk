@@ -280,9 +280,9 @@ export async function runInit(): Promise<void> {
 
   if (aiFlag) {
     console.log("");
-    console.log(`  ${yellow("⚠")} ${fg("The --ai flag is coming this week.")}`);
+    console.log(`  ${yellow("⚠")} ${fg("The --ai flag is not available yet.")}`);
     console.log(`  ${muted("For now, use")} ${fg("npx @npmsai/agentmint init")} ${muted("for a starter template.")}`);
-    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --template rcm|refund|coding|data|budget")}`);
+    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --template rcm")} ${muted("for a prior auth spec.")}`);
     console.log("");
     return;
   }

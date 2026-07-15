@@ -32,7 +32,12 @@ const commands: Record<string, () => Promise<void>> = {
 function showHelp(): void {
   console.log("");
   console.log(`  ${brand()}  ${dim(`v${VERSION}`)}`);
-  console.log(`  ${muted("Signs every agent action into a receipt you can verify later.")}`);
+  console.log(`  ${muted("Every agent action gets a signed receipt. Anyone can verify the chain,")}`);
+  console.log(`  ${muted("offline, without trusting the agent, the app, or us.")}`);
+  console.log("");
+  console.log(`  ${fg("Try the demo")}       ${dim("$")} npx @npmsai/agentmint demo`);
+  console.log(`  ${fg("Wrap your tools")}    ${dim("$")} npx @npmsai/agentmint init --template rcm`);
+  console.log(`  ${fg("Export for a buyer")} ${dim("$")} npx @npmsai/agentmint export --from receipts/ --out evidence.zip`);
   console.log("");
   console.log(`  ${fg("Usage:")}  npx @npmsai/agentmint ${dim("<command>")}`);
   console.log("");
@@ -52,7 +57,7 @@ function showHelp(): void {
   console.log("");
   console.log(`    ${muted("Improve")}`);
   console.log(`    ${fg("learn")}      ${muted("Write the spec that would have caught your past violations.")}`);
-  console.log(`    ${fg("scan")}       ${muted("Draft a spec from your source. Folding into learn in a later release.")}`);
+  console.log(`    ${fg("scan")}       ${muted("Draft a spec from your source.")}`);
   console.log(`    ${fg("test")}       ${muted("Run a pre-built agent test suite.")}`);
   console.log(`    ${fg("gate")}       ${muted("Request human approval before a high-risk action runs.")}`);
   console.log("");

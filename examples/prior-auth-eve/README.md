@@ -1,11 +1,17 @@
-# AgentMint × eve — prior-auth compliance agent
+# AgentMint and eve: prior auth compliance agent
 
-A medical prior-authorization agent built on [**eve**](https://github.com/vercel/eve)
+Reach for this example when you want the full end-to-end reference: a durable
+prior auth agent on a real framework, with blocks, a cross-patient guard,
+physician approval, and receipts retrievable over HTTP. It is the most thorough
+example here. Read the first three in [examples/README.md](../README.md) before
+this one.
+
+A medical prior authorization agent built on [**eve**](https://github.com/vercel/eve)
 (Vercel's filesystem-first framework for durable backend agents), with AgentMint
 enforcing at the tool boundary and writing one hash-chained receipt per session.
 
-The agent exposes only six authored tools — the default harness (bash, files,
-web, todo, questions, subagents) is disabled — and processes a **poisoned
+The agent exposes only six authored tools, the default harness (bash, files,
+web, todo, questions, subagents) is disabled, and processes a **poisoned
 referral**: a real request for member `PT-4827` with two attacks stitched into
 the intake notes.
 
@@ -19,8 +25,8 @@ the intake notes.
    rubber-stamped approval still can't push a determination for the wrong patient.
 
 The legitimate `submit_determination` for `PT-4827` pauses for physician review
-via **eve's native durable approval** (`approval: always()`) — not AgentMint's
-console gate — and AgentMint records the decision (`held → approved`) on the
+via **eve's native durable approval** (`approval: always()`), not AgentMint's
+console gate, and AgentMint records the decision (`held → approved`) on the
 receipt.
 
 ## Prerequisites
@@ -49,7 +55,7 @@ streams the NDJSON, answers each physician-approval pause, prints the receipt):
 
 ```bash
 node verification/drive.mjs approve   # approve the legitimate determination
-node verification/drive.mjs deny      # control: deny it — receipt records the rejection
+node verification/drive.mjs deny      # control: deny it, receipt records the rejection
 ```
 
 Or by hand, with the four HTTP calls the driver makes:
@@ -60,7 +66,7 @@ SID=$(curl -s -XPOST localhost:3000/eve/v1/session \
   -H 'content-type: application/json' \
   --data "$(jq -Rs '{message: .}' < referral.txt)" | jq -r .sessionId)
 
-# 2. stream the run (NDJSON) — watch for `input.requested`
+# 2. stream the run (NDJSON), watch for `input.requested`
 curl -sN localhost:3000/eve/v1/session/$SID/stream &
 
 # 3. answer the physician-approval pause (a plain "approve"/"deny" message)
@@ -107,22 +113,22 @@ Three things about a *durable* agent framework shaped this integration:
 
 1. **Durable approval replaces the console gate.** AgentMint's `gate()` reads
    stdin and can't run inside eve's server. eve's `approval: always()` gives
-   durable pause/resume for free — the turn parks at `session.waiting` for
+   durable pause/resume for free, the turn parks at `session.waiting` for
    seconds or days and answers over HTTP. AgentMint's job shifts from *asking* to
    *recording*: it stamps the physician's decision onto the receipt (and a hook
    records denials, which never reach the tool).
 
 2. **Step replay forced the idempotency design.** eve runs each tool call as an
    isolated, replayable step; a step interrupted mid-execution re-runs. So
-   enforcement state can't live in process memory — it lives in eve's durable
+   enforcement state can't live in process memory, it lives in eve's durable
    `defineState` (a serializable snapshot rehydrated into a `RunState` per call),
    and every receipt event is keyed by `session + tool + input + turn` so a
    replay logs once. `agent/lib/agentmint.ts` is where this lives.
 
 3. **Receipts survive as session artifacts, retrievable over HTTP.** Each call
    appends to a per-session JSONL and rewrites the AERF record, so the
-   `GET /receipt/:sessionId` channel — which runs in a different context than the
-   tool steps — serves the signed audit trail for any session by id, long after
+   `GET /receipt/:sessionId` channel, which runs in a different context than the
+   tool steps, serves the signed audit trail for any session by id, long after
    the run.
 
 ## Files
@@ -155,5 +161,5 @@ what the model decides.
 ## Not covered (natural next steps)
 
 Slack/Discord/Web channels, a real sandbox, schedules, subagents, and
-connections/MCP are all out of scope here — each is a small addition on top of
+connections/MCP are all out of scope here, each is a small addition on top of
 this same guard.

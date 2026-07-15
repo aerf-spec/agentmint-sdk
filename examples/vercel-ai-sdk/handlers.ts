@@ -1,30 +1,30 @@
 // Pure tool handlers, as plain named async functions. Kept separate from the
-// `tool()` definitions so they read cleanly on their own — and so `verify()`,
-// which statically scans source, can see `lookup_order` / `issue_refund` /
-// `send_email` and check the spec's ordering and reference claims against them.
+// `tool()` definitions so they read cleanly on their own, and so `verify()`,
+// which statically scans source, can see `lookup_auth` / `submit_prior_auth` /
+// `notify_payer` and check the spec's ordering and reference claims against them.
 
-// A tiny in-memory "order book" so the handlers return something real.
-const ORDERS: Record<string, { total: number; customer: string }> = {
-  "ORD-1001": { total: 42.5, customer: "ada@example.com" },
-  "ORD-2002": { total: 130.0, customer: "grace@example.com" },
+// A tiny in-memory "authorization file" so the handlers return something real.
+const AUTHS: Record<string, { authorized_amount: number; payer: string }> = {
+  "PA-2210": { authorized_amount: 42.5, payer: "aetna@example.com" },
+  "PA-3302": { authorized_amount: 130.0, payer: "cigna@example.com" },
 };
 
-export async function lookup_order({ order_id }: { order_id: string }) {
-  const order = ORDERS[order_id];
-  if (!order) return { found: false as const, order_id };
-  return { found: true as const, order_id, total: order.total, customer: order.customer };
+export async function lookup_auth({ auth_id }: { auth_id: string }) {
+  const auth = AUTHS[auth_id];
+  if (!auth) return { found: false as const, auth_id };
+  return { found: true as const, auth_id, authorized_amount: auth.authorized_amount, payer: auth.payer };
 }
 
-export async function issue_refund({
-  order_id,
-  amount,
+export async function submit_prior_auth({
+  auth_id,
+  billed_amount,
 }: {
-  order_id: string;
-  amount: number;
+  auth_id: string;
+  billed_amount: number;
 }) {
-  return { refunded: true as const, order_id, amount, confirmation: `RF-${order_id}` };
+  return { submitted: true as const, auth_id, billed_amount, confirmation: `PAX-${auth_id}` };
 }
 
-export async function send_email({ to }: { to: string; body: string }) {
+export async function notify_payer({ to }: { to: string; body: string }) {
   return { sent: true as const, to };
 }

@@ -126,7 +126,7 @@ export class EvidencePackage {
 // Ed25519 verify — plus §8.4 chain links and seq continuity.
 
 const VERIFY_MJS = `#!/usr/bin/env node
-// AgentMint evidence package verifier — STANDALONE. Requires only Node >= 18.
+// AgentMint evidence package verifier. STANDALONE. Requires only Node >= 18.
 // Checks: plan signature, every receipt signature, previous_receipt_hash
 // links (AERF SPEC.md §8.4), seq continuity, and the chain root in
 // receipt_index.json. Exit 0 = every check passed.
