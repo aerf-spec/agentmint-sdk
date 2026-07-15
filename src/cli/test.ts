@@ -81,7 +81,7 @@ function printHuman(suite: string, result: SuiteResult): void {
     const label = r.passed
       ? muted(`${r.actual}`)
       : yellow(`expected ${r.expected}, got ${r.actual}`);
-    console.log(`    ${mark} ${fg(r.name)} ${dim("—")} ${muted(r.description)}  ${label}`);
+    console.log(`    ${mark} ${fg(r.name)} ${dim("·")} ${muted(r.description)}  ${label}`);
   }
   console.log("");
   const summary = `${result.passed}/${result.total} passed`;

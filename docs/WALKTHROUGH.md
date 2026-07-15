@@ -124,7 +124,7 @@ $ npm run demo:silence
 Expected output:
 
 ```
-AgentMint — silence demo
+AgentMint silence demo
 A decision was blocked. Can the agent hide that it ever happened?
 
   seq  verdict  action            reason
@@ -135,12 +135,12 @@ A decision was blocked. Can the agent hide that it ever happened?
   4    DENY   generate_report   budget_exceeded: $1.00 >= $1.00
   5    DENY   exfiltrate        run_killed: budget_exceeded
 
-Chain verify: VALID — key_id: 4f3229b50e4be9e3, spec_hash: 294affec97e2e7a842930c61ff29e6dc78fd0d391422be88fcff3b7375749b2b
+Chain verify: VALID, key_id: 4f3229b50e4be9e3, spec_hash: 294affec97e2e7a842930c61ff29e6dc78fd0d391422be88fcff3b7375749b2b
 
 Cover-up: silently deleting receipt 2 (DENY transfer_funds) from the exported array...
 Chain verify: BROKEN at index 1
 
-  Receipt [1] missing: chain expected prev_hash [777677bb7b5a...], got [c31161149533...] (seq gap: expected 2, got 3) — a decision was deleted. Logs can omit; chains cannot.
+  Receipt [1] missing: chain expected prev_hash [777677bb7b5a...], got [c31161149533...] (seq gap: expected 2, got 3). A decision was deleted. Logs can omit; chains cannot.
 ```
 
 What just happened: the run produced five receipts, including a budget kill
@@ -191,7 +191,7 @@ $ agentmint learn --from receipts.jsonl --check learned-policy-holed.yaml  (rule
       → call 3: transfer_funds was blocked by loop_breaker, would now execute
       → call 4: delete_audit_log was blocked by action_block, would now execute
 
-(exit 1 — the edit reopened the holes, CI would block the merge)
+(exit 1: the edit reopened the holes, CI would block the merge)
 
 3 violations -> 3 rules -> regression tests + a reopened-hole detector. all passing.
 ```

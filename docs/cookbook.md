@@ -11,41 +11,41 @@ const ok = async () => ({ ok: true }); // stand-in tool used below
 
 ```ts
 // Block a tool entirely
-const tools = harden({ drop_table: ok }, { spec: loadSpec(`
+const tools = harden({ delete_patient_record: ok }, { spec: loadSpec(`
 version: "1.0"
 tools:
-  drop_table:
+  delete_patient_record:
     action: block
 `) });
-await tools.drop_table({ name: "users" }); // { error: true, ... }, tool never runs
+await tools.delete_patient_record({ patient_id: "PT-4821" }); // { error: true, ... }, tool never runs
 ```
 
 ```ts
 // Require tool B before tool A
-const tools = harden({ lookup_order: ok, issue_refund: ok }, { spec: loadSpec(`
+const tools = harden({ lookup_auth: ok, submit_prior_auth: ok }, { spec: loadSpec(`
 version: "1.0"
 tools:
-  issue_refund:
-    requires: [lookup_order]
+  submit_prior_auth:
+    requires: [lookup_auth]
     action: block
 `) });
-await tools.issue_refund({ order_id: "ord_0001" }); // blocked: requires
+await tools.submit_prior_auth({ auth_id: "PA-2210" }); // blocked: requires
 ```
 
 ```ts
 // Cap a numeric arg by a prior tool's output (max_ref)
-const tools = harden({ lookup_order: async () => ({ total: 40 }), refund: ok }, { spec: loadSpec(`
+const tools = harden({ lookup_auth: async () => ({ authorized_amount: 40 }), submit_prior_auth: ok }, { spec: loadSpec(`
 version: "1.0"
 tools:
-  refund:
+  submit_prior_auth:
     input:
       properties:
-        amount:
-          max_ref: "lookup_order.output.total"
+        billed_amount:
+          max_ref: "lookup_auth.output.authorized_amount"
           action: block
 `) });
-await tools.lookup_order({ order_id: "ord_0001" });
-await tools.refund({ amount: 500 }); // blocked: 500 > 40
+await tools.lookup_auth({ patient_id: "PT-4821" });
+await tools.submit_prior_auth({ billed_amount: 500 }); // blocked: 500 > 40
 ```
 
 ```ts

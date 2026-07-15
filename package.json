@@ -53,6 +53,7 @@
     "test:integration": "npx tsx --test tests/integration.test.ts",
     "typecheck": "npx tsc --noEmit",
     "demo": "npx tsx src/cli/demo.ts",
+    "demo:rcm": "npx tsx examples/demos/rcm.ts",
     "demo:tamper": "npx tsx examples/demos/tamper.ts",
     "demo:silence": "npx tsx examples/demos/silence.ts",
     "demo:trace": "npx tsx examples/demos/trace.ts",

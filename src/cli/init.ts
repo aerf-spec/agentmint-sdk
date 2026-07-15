@@ -1,7 +1,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { dim, fg, green, muted, yellow } from "./color.js";
 
-const STARTER_SPEC = `# AgentMint Spec — https://github.com/aerf-spec/agentmint-app
+const STARTER_SPEC = `# AgentMint Spec: https://github.com/aerf-spec/agentmint-app
 # Validation rules for your AI agent's tool calls.
 #
 # Quick start:
@@ -48,7 +48,7 @@ tools:
   #           - master
   #         action: block
 
-# Circuit breakers — stop runaway agents
+# Circuit breakers. Stop runaway agents.
 breakers:
   loop:
     max_identical_calls: 5
@@ -172,7 +172,7 @@ breakers:
     action: block
 `;
 
-const BUDGET_SPEC = `# Budget Guardrails — runtime cost enforcement at the tool boundary.
+const BUDGET_SPEC = `# Budget Guardrails. Runtime cost enforcement at the tool boundary.
 # Estimates and caps are evaluated BEFORE a tool runs, so an over-budget
 # call never executes. Start in shadow mode, then switch to enforce.
 
@@ -208,25 +208,81 @@ breakers:
     action: block
 `;
 
+const RCM_SPEC = `# AgentMint spec for a healthcare RCM prior authorization agent.
+# Each rule below names the HIPAA or CMS reason it exists. The agent reads
+# patient records, submits prior auths, and can raise appeals, but only a
+# clinician clears an appeal and it can never bill above the authorized amount.
+
+version: "1.0"
+
+# Start by logging every call and letting it through. Switch to block once you
+# trust the rules, so a real violation stops the call instead of only recording it.
+defaults:
+  action: warn
+
+tools:
+  # Read a patient record only after the authorization on file is looked up. This
+  # keeps the agent inside the case it was assigned and honors HIPAA minimum necessary.
+  read_patient_record:
+    requires:
+      - lookup_auth
+
+  # A prior auth submission must follow the authorization lookup, and the amount
+  # billed can never exceed the amount the payer authorized. This is the CMS
+  # overbilling guardrail: the claim is bounded by the authorization it cites.
+  submit_prior_auth:
+    requires:
+      - lookup_auth
+    input:
+      properties:
+        billed_amount:
+          # Bound the billed amount by the authorized amount returned from lookup_auth.
+          max_ref: lookup_auth.output.authorized_amount
+          action: block
+
+  # An appeal is a coverage determination. CMS and California SB 1120 require a
+  # clinician, not an algorithm, to make this call, so this tool is held for human
+  # approval and the clinician's decision is recorded as a signed receipt.
+  submit_appeal:
+    requires_approval: true
+
+  # Deleting a patient record is never in scope for a prior auth agent. Block it
+  # outright so an off-task call is refused and the refusal is itself receipted.
+  delete_patient_record:
+    action: block
+
+breakers:
+  # Payers rate limit and return transient errors under load. This loop breaker
+  # stops the agent from re-submitting the same prior auth over and over against
+  # the payer, which burns money and can look like abuse from the payer's side.
+  loop:
+    max_identical_calls: 3
+    action: block
+`;
+
 const EXAMPLES: Record<string, string> = {
   refund: REFUND_SPEC,
   coding: CODING_SPEC,
   data: DATA_SPEC,
   budget: BUDGET_SPEC,
+  rcm: RCM_SPEC,
 };
 
 export async function runInit(): Promise<void> {
   const args = process.argv.slice(3);
   const force = args.includes("--force");
+  // Accept --template (the RCM-era flag) and --example (the original) as aliases.
+  const templateIdx = args.indexOf("--template");
   const exampleIdx = args.indexOf("--example");
-  const example = exampleIdx >= 0 ? args[exampleIdx + 1] : undefined;
+  const flagIdx = templateIdx >= 0 ? templateIdx : exampleIdx;
+  const example = flagIdx >= 0 ? args[flagIdx + 1] : undefined;
   const aiFlag = args.includes("--ai");
 
   if (aiFlag) {
     console.log("");
-    console.log(`  ${yellow("⚠")} ${fg("--ai flag coming this week.")}`);
+    console.log(`  ${yellow("⚠")} ${fg("The --ai flag is coming this week.")}`);
     console.log(`  ${muted("For now, use")} ${fg("npx @npmsai/agentmint init")} ${muted("for a starter template.")}`);
-    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --example refund|coding|data|budget")}`);
+    console.log(`  ${muted("Or")} ${fg("npx @npmsai/agentmint init --template rcm|refund|coding|data|budget")}`);
     console.log("");
     return;
   }
@@ -243,13 +299,18 @@ export async function runInit(): Promise<void> {
   const content = example && EXAMPLES[example] ? EXAMPLES[example]! : STARTER_SPEC;
   writeFileSync(fileName, content);
 
-  const label = example && EXAMPLES[example] ? `${example} example` : "starter";
+  const label = example && EXAMPLES[example] ? `${example} template` : "starter";
 
   console.log("");
   console.log(`  ${green("✓")} Created ${fg(fileName)} ${dim(`(${label})`)}`);
   console.log("");
   console.log(`  ${muted("Your spec includes:")}`);
-  if (example && EXAMPLES[example]) {
+  if (example === "rcm") {
+    console.log(`    ${dim("•")} Patient record and prior auth scope rules`);
+    console.log(`    ${dim("•")} Billed amount bounded by the authorized amount`);
+    console.log(`    ${dim("•")} An appeal checkpoint held for a clinician`);
+    console.log(`    ${dim("•")} A loop breaker on payer retries`);
+  } else if (example && EXAMPLES[example]) {
     console.log(`    ${dim("•")} Tool rules with cross-ref validation`);
     console.log(`    ${dim("•")} Circuit breakers (loop + velocity)`);
   } else {
@@ -258,12 +319,10 @@ export async function runInit(): Promise<void> {
     console.log(`    ${dim("•")} Uncomment tool rules to activate`);
   }
   console.log("");
-  console.log(`  ${muted("Instrument your tools (one line — this + the spec above is the whole change):")}`);
+  console.log(`  ${muted("Instrument your tools. This one line, plus the spec above, is the whole change:")}`);
   console.log(`    ${dim("import { harden, loadSpec } from \"@npmsai/agentmint\";")}`);
   console.log(`    ${dim(`const tools = harden(myTools, { spec: loadSpec("${fileName}") });`)}`);
   console.log("");
-  console.log(`  ${muted("Next steps:")}`);
-  console.log(`    ${dim("$")} agentmint demo a         ${muted("# see all three scenarios")}`);
-  console.log(`    ${dim("$")} agentmint watch           ${muted("# validate against your agent")}`);
+  console.log(`  ${muted("Next: run")} ${fg("agentmint watch")} ${muted("to validate your agent against this spec, or")} ${fg("agentmint demo")} ${muted("to see it work first.")}`);
   console.log("");
 }

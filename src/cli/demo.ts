@@ -412,7 +412,7 @@ breakers:
   await call("run_tests", () => tools.run_tests!({ suite: "unit" }),
     "→ same test, same args, same result");
   await call("run_tests", () => tools.run_tests!({ suite: "unit" }),
-    "→ third identical retry — halted");
+    "→ third identical retry, halted");
   await call("run_command", () => tools.run_command!({ command: "rm -rf dist && npm run build" }),
     "→ tried to rm -rf dist to 'clean up' (not in the task)");
   await call("git_push", () => tools.git_push!({ branch: "main" }),
@@ -434,7 +434,7 @@ breakers:
   console.log(boxTop());
   console.log(boxLine(`  ${muted("What the agent did outside its task:")}`));
   console.log(boxLine());
-  console.log(boxLine(`    ${red("·")} ${fg("Read .env (credentials — not in the task)")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("Read .env (credentials, not in the task)")}`));
   console.log(boxLine(`    ${yellow("·")} ${fg("Edited package.json (never opened it first)")}`));
   console.log(boxLine(`    ${red("·")} ${fg("Committed before tests passed")}`));
   console.log(boxLine(`    ${red("·")} ${fg("Got stuck retrying the same test 3x")}`));
@@ -465,7 +465,7 @@ async function scenarioB(): Promise<void> {
   console.log(boxLine());
   console.log(boxLine(`   ${fg(`"Compare 5 competitors' pricing, screenshot each"`)}`));
   console.log(boxLine());
-  console.log(boxLine(`   ${muted("Run budget ")}${green("$1.00")}${muted(" — enforced before each call")}`));
+  console.log(boxLine(`   ${muted("Run budget ")}${green("$1.00")}${muted(", enforced before each call")}`));
   console.log(boxLine());
   console.log(boxBot());
   console.log("");
@@ -518,7 +518,7 @@ breakers:
   const isBlocked = (r: unknown): r is { error: true; message: string } =>
     !!r && typeof r === "object" && (r as { error?: unknown }).error === true;
 
-  const money = (n: number | undefined): string => (n === undefined ? "—" : `$${n.toFixed(2)}`);
+  const money = (n: number | undefined): string => (n === undefined ? "n/a" : `$${n.toFixed(2)}`);
 
   // Run one call and render its real result plus the estimate/running total.
   async function call(name: string, fn: () => Promise<unknown>, note: string): Promise<void> {
@@ -552,7 +552,7 @@ breakers:
   await call("search_web", () => tools.search_web!({ query: "epsilon pricing" }),
     "→ 5th search (cap reached)");
   await call("search_web", () => tools.search_web!({ query: "epsilon pricing tier 2" }),
-    "→ 6th search — over max_calls_per_run 5");
+    "→ 6th search, over max_calls_per_run 5");
   await call("summarize", () => tools.summarize!({ pages: 5 }),
     "→ final summary");
   await call("summarize", () => tools.summarize!({ pages: 5 }),
@@ -568,7 +568,7 @@ breakers:
   console.log(boxLine(`  ${muted("What the budget guardrails caught:")}`));
   console.log(boxLine());
   console.log(boxLine(`    ${red("·")} ${fg("Full-page screenshot over the per-call cap")}`));
-  console.log(boxLine(`    ${red("·")} ${fg("6th search — past max_calls_per_run")}`));
+  console.log(boxLine(`    ${red("·")} ${fg("6th search, past max_calls_per_run")}`));
   console.log(boxLine(`    ${red("·")} ${fg("Final summarize would blow the run budget")}`));
   console.log(boxLine());
   console.log(boxLine(
@@ -576,7 +576,7 @@ breakers:
   ));
   console.log(boxBot());
   console.log("");
-  console.log(`  ${green("✓")} ${muted("Every decision ran BEFORE the call — nothing over-budget executed.")}`);
+  console.log(`  ${green("✓")} ${muted("Every decision ran BEFORE the call. Nothing over-budget executed.")}`);
   console.log("");
   console.log(`  ${muted("Post-hoc dashboards tell you this")} ${fg("after")} ${muted("you've paid.")}`);
   console.log(`  ${muted("Guardrails at the tool boundary stop it")} ${fg("before")} ${muted("you do.")}`);
@@ -589,21 +589,31 @@ async function showMenu(): Promise<void> {
   console.log(boxTop());
   console.log(boxLine(center(`${brand()} ${fg("Demo")}`)));
   console.log(boxLine());
-  console.log(boxLine(`  ${fg("[1]")} Customer Support — refund gone wrong`));
-  console.log(boxLine(`  ${fg("[2]")} Coding Agent — rogue file operations`));
-  console.log(boxLine(`  ${fg("[3]")} Data Pipeline — runaway queries`));
-  console.log(boxLine(`  ${fg("[a]")} Coding Agent — 12-call stress test`));
-  console.log(boxLine(`  ${fg("[b]")} Budget Guardrails — cost caps at the boundary`));
+  console.log(boxLine(`  ${fg("[1]")} Customer Support. A refund gone wrong.`));
+  console.log(boxLine(`  ${fg("[2]")} Coding Agent. Rogue file operations.`));
+  console.log(boxLine(`  ${fg("[3]")} Data Pipeline. Runaway queries.`));
+  console.log(boxLine(`  ${fg("[a]")} Coding Agent. A 12-call stress test.`));
+  console.log(boxLine(`  ${fg("[b]")} Budget Guardrails. Cost caps at the boundary.`));
   console.log(boxLine());
   console.log(boxLine(`  ${muted("Usage:")} npx @npmsai/agentmint demo ${dim("[1|2|3|a|b]")}`));
   console.log(boxBot());
+  console.log("");
+  console.log(`  ${muted("Next: run")} ${fg("agentmint demo 1")} ${muted("to watch the first scenario, or")} ${fg("agentmint demo")} ${muted("for the prior auth walkthrough.")}`);
   console.log("");
 }
 
 export async function runDemo(scenarioArg?: string): Promise<void> {
   const arg = scenarioArg ?? process.argv[3];
 
+  // With no argument the default is the healthcare RCM prior auth scenario.
   if (!arg) {
+    const { runRcmDemo } = await import("./rcm.js");
+    await runRcmDemo();
+    return;
+  }
+
+  // The generic scenario hub stays reachable as `agentmint demo basic`.
+  if (arg === "basic") {
     await showMenu();
     return;
   }
@@ -619,7 +629,8 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
   } else if (arg === "b") {
     await scenarioB();
   } else {
-    console.log(`  ${red("✗")} Unknown scenario: ${red(arg)}. Use 1, 2, 3, a, or b.`);
+    console.log(`  ${red("✗")} Unknown scenario: ${red(arg)}. Use basic, 1, 2, 3, a, or b.`);
+    return;
   }
 
   console.log("");
@@ -627,6 +638,8 @@ export async function runDemo(scenarioArg?: string): Promise<void> {
   console.log("");
   console.log(`    ${muted("import { harden } from '@npmsai/agentmint'")}`);
   console.log(`    ${muted("const tools = harden(myTools)")}`);
+  console.log("");
+  console.log(`  ${muted("Next: run")} ${fg("agentmint demo")} ${muted("for the prior auth scenario, then")} ${fg("agentmint init")} ${muted("to write your own spec.")}`);
   console.log("");
   console.log(`  ${dim(`${brand()} v${VERSION}`)}`);
   console.log("");
