@@ -209,6 +209,14 @@ export interface AgentMintConfig {
   readonly silent?: boolean;
   readonly evidenceChain?: boolean;
   /**
+   * Strict allowlist of parameter keys that may appear in a recorded receipt.
+   * When set, only these keys (plus any `bind` keys) are kept on the event, and
+   * every other key is replaced with "[REDACTED]" whatever its type. Use this to
+   * keep identifiers, not clinical payloads, in evidence. When unset, the
+   * default heuristic applies: long strings and objects are redacted.
+   */
+  readonly evidenceFields?: readonly string[];
+  /**
    * Enable signed decision receipts. When present, every enforce() decision
    * emits one Ed25519-signed, hash-chained {@link DecisionReceipt}, retrievable
    * via harden()'s __receipts() / __verifyReceipts().
@@ -264,6 +272,8 @@ export interface RunState {
   retryCounts: Record<string, number>;
   completedSteps: Set<string>;
   boundValues: Readonly<Record<string, string>>;
+  /** Strict allowlist of param keys kept on receipts, from config.evidenceFields. */
+  evidenceFields?: readonly string[];
   events: Event[];
   retrievedData: string[];
   session: SessionStore;

@@ -260,6 +260,48 @@ breakers:
     action: block
 `;
 
+// Observe-only starter for the trial. Every rule is a comment, so nothing is
+// enforced. Paired with harden(tools, { mode: "shadow" }), the agent records
+// every call and blocks nothing. This is the safe way to start: your agent's
+// behavior does not change, and removal is deleting one wrapper line.
+const SHADOW_SPEC = `# AgentMint shadow spec. Observe-only, for a zero-risk trial.
+#
+# Nothing here blocks anything. Wrap your tools with:
+#   const tools = harden(myTools, { spec: loadSpec("agentmint.spec.yaml"), mode: "shadow" });
+# In shadow mode every call is recorded and nothing is blocked, so your agent
+# behaves exactly as before. When you trust the rules, remove mode: "shadow" to
+# start enforcing them. To stop entirely, delete the harden() wrapper line.
+
+version: "1.0"
+
+# warn logs a would-be violation and lets the call through. Shadow mode records
+# it either way. Switch to block only once you move off shadow mode.
+defaults:
+  action: warn
+
+tools:
+  # Uncomment to record which patient records the agent reads.
+  # read_patient_record:
+  #   requires:
+  #     - lookup_auth
+
+  # Uncomment to record prior auths and flag any that bill above the authorized amount.
+  # submit_prior_auth:
+  #   requires:
+  #     - lookup_auth
+  #   input:
+  #     properties:
+  #       billed_amount:
+  #         max_ref: lookup_auth.output.authorized_amount
+  #         action: warn
+
+# Breakers record runaway patterns without stopping the run in shadow mode.
+breakers:
+  loop:
+    max_identical_calls: 3
+    action: warn
+`;
+
 const EXAMPLES: Record<string, string> = {
   refund: REFUND_SPEC,
   coding: CODING_SPEC,
@@ -276,6 +318,7 @@ export async function runInit(): Promise<void> {
   const exampleIdx = args.indexOf("--example");
   const flagIdx = templateIdx >= 0 ? templateIdx : exampleIdx;
   const example = flagIdx >= 0 ? args[flagIdx + 1] : undefined;
+  const shadow = args.includes("--shadow");
   const aiFlag = args.includes("--ai");
 
   if (aiFlag) {
@@ -296,16 +339,28 @@ export async function runInit(): Promise<void> {
     return;
   }
 
-  const content = example && EXAMPLES[example] ? EXAMPLES[example]! : STARTER_SPEC;
+  const content = shadow
+    ? SHADOW_SPEC
+    : example && EXAMPLES[example]
+      ? EXAMPLES[example]!
+      : STARTER_SPEC;
   writeFileSync(fileName, content);
 
-  const label = example && EXAMPLES[example] ? `${example} template` : "starter";
+  const label = shadow
+    ? "shadow, observe-only"
+    : example && EXAMPLES[example]
+      ? `${example} template`
+      : "starter";
 
   console.log("");
   console.log(`  ${green("✓")} Created ${fg(fileName)} ${dim(`(${label})`)}`);
   console.log("");
   console.log(`  ${muted("Your spec includes:")}`);
-  if (example === "rcm") {
+  if (shadow) {
+    console.log(`    ${dim("•")} Observe-only defaults. Nothing blocks anything.`);
+    console.log(`    ${dim("•")} Commented RCM rules, ready to uncomment when you trust them.`);
+    console.log(`    ${dim("•")} A loop breaker set to warn, not block.`);
+  } else if (example === "rcm") {
     console.log(`    ${dim("•")} Patient record and prior auth scope rules`);
     console.log(`    ${dim("•")} Billed amount bounded by the authorized amount`);
     console.log(`    ${dim("•")} An appeal checkpoint held for a clinician`);
@@ -321,8 +376,15 @@ export async function runInit(): Promise<void> {
   console.log("");
   console.log(`  ${muted("Instrument your tools. This one line, plus the spec above, is the whole change:")}`);
   console.log(`    ${dim("import { harden, loadSpec } from \"@npmsai/agentmint\";")}`);
-  console.log(`    ${dim(`const tools = harden(myTools, { spec: loadSpec("${fileName}") });`)}`);
-  console.log("");
-  console.log(`  ${muted("Next: run")} ${fg("agentmint watch")} ${muted("to validate your agent against this spec, or")} ${fg("agentmint demo")} ${muted("to see it work first.")}`);
+  if (shadow) {
+    console.log(`    ${dim(`const tools = harden(myTools, { spec: loadSpec("${fileName}"), mode: "shadow" });`)}`);
+    console.log("");
+    console.log(`  ${muted("Shadow mode records every call and blocks nothing. Removal is deleting that one line.")}`);
+    console.log(`  ${muted("Next: read")} ${fg("TRY-IT.md")} ${muted("for the half-day trial, or run")} ${fg("agentmint doctor")} ${muted("to confirm it works.")}`);
+  } else {
+    console.log(`    ${dim(`const tools = harden(myTools, { spec: loadSpec("${fileName}") });`)}`);
+    console.log("");
+    console.log(`  ${muted("Next: run")} ${fg("agentmint watch")} ${muted("to validate your agent against this spec, or")} ${fg("agentmint demo")} ${muted("to see it work first.")}`);
+  }
   console.log("");
 }

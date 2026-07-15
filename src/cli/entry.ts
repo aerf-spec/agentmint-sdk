@@ -27,6 +27,7 @@ const commands: Record<string, () => Promise<void>> = {
   ci: () => import("./ci.js").then((m) => m.runCi()),
   diff: () => import("./diff.js").then((m) => m.runDiff()),
   export: () => import("./export.js").then((m) => m.runExport()),
+  doctor: () => import("./doctor.js").then((m) => m.runDoctor()),
 };
 
 function showHelp(): void {
@@ -35,9 +36,10 @@ function showHelp(): void {
   console.log(`  ${muted("Every agent action gets a signed receipt. Anyone can verify the chain,")}`);
   console.log(`  ${muted("offline, without trusting the agent, the app, or us.")}`);
   console.log("");
-  console.log(`  ${fg("Try the demo")}       ${dim("$")} npx @npmsai/agentmint demo`);
-  console.log(`  ${fg("Wrap your tools")}    ${dim("$")} npx @npmsai/agentmint init --template rcm`);
-  console.log(`  ${fg("Export for a buyer")} ${dim("$")} npx @npmsai/agentmint export --from receipts/ --out evidence.zip`);
+  console.log(`  ${fg("Start the half-day trial")}  ${muted("read")} ${fg("TRY-IT.md")}`);
+  console.log(`  ${fg("Try the demo")}              ${dim("$")} npx @npmsai/agentmint demo`);
+  console.log(`  ${fg("Check your setup")}          ${dim("$")} npx @npmsai/agentmint doctor`);
+  console.log(`  ${fg("Export for a buyer")}        ${dim("$")} npx @npmsai/agentmint export --from receipts/ --out evidence.zip`);
   console.log("");
   console.log(`  ${fg("Usage:")}  npx @npmsai/agentmint ${dim("<command>")}`);
   console.log("");
@@ -47,6 +49,7 @@ function showHelp(): void {
   console.log(`    ${fg("demo")}       ${muted("Run the prior auth walkthrough with no keys and no network.")}`);
   console.log("");
   console.log(`    ${muted("Observe")}`);
+  console.log(`    ${fg("doctor")}     ${muted("Check your Node version, tool wrapping, and active mode.")}`);
   console.log(`    ${fg("watch")}      ${muted("Validate your agent's calls against your spec as they happen.")}`);
   console.log("");
   console.log(`    ${muted("Prove")}`);
@@ -70,7 +73,7 @@ function showHelp(): void {
   console.log(`    ${dim("$")} npx @npmsai/agentmint export --from receipts/ --out evidence.zip`);
   console.log(`    ${dim("$")} npx @npmsai/agentmint verify --receipts receipts/ --pub public_key.pem`);
   console.log("");
-  console.log(`  ${muted("Next: run")} ${fg("agentmint demo")} ${muted("to see a receipted prior auth session end to end.")}`);
+  console.log(`  ${muted("Next: read")} ${fg("TRY-IT.md")} ${muted("for the half-day trial, from curious to a forwardable evidence packet.")}`);
   console.log("");
 }
 
