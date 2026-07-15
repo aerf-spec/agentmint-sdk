@@ -1,13 +1,17 @@
-// Refund agent on the Vercel AI SDK, guarded by AgentMint.
+// Reach for this example if you are an engineer wrapping tools built on the
+// Vercel AI SDK generateText tool loop, and you want to see the bridge from a
+// spec gate to the SDK's tool-approval flow.
+//
+// Prior-auth agent on the Vercel AI SDK, guarded by AgentMint.
 //
 //   npx tsx run.ts            # MockLanguageModelV3, no API key (default)
-//   echo y | npx tsx run.ts   # auto-approve the refund at the console gate
+//   echo y | npx tsx run.ts   # auto-approve the prior auth at the console gate
 //   npx tsx run.ts --live     # a real model via the AI SDK Gateway
 //
-// The agent looks an order up, issues a refund (which requires human approval
-// through AgentMint's gate()), and emails the customer. Every tool call becomes
-// a line in a signed JSONL receipt; a final verify() pass prints a verification
-// receipt over the guardrail spec.
+// The agent looks an authorization up, submits a prior auth (which requires
+// human approval through AgentMint's gate()), and notifies the payer. Every
+// tool call becomes a line in a signed JSONL receipt. A final verify() pass
+// prints a verification receipt over the guardrail spec.
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { generateText, stepCountIs } from "ai";
@@ -29,15 +33,15 @@ const usage = (): LanguageModelV3Usage => ({
 // A scripted three-step tool loop so the demo runs with no API key. On --live a
 // real model plans the same task through the AI Gateway (set AI_GATEWAY_API_KEY).
 const mockModel = new MockLanguageModelV3({
-  modelId: "mock-refund-agent",
+  modelId: "mock-prior-auth-agent",
   provider: "mock.gateway",
   doGenerate: [
     {
       content: [{
         type: "tool-call",
         toolCallId: "call_lookup",
-        toolName: "lookup_order",
-        input: JSON.stringify({ order_id: "ORD-1001" }),
+        toolName: "lookup_auth",
+        input: JSON.stringify({ auth_id: "PA-2210" }),
       }],
       finishReason: { unified: "tool-calls", raw: "tool_calls" },
       usage: usage(),
@@ -46,9 +50,9 @@ const mockModel = new MockLanguageModelV3({
     {
       content: [{
         type: "tool-call",
-        toolCallId: "call_refund",
-        toolName: "issue_refund",
-        input: JSON.stringify({ order_id: "ORD-1001", amount: 42.5 }),
+        toolCallId: "call_submit",
+        toolName: "submit_prior_auth",
+        input: JSON.stringify({ auth_id: "PA-2210", billed_amount: 42.5 }),
       }],
       finishReason: { unified: "tool-calls", raw: "tool_calls" },
       usage: usage(),
@@ -57,11 +61,11 @@ const mockModel = new MockLanguageModelV3({
     {
       content: [{
         type: "tool-call",
-        toolCallId: "call_email",
-        toolName: "send_email",
+        toolCallId: "call_notify",
+        toolName: "notify_payer",
         input: JSON.stringify({
-          to: "ada@example.com",
-          body: "Your refund of $42.50 is on its way.",
+          to: "aetna@example.com",
+          body: "The prior auth for $42.50 has been submitted.",
         }),
       }],
       finishReason: { unified: "tool-calls", raw: "tool_calls" },
@@ -69,7 +73,7 @@ const mockModel = new MockLanguageModelV3({
       warnings: [],
     },
     {
-      content: [{ type: "text", text: "All done — refund issued and the customer emailed." }],
+      content: [{ type: "text", text: "All done. Prior auth submitted and the payer notified." }],
       finishReason: { unified: "stop", raw: "stop" },
       usage: usage(),
       warnings: [],
@@ -82,20 +86,20 @@ async function main(): Promise<void> {
 
   const am = withAgentMint({ spec: SPEC, mode: "enforce" });
 
-  console.log(`\n  Refund agent — model: ${live ? "openai/gpt-4.1-mini (live)" : "mock"}`);
-  console.log("  When the agent tries to issue the refund, AgentMint's gate");
+  console.log(`\n  Prior-auth agent. Model: ${live ? "openai/gpt-4.1-mini (live)" : "mock"}`);
+  console.log("  When the agent tries to submit the prior auth, AgentMint's gate");
   console.log("  will ask you to approve it (type y / n at the prompt).\n");
 
   const result = await generateText({
     model,
     tools: am.tools(tools),
-    // Spec-driven approval: issue_refund is `requires_approval: true`, so the
-    // gate fires only for it. All decisions land on the receipt.
+    // Spec-driven approval: submit_prior_auth is `requires_approval: true`, so
+    // the gate fires only for it. All decisions land on the receipt.
     toolApproval: am.toolApproval("spec"),
     onStepFinish: am.onStepFinish,
     stopWhen: stepCountIs(6),
     prompt:
-      "Refund order ORD-1001 in full and email the customer to confirm.",
+      "Submit the prior auth PA-2210 in full and notify the payer to confirm.",
   });
 
   console.log(`\n  Model said: ${result.text}\n`);

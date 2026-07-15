@@ -70,7 +70,7 @@ function renderBox(options: GateOptions): string {
 
   const rows: string[] = [];
   rows.push(rule("┌", "┐"));
-  rows.push(line(`🔒 ${brand()} — Approval Required`));
+  rows.push(line(`🔒 ${brand()}  Approval Required`));
   rows.push(line());
   rows.push(line(`Action:  ${bold(options.action)}`));
   rows.push(line("Context:"));
@@ -176,7 +176,7 @@ function slackBlocks(options: GateOptions): unknown {
     blocks: [
       {
         type: "header",
-        text: { type: "plain_text", text: "🔒 AgentMint — Approval Required" },
+        text: { type: "plain_text", text: "🔒 AgentMint  Approval Required" },
       },
       {
         type: "section",

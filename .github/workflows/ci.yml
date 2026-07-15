@@ -2,19 +2,31 @@ name: CI
 
 on:
   push:
+    branches: ["**"]
   pull_request:
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["18", "20", "22"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
-      - name: Vitest suite
-        run: npx vitest run
-      - name: AERF conformance oracle
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: AERF conformance oracle (12/12 vectors)
         run: node test/aerf-verify-poc.mjs
+      - name: Test suite
+        run: npx vitest run
+      - name: Sample evidence packet verifies standalone
+        run: |
+          npm run example:packet
+          cd examples/sample-evidence-packet
+          unzip -o evidence.zip -d packet
+          node packet/verify.mjs

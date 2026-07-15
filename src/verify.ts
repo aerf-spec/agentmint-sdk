@@ -545,7 +545,7 @@ export function formatVerifyReceipt(receipt: VerifyReceipt): string {
 
   const s = receipt.summary;
   const risky = receipt.scope.risky_actions.length;
-  line(`${C.brand()} ${C.dim("Verify")} ${C.muted("— Receipt")}`);
+  line(`${C.brand()} ${C.dim("Verify")} ${C.muted("Receipt")}`);
   line();
   line(
     C.muted(

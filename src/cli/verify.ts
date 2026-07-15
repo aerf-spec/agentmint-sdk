@@ -74,7 +74,7 @@ function showHelp(): void {
   console.log(`    ${dim("$")} agentmint verify --receipts examples/demos/out/receipts.json --pub examples/demos/out/public_key.pem`);
   console.log(`    ${dim("$")} agentmint verify demo`);
   console.log(`    ${dim("$")} agentmint verify --dir ./src --spec agentmint.spec.yaml`);
-  console.log(`    ${dim("$")} agentmint verify --diff HEAD~1 --context "fix refund bug"`);
+  console.log(`    ${dim("$")} agentmint verify --diff HEAD~1 --context "fix a scope bug"`);
   console.log("");
 }
 
