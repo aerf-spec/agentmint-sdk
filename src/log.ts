@@ -37,6 +37,7 @@ export function createRunState(config: AgentMintConfig): RunState {
     retryCounts: {},
     completedSteps: new Set(),
     boundValues: Object.freeze({ ...config.bind }),
+    ...(config.evidenceFields ? { evidenceFields: config.evidenceFields } : {}),
     events: [],
     retrievedData: [],
     session: createSession(),
@@ -71,7 +72,7 @@ export function logEvent(
     violations?: ReadonlyArray<ReceiptViolation>;
   },
 ): Event {
-  const redacted = redact(params, Object.keys(state.boundValues));
+  const redacted = redact(params, Object.keys(state.boundValues), state.evidenceFields);
   const elapsed = ((Date.now() - state.startedAt) / 1000).toFixed(1) + "s";
   const event: Event = {
     timestamp: new Date().toISOString(),

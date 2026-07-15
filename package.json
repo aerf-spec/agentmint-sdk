@@ -63,7 +63,8 @@
     "example:gate": "npx tsx examples/spec-gate/spec-gate.ts",
     "packet:sample": "npx tsx examples/sample-evidence-packet/generate.ts",
     "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
-    "benchmark:full": "cd examples/lm-studio-benchmark && npm run full"
+    "benchmark:full": "cd examples/lm-studio-benchmark && npm run full",
+    "example:trial": "npx tsx examples/trial-agent/trial.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

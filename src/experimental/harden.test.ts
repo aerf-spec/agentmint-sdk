@@ -102,4 +102,32 @@ describe("harden", () => {
     await (tools as any).foo();
     expect((tools as any).__receipt()).toContain("Evidence:");
   });
+
+  it("shadow_mode_never_blocks_the_real_call", async () => {
+    // The same deny rule blocks in enforce mode (see enforcement_applied). In
+    // shadow mode the tool still runs and returns its real result. The would-be
+    // block is only recorded, never enforced.
+    const tools = harden({ delete_patient_record: async () => ({ deleted: true }) }, {
+      deny: ["delete_patient_record"],
+      mode: "shadow",
+    });
+    const result = await (tools as any).delete_patient_record({ patient_id: "PT-1" });
+    expect(result).toEqual({ deleted: true }); // executed, real result returned
+    expect(result).not.toHaveProperty("error"); // never a block response
+    expect((tools as any).__state().executedCount).toBe(1);
+  });
+
+  it("evidence_fields_allowlist_redacts_everything_else", async () => {
+    // Only patient_id is on the allowlist, so the clinical fields never reach
+    // the receipt. This is the field selection that keeps PHI out of evidence.
+    const tools = harden({ read_patient_record: async (p: any) => p }, {
+      evidenceFields: ["patient_id"],
+    });
+    await (tools as any).read_patient_record({ patient_id: "PT-9", diagnosis: "sensitive", note: "x" });
+    expect((tools as any).__log()[0].params).toEqual({
+      patient_id: "PT-9",
+      diagnosis: "[REDACTED]",
+      note: "[REDACTED]",
+    });
+  });
 });

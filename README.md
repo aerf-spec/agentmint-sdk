@@ -19,6 +19,8 @@ It runs a prior auth session: one in-scope patient record read, one prior auth s
 
 ## Add it to your agent
 
+Start in shadow mode. It records everything, blocks nothing, and is removable in one line, so there is no risk in trying it.
+
 ```
 npm install @npmsai/agentmint
 ```
@@ -26,12 +28,12 @@ npm install @npmsai/agentmint
 ```ts
 import { harden } from "@npmsai/agentmint";
 
-const tools = harden(myTools);                       // observe and receipt, nothing blocked
+const tools = harden(myTools, { mode: "shadow" });   // records everything, blocks nothing
 await tools.submit_prior_auth({ auth_id: "PA-2210", billed_amount: 40 });
 console.log(tools.__receipt());                      // the receipt box for this run
 ```
 
-One import, one wrap. `harden()` fits raw, OpenAI, Anthropic, and LangChain tool shapes. For the Vercel AI SDK and durable agents, see [examples/](examples/).
+One import, one wrap. `harden()` fits raw, OpenAI, Anthropic, and LangChain tool shapes. For the Vercel AI SDK and durable agents, see [examples/](examples/). For the full trial, from curious to a forwardable packet in half a day, see [TRY-IT.md](TRY-IT.md).
 
 ## Hand your buyer the packet
 
@@ -43,6 +45,18 @@ $ unzip evidence.zip && node verify.mjs
 ```
 
 They need Node 18. They do not need agentmint, an account, or trust in you. If a receipt was touched, the verifier says so and names the one that changed. See a finished packet in [examples/sample-evidence-packet/](examples/sample-evidence-packet/).
+
+## What leaves your environment
+
+Nothing, by default. Receipts are generated and stored in your runtime. PHI never reaches agentmint. There is no agentmint service in your data flow, so trying this adds no new subprocessor and no new BAA to your compliance story.
+
+Put identifiers, not clinical payloads, in evidence fields. Long strings and objects are redacted by default. For exact control, name the only fields allowed onto a receipt:
+
+```ts
+const tools = harden(myTools, { mode: "shadow", evidenceFields: ["patient_id", "auth_id"] });
+```
+
+Every parameter not on that list is replaced with `[REDACTED]` before it is recorded, whatever its type.
 
 ## Control what gets receipted
 

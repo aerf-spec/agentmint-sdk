@@ -62,6 +62,16 @@ This is the most thorough example. Start here only after the first three.
 
 See [prior-auth-eve/](prior-auth-eve/).
 
+## The half-day trial
+
+[trial-agent/](trial-agent/) is the runnable companion to
+[TRY-IT.md](../TRY-IT.md). It wraps a toy prior auth agent in shadow mode, then
+writes signed receipts you can export into a forwardable packet.
+
+```
+npm run example:trial
+```
+
 ## Also here
 
 - [demos/](demos/) : the scenarios behind `agentmint demo`, each runnable on its own.
