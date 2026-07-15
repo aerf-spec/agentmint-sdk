@@ -1,7 +1,11 @@
 // agentmint export — bundle receipts into a portable, self-verifying zip.
 //
 //   agentmint export --from receipts/ --out evidence.zip \
-//       [--plan plan.json] [--key notary_key.pem | --pub public_key.pem]
+//       [--plan plan.json] [--key notary_key.pem | --pub public_key.pem] \
+//       [--created 2026-07-15T00:00:00Z]
+//
+// --created pins the package_created timestamp in receipt_index.json, so the
+// same receipts export to a byte-identical zip (deterministic regeneration).
 //
 // --from accepts a directory of receipt .json files and/or .jsonl files (one
 // receipt per line, e.g. a FileReceiptSink output). Receipts are ordered by
@@ -46,6 +50,7 @@ export async function runExport(): Promise<void> {
   const planPath = argValue("--plan");
   const keyPath = argValue("--key");
   const pubPath = argValue("--pub");
+  const created = argValue("--created");
 
   if (!from) {
     console.error(`\n  ${red("✗")} Usage: agentmint export --from receipts/ --out evidence.zip [--plan plan.json] [--key notary_key.pem | --pub public_key.pem]\n`);
@@ -92,7 +97,7 @@ export async function runExport(): Promise<void> {
     return;
   }
 
-  const pkg = new EvidencePackage({ plan, publicKeyPem, signingKey });
+  const pkg = new EvidencePackage({ plan, publicKeyPem, signingKey, packageCreated: created });
   for (const r of receipts) pkg.add(r);
   const path = pkg.export(resolve(out));
 

@@ -1,5 +1,7 @@
 # agentmint
 
+[![CI](https://github.com/aerf-spec/agentmint-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/aerf-spec/agentmint-sdk/actions/workflows/ci.yml)
+
 Your agent takes real actions: it moves money, changes records, sends messages. When a buyer or an auditor asks what it did, your logs don't prove anything. You could have edited them after the fact, and your buyer knows it.
 
 agentmint gives every action a receipt, created the moment the action happens and linked to the one before it. Change any action afterward and verification fails, pointing straight at the one that was altered.
@@ -7,6 +9,14 @@ agentmint gives every action a receipt, created the moment the action happens an
 Your buyer checks the receipts themselves, on their own machine, with a single command. No account, no trust in you, and nothing from us has to be running.
 
 **Security reviews shrink from weeks to days, disputes end without a call to you, and your word gets replaced by proof.**
+
+## Received an evidence packet?
+
+If a vendor sent you an `evidence.zip` and you need to verify it, you are in the right place and you do not need to install agentmint. Unzip the packet and run the standalone verifier, which uses only Node 18 or newer. The full reviewer guide, including what PASS and FAIL mean and what a receipt does not prove, is in [`FOR-REVIEWERS.md`](FOR-REVIEWERS.md).
+
+```
+unzip evidence.zip && node verify.mjs
+```
 
 ## 60-second demo
 
@@ -28,7 +38,7 @@ npm install @npmsai/agentmint
 import { harden } from "@npmsai/agentmint";
 
 const tools = harden(myTools);          // observe-and-receipt mode
-await tools.charge_card({ amount: 4000 });
+await tools.submit_prior_auth({ prior_auth_id: "PA-2210", billed_amount: 40 });
 console.log(tools.__receipt());         // a rendered receipt box for the run
 ```
 
@@ -65,7 +75,7 @@ const privateKeyPem = generateKeyPairSync("ed25519").privateKey
   .export({ type: "pkcs8", format: "pem" }) as string;
 
 const tools = harden(myTools, { signing: { privateKeyPem } });
-await tools.send_email({ to: "ops@example.com" });
+await tools.read_patient_record({ patient_id: "PT-4821" });
 tools.__verifyReceipts(); // { ok: true }, or the exact break index and why
 ```
 
@@ -116,6 +126,8 @@ More rules, each one line. Full versions in [`docs/cookbook.md`](docs/cookbook.m
 Auditors now want evidence that a control *ran*, not a claim that it exists. The EU AI Act requires tamper-evident event records for high-risk systems ([Article 12](https://artificialintelligenceact.eu/article/12/)); the [OWASP GenAI Security Project](https://genai.owasp.org/) lists repudiation among its core agentic threats; SOC 2, HIPAA, and AIUC-1 reviews want proof a decision happened. A signed receipt is that proof.
 
 In healthcare specifically, CMS and California SB 1120 require a clinician, not an algorithm, to make coverage determinations, and the checkpoint approval receipt records that determination as a signed artifact.
+
+The [compliance crosswalk](docs/compliance-crosswalk.md) maps each of these controls to the exact receipt fields that answer it and how to check them in a packet. A worked, verifiable example is in [`examples/sample-evidence-packet/`](examples/sample-evidence-packet/).
 
 ## How policies improve over time
 

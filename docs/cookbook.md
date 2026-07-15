@@ -50,35 +50,35 @@ await tools.submit_prior_auth({ billed_amount: 500 }); // blocked: 500 > 40
 
 ```ts
 // Loop breaker: identical call, third strike
-const tools = harden({ fetch_page: ok }, { spec: loadSpec(`
+const tools = harden({ read_patient_record: ok }, { spec: loadSpec(`
 version: "1.0"
 breakers:
   loop:
     max_identical_calls: 3
     action: block
 `) });
-await tools.fetch_page({ url: "https://example.com" }); // 1: allowed
-await tools.fetch_page({ url: "https://example.com" }); // 2: allowed
-await tools.fetch_page({ url: "https://example.com" }); // 3: blocked
+await tools.read_patient_record({ patient_id: "PT-4821" }); // 1: allowed
+await tools.read_patient_record({ patient_id: "PT-4821" }); // 2: allowed
+await tools.read_patient_record({ patient_id: "PT-4821" }); // 3: blocked
 ```
 
 ```ts
 // Per-run budget cap: the run is killed before it can pass $5
-const tools = harden({ call_llm: ok }, { budget: 5, costEstimator: () => 2 });
-await tools.call_llm({ prompt: "step 1" }); // $2
-await tools.call_llm({ prompt: "step 2" }); // $4
-await tools.call_llm({ prompt: "step 3" }); // killed: would pass $5
+const tools = harden({ lookup_auth: ok }, { budget: 5, costEstimator: () => 2 });
+await tools.lookup_auth({ auth_id: "PA-2210" }); // $2
+await tools.lookup_auth({ auth_id: "PA-2210" }); // $4
+await tools.lookup_auth({ auth_id: "PA-2210" }); // killed: would pass $5
 ```
 
 ```ts
 // Shadow mode: evaluate and record, but execute anyway
-const tools = harden({ transfer: ok }, { mode: "shadow", spec: loadSpec(`
+const tools = harden({ submit_appeal: ok }, { mode: "shadow", spec: loadSpec(`
 version: "1.0"
 tools:
-  transfer:
+  submit_appeal:
     action: block
 `) });
-await tools.transfer({ amount: 100 }); // runs; the log records the would-be block
+await tools.submit_appeal({ appeal_id: "APL-1103" }); // runs; the log records the would-be block
 ```
 
 ```ts
@@ -86,8 +86,8 @@ await tools.transfer({ amount: 100 }); // runs; the log records the would-be blo
 import { generateKeyPairSync } from "node:crypto";
 const { privateKey } = generateKeyPairSync("ed25519");
 const privateKeyPem = privateKey.export({ type: "pkcs8", format: "pem" }) as string;
-const tools = harden({ send_email: ok }, { signing: { privateKeyPem } });
-await tools.send_email({ to: "ops@example.com" });
+const tools = harden({ submit_prior_auth: ok }, { signing: { privateKeyPem } });
+await tools.submit_prior_auth({ prior_auth_id: "PA-2210" });
 tools.__verifyReceipts(); // { ok: true }
 ```
 
@@ -97,8 +97,8 @@ tools.__verifyReceipts(); // { ok: true }
 import { Notary, FileReceiptSink } from "@npmsai/agentmint/notary";
 import { writeFileSync } from "node:fs";
 const notary = new Notary({ stateDir: "./state", sink: new FileReceiptSink("./receipts") });
-const plan = notary.createPlan({ user: "ops@example.com", action: "close-tickets", scope: ["ticket:close:*"] });
-notary.notarise({ action: "ticket:close:tkt_0007", agent: "support-agent", plan, evidence: { ticket_id: "tkt_0007" } });
+const plan = notary.createPlan({ user: "utilization-management", action: "prior_auth_session", scope: ["submit:prior_auth:*"] });
+notary.notarise({ action: "submit:prior_auth:PA-2210", agent: "prior-auth-agent", plan, evidence: { prior_auth_id: "PA-2210" } });
 writeFileSync("plan.json", JSON.stringify(plan, null, 2));
 ```
 
