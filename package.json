@@ -58,6 +58,7 @@
     "demo:silence": "npx tsx examples/demos/silence.ts",
     "demo:trace": "npx tsx examples/demos/trace.ts",
     "demo:learn": "npx tsx examples/demos/learn.ts",
+    "packet:sample": "npx tsx examples/sample-evidence-packet/generate.ts",
     "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
     "benchmark:full": "cd examples/lm-studio-benchmark && npm run full"
   },
