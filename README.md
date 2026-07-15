@@ -1,8 +1,8 @@
 # agentmint
 
-Every agent action gets a signed receipt. Anyone can verify the chain, offline, without trusting the agent, the app, or us.
+Tamper-evident plain-language receipts for Healthcare RCM agents. For startup founders selling to healthcare systems.
+Give your clinic or hospital proof your agent is safe and compliant end-to-end, in a way they understand, without YOU having to dig through logs and THEM having to take your word for it.
 
-Your agent acts on records and money. The usual record of what it did is a log the same process could rewrite after the fact. The people evaluating you know that, so your word is not evidence.
 
 **Building an agent?** Start below.
 **Received an evidence packet?** Read [FOR-REVIEWERS.md](FOR-REVIEWERS.md). You do not need to install anything.
@@ -15,7 +15,7 @@ npx @npmsai/agentmint demo
 
 It runs a prior auth session: one in-scope patient record read, one prior auth submitted, one out-of-scope record read blocked before it runs, and one appeal held for a clinician whose approval is itself a signed receipt. Then it flips one byte and verification points straight at the receipt that changed.
 
-## Add it to your agent
+## Add it to your agent. 
 
 ```
 npm install @npmsai/agentmint
@@ -103,13 +103,13 @@ $ node test/aerf-verify-poc.mjs   # 12/12 AERF conformance vectors
 $ npx vitest run                  # full suite, incl. cross-producer byte-match vs the Python reference
 ```
 
-One honest limit: a receipt proves what was observed and signed, not what *should* have happened. What it makes impossible is silent revision. If a bad input reaches every signer, they all sign it honestly, and the receipt records what happened, not a judgment that it was right.
+One honest limit: a receipt proves what was observed and signed, not what *should* have happened. What it makes impossible is silent revision. If a bad input reaches every signer, they all sign it honestly, and the receipt records what happened, not a judgment that it was right. Happy to talk with those in the space on how to develop a good framework to judge appropriateness of actions that are otherwise in-policy!
 
 The Notary API for plan-bound evidence, and the three proof layers that stack behind a packet, are in [`THREAT-MODEL.md`](THREAT-MODEL.md#proof-layers). A newcomer does not need them to ship.
 
 ## How it improves over time
 
-This is the regression loop, not a headline. When a run trips a rule, its receipts become the policy. `agentmint learn` reads past violations, writes the spec that would have caught them, and generates a test that fails if a later edit reopens the hole.
+This is the regression loop, not a headline. When a run trips a rule, its receipts become the policy. `agentmint learn` reads past violations, writes the spec that would have caught them, and generates a test that fails if a later edit reopens the hole. The goal is that your buyer gets more transparency over time.
 
 ```
 $ agentmint learn --from receipts/incident.jsonl --out policy.yaml --test policy.test.ts
