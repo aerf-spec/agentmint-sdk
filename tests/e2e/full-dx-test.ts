@@ -50,10 +50,11 @@ async function phase1_firstContact(): Promise<void> {
 
   // Test: demo menu shows without args
   try {
-    const menuOutput = execSync("npx tsx src/cli/entry.ts demo", {
+    const menuOutput = execSync("npx tsx src/cli/entry.ts demo --fast", {
       cwd: process.cwd(),
       encoding: "utf-8",
       timeout: 10000,
+      env: { ...process.env, AGENTMINT_DEMO_FAST: "1" },
     });
     assert(menuOutput.includes("Demo"), "demo menu renders");
     assert(menuOutput.includes("[1]") || menuOutput.includes("1"), "menu shows scenario options");

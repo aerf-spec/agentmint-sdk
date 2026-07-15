@@ -603,12 +603,16 @@ async function showMenu(): Promise<void> {
 }
 
 export async function runDemo(scenarioArg?: string): Promise<void> {
-  const arg = scenarioArg ?? process.argv[3];
+  const argv = process.argv.slice(3);
+  // --fast skips the walkthrough pauses. It is a flag, not a scenario name.
+  const fast = argv.includes("--fast");
+  const arg = scenarioArg ?? argv.find((a) => !a.startsWith("--"));
 
-  // With no argument the default is the healthcare RCM prior auth scenario.
+  // With no scenario the default is the healthcare RCM prior auth walkthrough.
+  // Pass the flag only when set, so AGENTMINT_DEMO_FAST can still enable it.
   if (!arg) {
     const { runRcmDemo } = await import("./rcm.js");
-    await runRcmDemo();
+    await runRcmDemo(fast ? { fast: true } : undefined);
     return;
   }
 

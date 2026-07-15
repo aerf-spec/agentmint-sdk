@@ -16,9 +16,9 @@ import { buildRcmChain, renderRcmSession } from "../../src/cli/rcm.js";
 const here = dirname(fileURLToPath(import.meta.url));
 const outDir = join(here, "out");
 
-function main(): void {
+async function main(): Promise<void> {
   const chain = buildRcmChain();
-  renderRcmSession(chain);
+  await renderRcmSession(chain);
 
   // Export the untouched chain for downstream verification.
   mkdirSync(outDir, { recursive: true });
@@ -32,4 +32,7 @@ function main(): void {
   console.log("");
 }
 
-main();
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
