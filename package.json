@@ -64,7 +64,8 @@
     "packet:sample": "npx tsx examples/sample-evidence-packet/generate.ts",
     "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
     "benchmark:full": "cd examples/lm-studio-benchmark && npm run full",
-    "example:trial": "npx tsx examples/trial-agent/trial.ts"
+    "example:trial": "npx tsx examples/trial-agent/trial.ts",
+    "site:build": "npx tsx scripts/build-receipt-viewer.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

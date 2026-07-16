@@ -1,0 +1,163 @@
+[
+  {
+    "id": "a1000001-0000-4000-8000-000000000001",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "read:patient_record:PT-4821",
+    "in_policy": true,
+    "policy_reason": "In scope for this case. HIPAA 164.312(a) access control is satisfied for the assigned patient.",
+    "evidence_hash_sha512": "81b1d1844bffca59a46c8437d2b44e275787666ad147c669ed9b1749645ad2c32bff97fe72ae2862db42c98cb45a705100ebcc5be058e5c7250f4f43b122f069",
+    "evidence": {
+      "patient_id": "PT-4821"
+    },
+    "observed_at": "2026-01-15T09:00:01.000000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 1,
+    "signature": "eb9b2cfb2c0d34c55d9edb6bc280f03931b52fdcdaae53008ea8da77c0b7eb0f69b911ab3cdb59aaaaf88aed82175c50f1c919b8cb2d6b1d9377012423275c0a"
+  },
+  {
+    "id": "a2000002-0000-4000-8000-000000000002",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "submit:prior_auth:PA-2210",
+    "in_policy": true,
+    "policy_reason": "In scope. Billed amount 40 does not exceed the authorized amount 40 from the lookup.",
+    "evidence_hash_sha512": "d2478cb8d94b22cbea308ed4ecd65b37c79eaa3decda9dfbfc26df18b83971a0e50ddeda761dd3cb390c34dc6d629401190352de21e9584b9a723282186c0485",
+    "evidence": {
+      "auth_id": "PA-2210",
+      "billed_amount": 40,
+      "authorized_amount": 40
+    },
+    "observed_at": "2026-01-15T09:00:02.000000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "previous_receipt_hash": "b56f6a7df00994feeeafb31bcc1a69035c60b7aa3ecdff0bf9194465eaad0837",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 2,
+    "signature": "90a02e835f643879a43d901e4fb79ee8481829c0562147e16ab4aefda385d8a4b7f8f912ec11ac299ef329c65dc00a5dd5ac96c3f93c4fb544fc0f41b275c50d"
+  },
+  {
+    "id": "a3000003-0000-4000-8000-000000000003",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "read:patient_record:PT-4498",
+    "in_policy": false,
+    "policy_reason": "Out of scope. This record is not the assigned patient, so the call was blocked before it ran.",
+    "evidence_hash_sha512": "205986d7794be70a80687dcf12e175d94b0aa07bc63376311d5221a95983e048af4ee872730a0a7d1370b72dc861d64dc7fd623a9a57412ff0d853ee7cd3aa07",
+    "evidence": {
+      "patient_id": "PT-4498",
+      "blocked": true
+    },
+    "observed_at": "2026-01-15T09:00:03.000000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "previous_receipt_hash": "f5c89973f02b6ecfa2681b6fa401e3bcc2e6d9c1ec0d0bef3c584e04ea5260c9",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 3,
+    "signature": "2ed3878500b14ad0bc30146e963f5861bfd715a4a41de709f2854114390ce572c5733345796f899a328cbe143156fd478d75748d14f881faa9910acc025b970c"
+  },
+  {
+    "id": "a4000004-0000-4000-8000-000000000004",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "submit:appeal:APL-1103",
+    "in_policy": false,
+    "policy_reason": "Held for human approval. CMS-4201-F and California SB 1120 require a clinician to make this determination.",
+    "evidence_hash_sha512": "abeeaebc76e70dde8c5689fd12e82cc0ee4edd37202433527ad26b64b43a3e59f0ae86f6d982beaa737990ee0fb65a4443c9eac6af91279875e9f0124e002787",
+    "evidence": {
+      "appeal_id": "APL-1103",
+      "held": true
+    },
+    "observed_at": "2026-01-15T09:00:04.000000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "previous_receipt_hash": "b099d3a034f307e5ce7828889893620965846881b1da94d50da393869568d789",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 4,
+    "signature": "e46d61c298f2c08abd45a9fd42f729d719ddc321790f4067de701853d3b87aa12347781cd8ae857afcec5a02e92d0708e598c3a5fc59689306888b0b50ad140d"
+  },
+  {
+    "id": "a5000005-0000-4000-8000-000000000005",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "submit:appeal:APL-1103",
+    "in_policy": true,
+    "policy_reason": "Approved by clinician key 4f2a. The clinician's determination is now a signed artifact in the chain.",
+    "evidence_hash_sha512": "6ac2854dfc32e3ece5c7131ed69f5ea7de8c10758398ee2a53cd15c285db9393fb9e7b3a237f7411e297fbab26b82833900c4c16aa562423db58ada925bfaaec",
+    "evidence": {
+      "appeal_id": "APL-1103",
+      "approved_by": "clinician:4f2a"
+    },
+    "observed_at": "2026-01-15T09:00:05.000000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "previous_receipt_hash": "80b227abc8efdee3d4f92f1cff5b6437aec29b24e88b7d3f9fda8e9b6450aa88",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 5,
+    "signature": "12feecc487b0e9b2cfcc8d455849300662d4a06099c28922b447ab7d6f369cf84a892e4b35a2b2ba00464b8baad73b387915fc1f6681597ffa8eb9cc5364cd0b"
+  },
+  {
+    "id": "a6000006-0000-4000-8000-000000000006",
+    "type": "notarised_evidence",
+    "plan_id": "a0000000-0000-4000-8000-000000000000",
+    "agent": "prior-auth-agent",
+    "action": "submit:appeal:APL-1103",
+    "in_policy": true,
+    "policy_reason": "Submitted under the clinician's approval. The clinician's decision, not the agent's, is on the receipt.",
+    "evidence_hash_sha512": "3ea2136fa0a20ae8c33de888a1f1d2364d8d8bc3980b3e6c473e373234b556d3159bd996c28fdf0f15f86f1add0f00168c040ca690e3df3e0f25fd4e427824d6",
+    "evidence": {
+      "appeal_id": "APL-1103",
+      "submitted": true
+    },
+    "observed_at": "2026-01-15T09:00:05.500000+00:00",
+    "aiuc_controls": [
+      "E015",
+      "D003",
+      "B001"
+    ],
+    "key_id": "c770accea5578c92",
+    "agent_key_id": "",
+    "policy_hash": "576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb",
+    "previous_receipt_hash": "9075731d760f4c8a6a208b444be65b9415f1011cad5bd9ba8fd2cb7fcdce50f0",
+    "plan_signature": "bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05",
+    "seq": 6,
+    "signature": "79418771ad3e76d8c8afe2634473ce4b7ecd7f928ec8e4ddd2abf938cfa0f52cd0dc1507145edccb239bf7c84e0b5ec13212de4af767fb4555ebcb976ef3f80a"
+  }
+]
