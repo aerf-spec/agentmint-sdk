@@ -14,8 +14,14 @@ so the same records shown on the page can be verified standalone with
 ## Files
 
 - `index.html` : the page. Self-contained. No scripts, no external assets, no network calls.
-- `receipts.json` : the six receipts shown on the page, as raw JSON.
+- `receipts.json` : the six receipts shown on the page, as raw signed JSON.
+- `receipts.md` : the same receipts in plain language, one section each.
+- `verification.md` : the verification report, the clean pass and the tamper failure.
 - `public_key.pem` : the key that verifies those receipts.
+
+The Markdown files render on GitHub when linked as repository files, and are
+served as plain text at the Pages URL (for example
+`https://aerf-spec.github.io/agentmint-sdk/verification.md`).
 
 ## Regenerate
 
