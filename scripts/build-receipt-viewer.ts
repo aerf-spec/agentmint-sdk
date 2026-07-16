@@ -27,14 +27,11 @@ import {
 import { verifyAerfChain } from "../src/chain.js";
 import { privateKeyFromPem, publicKeyToPem } from "../src/kernel/sign.js";
 import { renderPage } from "./receipt-viewer-template.js";
-import { renderVerifierPage } from "./verifier-page-template.js";
 import {
   renderReceiptsMarkdown,
   renderVerificationMarkdown,
   type ReceiptCheck,
 } from "./receipt-exports.js";
-
-const CUSTOM_DOMAIN = "agentmint.run";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const siteDir = join(here, "..", "site");
@@ -290,12 +287,6 @@ function main(): void {
   const html = renderPage(data);
   mkdirSync(siteDir, { recursive: true });
   writeFileSync(join(siteDir, "index.html"), html);
-
-  // The no-code, in-browser verifier, with the receipts and key embedded.
-  writeFileSync(join(siteDir, "verify.html"), renderVerifierPage(data));
-
-  // Custom domain for GitHub Pages.
-  writeFileSync(join(siteDir, "CNAME"), CUSTOM_DOMAIN + "\n");
 
   // Linkable side files, all built from the same SDK-produced data:
   //   receipts.json    the raw signed chain (machine format)
