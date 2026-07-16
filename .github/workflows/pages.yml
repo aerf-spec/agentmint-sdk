@@ -1,0 +1,52 @@
+name: Pages
+
+# Builds the receipt viewer from the SDK and deploys it to GitHub Pages.
+# The site is regenerated here from source, so the receipts, signatures, and
+# hashes on the published page are always produced by the current SDK.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "site/**"
+      - "scripts/build-receipt-viewer.ts"
+      - "scripts/receipt-viewer-template.ts"
+      - "src/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; do not cancel an in-progress deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Generate the receipt viewer from the SDK
+        run: npx tsx scripts/build-receipt-viewer.ts
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Prior authorization session PA-2210 &middot; AgentMint receipt viewer</title>
+<meta name="description" content="A recorded prior authorization agent session: six signed, hash-linked receipts with a standalone verification you can run yourself. Sample data.">
+<meta name="robots" content="noindex">
+<style>
+
+:root {
+  --paper: #f4f6f8;
+  --surface: #ffffff;
+  --ink: #1a232f;
+  --ink-2: #303c4c;
+  --muted: #59626f;
+  --faint: #838d9a;
+  --line: #e4e8ed;
+  --line-2: #ccd3db;
+  --accent: #123b5c;
+  --accent-soft: #e9f0f5;
+
+  --allow: #1a7350;
+  --allow-soft: #e8f3ed;
+  --allow-line: #bfe0ce;
+  --block: #b0392f;
+  --block-soft: #fbecea;
+  --block-line: #ecc8c3;
+  --check: #92620f;
+  --check-soft: #fbf1de;
+  --check-line: #ead6a9;
+
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --wrap: 44rem;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+code { font-family: var(--mono); font-size: 0.86em; }
+a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 2px; }
+h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.005em; }
+
+/* Banner */
+.banner {
+  background: var(--accent);
+  color: #eaf1f6;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 11px clamp(18px, 5vw, 40px);
+  text-align: center;
+}
+.banner strong { color: #fff; font-weight: 600; }
+
+/* Page frame */
+.page {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: clamp(40px, 7vw, 76px) clamp(20px, 5vw, 40px) 72px;
+}
+
+/* Masthead */
+.eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 18px;
+  font-weight: 600;
+}
+.masthead h1 {
+  font-size: clamp(30px, 6vw, 42px);
+  line-height: 1.1;
+  margin: 0 0 22px;
+  color: var(--ink);
+}
+.lede {
+  font-size: clamp(17px, 2.4vw, 19px);
+  color: var(--ink-2);
+  margin: 0;
+  max-width: 40rem;
+}
+
+/* Plan */
+.plan {
+  margin-top: 44px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: clamp(20px, 4vw, 30px);
+}
+.plan__title { font-size: 18px; margin: 0 0 4px; color: var(--ink); }
+.plan__note { color: var(--muted); font-size: 15px; margin: 0 0 22px; }
+.plan__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px 28px;
+  margin: 0;
+}
+.plan__grid > div { min-width: 0; }
+.plan__wide { grid-column: 1 / -1; }
+.plan__grid dt {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--faint);
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.plan__grid dd { margin: 0; color: var(--ink-2); font-size: 15px; word-break: break-word; }
+.plan__grid dd code { color: var(--ink); background: var(--paper); padding: 2px 6px; border-radius: 5px; }
+.tag {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border: 1px solid var(--line-2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  vertical-align: middle;
+}
+
+/* Section headings */
+.chain-section, .verify, .howto { margin-top: 64px; }
+.section-title {
+  font-size: 24px;
+  margin: 0 0 12px;
+  color: var(--ink);
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.section-intro { color: var(--ink-2); margin: 0 0 30px; max-width: 40rem; }
+
+/* Chain / spine */
+.chain { list-style: none; margin: 0; padding: 0; }
+.rcpt {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  column-gap: clamp(12px, 3vw, 22px);
+  padding-bottom: 22px;
+}
+.rcpt__rail { position: relative; }
+.rcpt__rail::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 0;
+  height: 100%;
+  width: 2px;
+  background: var(--line-2);
+  transform: translateX(-50%);
+}
+.rcpt:first-child .rcpt__rail::before { top: 23px; height: calc(100% - 23px); }
+.rcpt:last-child .rcpt__rail::before { height: 23px; }
+.rcpt__seq {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 6px 0 0 5px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 2px solid var(--line-2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 600;
+}
+.rcpt--allow .rcpt__seq { border-color: var(--allow-line); color: var(--allow); }
+.rcpt--block .rcpt__seq { border-color: var(--block-line); color: var(--block); }
+.rcpt--check .rcpt__seq { border-color: var(--check-line); color: var(--check); }
+
+.rcpt__body {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line-2);
+  border-radius: 10px;
+  padding: clamp(16px, 3vw, 22px);
+}
+.rcpt--allow .rcpt__body { border-left-color: var(--allow); }
+.rcpt--block .rcpt__body { border-left-color: var(--block); }
+.rcpt--check .rcpt__body { border-left-color: var(--check); }
+
+.rcpt__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+.pill--allow { background: var(--allow-soft); color: var(--allow); }
+.pill--block { background: var(--block-soft); color: var(--block); }
+.pill--check { background: var(--check-soft); color: var(--check); }
+.rcpt__action { color: var(--muted); font-size: 13px; word-break: break-all; }
+.rcpt__title { font-size: 19px; margin: 0 0 8px; color: var(--ink); }
+.rcpt__plain { margin: 0 0 12px; color: var(--ink-2); }
+.rcpt__meta { margin: 0; font-size: 13px; color: var(--faint); }
+
+/* Raw disclosure */
+.raw { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+.raw summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+}
+.raw summary::-webkit-details-marker { display: none; }
+.raw__label::before { content: "\203A"; margin-right: 8px; display: inline-block; transition: transform 0.15s ease; }
+.raw[open] .raw__label::before { transform: rotate(90deg); }
+.raw__hint { color: var(--faint); font-weight: 400; font-size: 12px; }
+.raw[open] .raw__hint { display: none; }
+.raw__body { padding-top: 14px; }
+.fields { margin: 0 0 16px; display: grid; gap: 12px; }
+.field dt {
+  font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--faint); font-weight: 600; margin-bottom: 3px;
+}
+.field dd { margin: 0; }
+.field dd code { color: var(--ink-2); word-break: break-all; line-height: 1.45; }
+.raw__caption { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+
+/* Code blocks (the secondary terminal element) */
+.code {
+  background: #101822;
+  color: #d7e0ea;
+  border-radius: 8px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin: 0;
+}
+.code code { font-size: inherit; color: inherit; }
+.code--fail { border-left: 3px solid var(--block); }
+.code--cmd { font-size: 13.5px; }
+
+/* Verification panels */
+.panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: clamp(20px, 4vw, 28px);
+  background: var(--surface);
+  margin-bottom: 22px;
+}
+.panel--pass { border-color: var(--allow-line); background: linear-gradient(var(--allow-soft), var(--surface) 120px); }
+.panel--fail { border-color: var(--block-line); background: linear-gradient(var(--block-soft), var(--surface) 120px); }
+.panel__head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.panel__mark {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%; font-size: 15px; font-weight: 700; flex: none;
+}
+.panel__mark--pass { background: var(--allow); color: #fff; }
+.panel__mark--fail { background: var(--block); color: #fff; }
+.panel__title { font-size: 20px; margin: 0; color: var(--ink); }
+.panel p { color: var(--ink-2); }
+.panel p:last-child { margin-bottom: 0; }
+.panel code { background: rgba(18,59,92,0.06); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+.panel .code code { background: none; padding: 0; color: inherit; border-radius: 0; }
+.panel__foot { font-size: 14px; color: var(--muted); }
+
+.oklist { list-style: none; margin: 18px 0; padding: 0; display: grid; gap: 7px; }
+.oklist li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.tick { color: var(--allow); font-weight: 700; }
+.ok-seq {
+  font-family: var(--mono); font-size: 12px; color: var(--muted);
+  width: 20px; text-align: center; flex: none;
+}
+.oklist code { background: none; padding: 0; color: var(--ink-2); word-break: break-all; }
+.rooted { font-size: 14px; }
+.rooted .wrap { word-break: break-all; }
+
+/* Tamper strip */
+.strip {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px;
+  margin: 20px 0; padding: 16px; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+.chip {
+  display: flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 50%;
+  font-family: var(--mono); font-size: 13px; font-weight: 600; flex: none;
+  border: 2px solid var(--line-2); color: var(--muted); background: var(--surface);
+}
+.chip--ok { border-color: var(--allow-line); color: var(--allow); }
+.chip--broken { border-color: var(--block); color: #fff; background: var(--block); }
+.chip--suspect { border-style: dashed; border-color: var(--block-line); color: var(--faint); }
+.link { width: 18px; height: 2px; background: var(--line-2); flex: none; }
+.link--ok { background: var(--allow-line); }
+.link--cut { background: repeating-linear-gradient(90deg, var(--block) 0 4px, transparent 4px 8px); }
+.broke { font-size: 15px; }
+
+/* How to verify */
+.howto .code--cmd { margin-bottom: 20px; }
+.links { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 9px; }
+.links li { padding-left: 16px; position: relative; color: var(--muted); font-size: 15px; }
+.links li::before { content: "\2192"; position: absolute; left: 0; color: var(--faint); }
+
+/* Footer */
+.foot { margin-top: 66px; padding-top: 24px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+.foot a { color: var(--accent); }
+.foot__fine { color: var(--faint); font-size: 13px; margin-bottom: 0; }
+
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .plan__grid { grid-template-columns: 1fr; }
+  .rcpt { grid-template-columns: 38px minmax(0, 1fr); column-gap: 12px; }
+  .rcpt__rail::before { left: 18px; }
+  .rcpt__seq { width: 30px; height: 30px; margin-left: 3px; font-size: 13px; }
+  .rcpt:first-child .rcpt__rail::before { top: 21px; height: calc(100% - 21px); }
+  .rcpt:last-child .rcpt__rail::before { height: 21px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+</style>
+</head>
+<body>
+<div class="banner" role="note">
+  <strong>Sample data. No real patient information.</strong>
+  Identifiers, amounts, and the payer name are fictional. The signatures and hashes are real, computed by the SDK over this synthetic session.
+</div>
+
+<main class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">AgentMint &middot; Receipted session</p>
+    <h1>Prior authorization session PA-2210</h1>
+    <p class="lede">
+      A receipt exists only for actions taken while it was recording. This page is one recorded session: a prior authorization agent working a single case under a plan that was signed before the session began. Each decision the agent made became a signed, hash-linked receipt. You can read every one below, and you can check them yourself without trusting anything on this page.
+    </p>
+  </header>
+
+  <section class="plan" aria-label="Session plan">
+    <h2 class="plan__title">The signed plan</h2>
+    <p class="plan__note">This was signed before the session started. It states what the agent was allowed to do. Every receipt below is bound to it.</p>
+    <dl class="plan__grid">
+      <div><dt>Agent</dt><dd><code>prior-auth-agent</code></dd></div>
+      <div><dt>Payer</dt><dd>Northgate Health Plan <span class="tag">example</span></dd></div>
+      <div class="plan__wide"><dt>Authorized scope</dt><dd><code>read:patient_record:PT-4821:*</code> <code>submit:prior_auth:*</code></dd></div>
+      <div class="plan__wide"><dt>Checkpoints (require a clinician)</dt><dd><code>submit:appeal:*</code></dd></div>
+      <div><dt>Plan issued</dt><dd>2026-01-15 09:00:00 UTC</dd></div>
+      <div><dt>Signing key</dt><dd><code>c770accea5578c92</code></dd></div>
+    </dl>
+  </section>
+
+  <section class="chain-section" aria-label="Receipt chain">
+    <h2 class="section-title">The receipt chain</h2>
+    <p class="section-intro">Six actions, in order. Each one carries its own signature and links to the receipt before it by hash. The status on each card is the verdict the plan reached, recorded at the time, not a summary written afterward.</p>
+    <ol class="chain">
+
+    <li class="rcpt rcpt--allow">
+      <div class="rcpt__rail"><span class="rcpt__seq">1</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--allow">Allowed</span>
+          <code class="rcpt__action">read:patient_record:PT-4821</code>
+        </div>
+        <h3 class="rcpt__title">Patient record read</h3>
+        <p class="rcpt__plain">The agent read the record for the patient assigned to this case, PT-4821. This is inside the authorized scope, so it ran and was recorded.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:01 UTC &middot; sequence 1 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>1</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a1000001-0000-4000-8000-000000000001</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>true</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>eb9b2cfb2c0d34c55d9edb6bc280f03931b52fdcdaae53008ea8da77c0b7eb0f69b911ab3cdb59aaaaf88aed82175c50f1c919b8cb2d6b1d9377012423275c0a</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>none (first receipt in the chain)</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>81b1d1844bffca59a46c8437d2b44e275787666ad147c669ed9b1749645ad2c32bff97fe72ae2862db42c98cb45a705100ebcc5be058e5c7250f4f43b122f069</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a1000001-0000-4000-8000-000000000001&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;read:patient_record:PT-4821&quot;,
+  &quot;in_policy&quot;: true,
+  &quot;policy_reason&quot;: &quot;In scope for this case. HIPAA 164.312(a) access control is satisfied for the assigned patient.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;81b1d1844bffca59a46c8437d2b44e275787666ad147c669ed9b1749645ad2c32bff97fe72ae2862db42c98cb45a705100ebcc5be058e5c7250f4f43b122f069&quot;,
+  &quot;evidence&quot;: {
+    &quot;patient_id&quot;: &quot;PT-4821&quot;
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:01.000000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 1,
+  &quot;signature&quot;: &quot;eb9b2cfb2c0d34c55d9edb6bc280f03931b52fdcdaae53008ea8da77c0b7eb0f69b911ab3cdb59aaaaf88aed82175c50f1c919b8cb2d6b1d9377012423275c0a&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+
+    <li class="rcpt rcpt--allow">
+      <div class="rcpt__rail"><span class="rcpt__seq">2</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--allow">Allowed</span>
+          <code class="rcpt__action">submit:prior_auth:PA-2210</code>
+        </div>
+        <h3 class="rcpt__title">Prior authorization submitted</h3>
+        <p class="rcpt__plain">The agent submitted prior authorization PA-2210. The billed amount matched the authorized amount from the lookup, so it stayed in scope.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:02 UTC &middot; sequence 2 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>2</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a2000002-0000-4000-8000-000000000002</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>true</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>90a02e835f643879a43d901e4fb79ee8481829c0562147e16ab4aefda385d8a4b7f8f912ec11ac299ef329c65dc00a5dd5ac96c3f93c4fb544fc0f41b275c50d</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>b56f6a7df00994feeeafb31bcc1a69035c60b7aa3ecdff0bf9194465eaad0837</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>d2478cb8d94b22cbea308ed4ecd65b37c79eaa3decda9dfbfc26df18b83971a0e50ddeda761dd3cb390c34dc6d629401190352de21e9584b9a723282186c0485</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a2000002-0000-4000-8000-000000000002&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;submit:prior_auth:PA-2210&quot;,
+  &quot;in_policy&quot;: true,
+  &quot;policy_reason&quot;: &quot;In scope. Billed amount 40 does not exceed the authorized amount 40 from the lookup.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;d2478cb8d94b22cbea308ed4ecd65b37c79eaa3decda9dfbfc26df18b83971a0e50ddeda761dd3cb390c34dc6d629401190352de21e9584b9a723282186c0485&quot;,
+  &quot;evidence&quot;: {
+    &quot;auth_id&quot;: &quot;PA-2210&quot;,
+    &quot;billed_amount&quot;: 40,
+    &quot;authorized_amount&quot;: 40
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:02.000000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;previous_receipt_hash&quot;: &quot;b56f6a7df00994feeeafb31bcc1a69035c60b7aa3ecdff0bf9194465eaad0837&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 2,
+  &quot;signature&quot;: &quot;90a02e835f643879a43d901e4fb79ee8481829c0562147e16ab4aefda385d8a4b7f8f912ec11ac299ef329c65dc00a5dd5ac96c3f93c4fb544fc0f41b275c50d&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+
+    <li class="rcpt rcpt--block">
+      <div class="rcpt__rail"><span class="rcpt__seq">3</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--block">Blocked</span>
+          <code class="rcpt__action">read:patient_record:PT-4498</code>
+        </div>
+        <h3 class="rcpt__title">Out-of-scope record read blocked</h3>
+        <p class="rcpt__plain">The agent tried to read a different patient's record, PT-4498. That record is outside this session's authorized scope, so the call was blocked before it ran. The block itself is recorded.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:03 UTC &middot; sequence 3 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>3</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a3000003-0000-4000-8000-000000000003</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>false</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>2ed3878500b14ad0bc30146e963f5861bfd715a4a41de709f2854114390ce572c5733345796f899a328cbe143156fd478d75748d14f881faa9910acc025b970c</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>f5c89973f02b6ecfa2681b6fa401e3bcc2e6d9c1ec0d0bef3c584e04ea5260c9</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>205986d7794be70a80687dcf12e175d94b0aa07bc63376311d5221a95983e048af4ee872730a0a7d1370b72dc861d64dc7fd623a9a57412ff0d853ee7cd3aa07</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a3000003-0000-4000-8000-000000000003&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;read:patient_record:PT-4498&quot;,
+  &quot;in_policy&quot;: false,
+  &quot;policy_reason&quot;: &quot;Out of scope. This record is not the assigned patient, so the call was blocked before it ran.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;205986d7794be70a80687dcf12e175d94b0aa07bc63376311d5221a95983e048af4ee872730a0a7d1370b72dc861d64dc7fd623a9a57412ff0d853ee7cd3aa07&quot;,
+  &quot;evidence&quot;: {
+    &quot;patient_id&quot;: &quot;PT-4498&quot;,
+    &quot;blocked&quot;: true
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:03.000000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;previous_receipt_hash&quot;: &quot;f5c89973f02b6ecfa2681b6fa401e3bcc2e6d9c1ec0d0bef3c584e04ea5260c9&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 3,
+  &quot;signature&quot;: &quot;2ed3878500b14ad0bc30146e963f5861bfd715a4a41de709f2854114390ce572c5733345796f899a328cbe143156fd478d75748d14f881faa9910acc025b970c&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+
+    <li class="rcpt rcpt--check">
+      <div class="rcpt__rail"><span class="rcpt__seq">4</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--check">Checkpoint</span>
+          <code class="rcpt__action">submit:appeal:APL-1103</code>
+        </div>
+        <h3 class="rcpt__title">Appeal held for clinician approval</h3>
+        <p class="rcpt__plain">The agent reached an appeal. Under CMS-4201-F and California SB 1120 a clinician, not an algorithm, has to make this determination, so the action was held at a checkpoint.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:04 UTC &middot; sequence 4 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>4</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a4000004-0000-4000-8000-000000000004</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>false</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>e46d61c298f2c08abd45a9fd42f729d719ddc321790f4067de701853d3b87aa12347781cd8ae857afcec5a02e92d0708e598c3a5fc59689306888b0b50ad140d</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>b099d3a034f307e5ce7828889893620965846881b1da94d50da393869568d789</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>abeeaebc76e70dde8c5689fd12e82cc0ee4edd37202433527ad26b64b43a3e59f0ae86f6d982beaa737990ee0fb65a4443c9eac6af91279875e9f0124e002787</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a4000004-0000-4000-8000-000000000004&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;submit:appeal:APL-1103&quot;,
+  &quot;in_policy&quot;: false,
+  &quot;policy_reason&quot;: &quot;Held for human approval. CMS-4201-F and California SB 1120 require a clinician to make this determination.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;abeeaebc76e70dde8c5689fd12e82cc0ee4edd37202433527ad26b64b43a3e59f0ae86f6d982beaa737990ee0fb65a4443c9eac6af91279875e9f0124e002787&quot;,
+  &quot;evidence&quot;: {
+    &quot;appeal_id&quot;: &quot;APL-1103&quot;,
+    &quot;held&quot;: true
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:04.000000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;previous_receipt_hash&quot;: &quot;b099d3a034f307e5ce7828889893620965846881b1da94d50da393869568d789&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 4,
+  &quot;signature&quot;: &quot;e46d61c298f2c08abd45a9fd42f729d719ddc321790f4067de701853d3b87aa12347781cd8ae857afcec5a02e92d0708e598c3a5fc59689306888b0b50ad140d&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+
+    <li class="rcpt rcpt--allow">
+      <div class="rcpt__rail"><span class="rcpt__seq">5</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--allow">Approved</span>
+          <code class="rcpt__action">submit:appeal:APL-1103</code>
+        </div>
+        <h3 class="rcpt__title">Clinician approval recorded</h3>
+        <p class="rcpt__plain">A clinician reviewed the appeal and approved it. The approval is its own signed receipt in the chain, carrying the clinician key that authorized it.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:05 UTC &middot; sequence 5 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>5</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a5000005-0000-4000-8000-000000000005</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>true</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>12feecc487b0e9b2cfcc8d455849300662d4a06099c28922b447ab7d6f369cf84a892e4b35a2b2ba00464b8baad73b387915fc1f6681597ffa8eb9cc5364cd0b</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>80b227abc8efdee3d4f92f1cff5b6437aec29b24e88b7d3f9fda8e9b6450aa88</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>6ac2854dfc32e3ece5c7131ed69f5ea7de8c10758398ee2a53cd15c285db9393fb9e7b3a237f7411e297fbab26b82833900c4c16aa562423db58ada925bfaaec</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a5000005-0000-4000-8000-000000000005&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;submit:appeal:APL-1103&quot;,
+  &quot;in_policy&quot;: true,
+  &quot;policy_reason&quot;: &quot;Approved by clinician key 4f2a. The clinician's determination is now a signed artifact in the chain.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;6ac2854dfc32e3ece5c7131ed69f5ea7de8c10758398ee2a53cd15c285db9393fb9e7b3a237f7411e297fbab26b82833900c4c16aa562423db58ada925bfaaec&quot;,
+  &quot;evidence&quot;: {
+    &quot;appeal_id&quot;: &quot;APL-1103&quot;,
+    &quot;approved_by&quot;: &quot;clinician:4f2a&quot;
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:05.000000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;previous_receipt_hash&quot;: &quot;80b227abc8efdee3d4f92f1cff5b6437aec29b24e88b7d3f9fda8e9b6450aa88&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 5,
+  &quot;signature&quot;: &quot;12feecc487b0e9b2cfcc8d455849300662d4a06099c28922b447ab7d6f369cf84a892e4b35a2b2ba00464b8baad73b387915fc1f6681597ffa8eb9cc5364cd0b&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+
+    <li class="rcpt rcpt--allow">
+      <div class="rcpt__rail"><span class="rcpt__seq">6</span></div>
+      <article class="rcpt__body">
+        <div class="rcpt__head">
+          <span class="pill pill--allow">Submitted</span>
+          <code class="rcpt__action">submit:appeal:APL-1103</code>
+        </div>
+        <h3 class="rcpt__title">Appeal submitted under approval</h3>
+        <p class="rcpt__plain">The appeal was submitted, and only after the clinician approval was in place. The receipt records that the clinician's decision, not the agent's, authorized the submission.</p>
+        <p class="rcpt__meta">Recorded 2026-01-15 09:00:05 UTC &middot; sequence 6 of 6</p>
+        
+      <details class="raw">
+        <summary><span class="raw__label">Signed receipt fields</span><span class="raw__hint">click to open</span></summary>
+        <div class="raw__body">
+          <dl class="fields">
+            <div class="field"><dt>Sequence number</dt><dd><code>6</code></dd></div>
+            <div class="field"><dt>Receipt id</dt><dd><code>a6000006-0000-4000-8000-000000000006</code></dd></div>
+            <div class="field"><dt>In policy</dt><dd><code>true</code></dd></div>
+            <div class="field"><dt>Issuer signature (Ed25519)</dt><dd><code>79418771ad3e76d8c8afe2634473ce4b7ecd7f928ec8e4ddd2abf938cfa0f52cd0dc1507145edccb239bf7c84e0b5ec13212de4af767fb4555ebcb976ef3f80a</code></dd></div>
+            <div class="field"><dt>Previous receipt hash</dt><dd><code>9075731d760f4c8a6a208b444be65b9415f1011cad5bd9ba8fd2cb7fcdce50f0</code></dd></div>
+            <div class="field"><dt>Evidence hash (SHA-512)</dt><dd><code>3ea2136fa0a20ae8c33de888a1f1d2364d8d8bc3980b3e6c473e373234b556d3159bd996c28fdf0f15f86f1add0f00168c040ca690e3df3e0f25fd4e427824d6</code></dd></div>
+          </dl>
+          <p class="raw__caption">The full signed receipt, exactly as it appears in the evidence file:</p>
+          <pre class="code"><code>{
+  &quot;id&quot;: &quot;a6000006-0000-4000-8000-000000000006&quot;,
+  &quot;type&quot;: &quot;notarised_evidence&quot;,
+  &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
+  &quot;agent&quot;: &quot;prior-auth-agent&quot;,
+  &quot;action&quot;: &quot;submit:appeal:APL-1103&quot;,
+  &quot;in_policy&quot;: true,
+  &quot;policy_reason&quot;: &quot;Submitted under the clinician's approval. The clinician's decision, not the agent's, is on the receipt.&quot;,
+  &quot;evidence_hash_sha512&quot;: &quot;3ea2136fa0a20ae8c33de888a1f1d2364d8d8bc3980b3e6c473e373234b556d3159bd996c28fdf0f15f86f1add0f00168c040ca690e3df3e0f25fd4e427824d6&quot;,
+  &quot;evidence&quot;: {
+    &quot;appeal_id&quot;: &quot;APL-1103&quot;,
+    &quot;submitted&quot;: true
+  },
+  &quot;observed_at&quot;: &quot;2026-01-15T09:00:05.500000+00:00&quot;,
+  &quot;aiuc_controls&quot;: [
+    &quot;E015&quot;,
+    &quot;D003&quot;,
+    &quot;B001&quot;
+  ],
+  &quot;key_id&quot;: &quot;c770accea5578c92&quot;,
+  &quot;agent_key_id&quot;: &quot;&quot;,
+  &quot;policy_hash&quot;: &quot;576a0f0134f0fbe9d1392b4a76ac3ed110629095f23475e42afc4fe4f91c55cb&quot;,
+  &quot;previous_receipt_hash&quot;: &quot;9075731d760f4c8a6a208b444be65b9415f1011cad5bd9ba8fd2cb7fcdce50f0&quot;,
+  &quot;plan_signature&quot;: &quot;bd4f69c5b45909c0f1355cd2cbee582b4ebee22e53ad1e5786cab1915835dc58e722f83da22692e023d21267a9285e65d54c501b141a86060d0bacf88f755c05&quot;,
+  &quot;seq&quot;: 6,
+  &quot;signature&quot;: &quot;79418771ad3e76d8c8afe2634473ce4b7ecd7f928ec8e4ddd2abf938cfa0f52cd0dc1507145edccb239bf7c84e0b5ec13212de4af767fb4555ebcb976ef3f80a&quot;
+}</code></pre>
+        </div>
+      </details>
+      </article>
+    </li>
+    </ol>
+  </section>
+
+  <section class="verify" aria-label="Verification">
+    <h2 class="section-title">Verification</h2>
+
+    <div class="panel panel--pass">
+      <div class="panel__head">
+        <span class="panel__mark panel__mark--pass" aria-hidden="true">&#10003;</span>
+        <h3 class="panel__title">The chain verifies</h3>
+      </div>
+      <p>All six receipts checked out. Every signature is valid, every receipt's recorded link matches the receipt before it, and the sequence runs 1 through 6 with no gaps. A removed or reordered receipt would break one of those checks.</p>
+      <ul class="oklist">
+<li><span class="tick">&#10003;</span><span class="ok-seq">1</span><code>read:patient_record:PT-4821</code></li>
+<li><span class="tick">&#10003;</span><span class="ok-seq">2</span><code>submit:prior_auth:PA-2210</code></li>
+<li><span class="tick">&#10003;</span><span class="ok-seq">3</span><code>read:patient_record:PT-4498</code></li>
+<li><span class="tick">&#10003;</span><span class="ok-seq">4</span><code>submit:appeal:APL-1103</code></li>
+<li><span class="tick">&#10003;</span><span class="ok-seq">5</span><code>submit:appeal:APL-1103</code></li>
+<li><span class="tick">&#10003;</span><span class="ok-seq">6</span><code>submit:appeal:APL-1103</code></li>
+      </ul>
+      <p class="rooted">Chain root hash <code class="wrap">2093f65124f37dc4ef9bc688d211ad0e8b842fa4b8187f1e3795a90498197e6d</code></p>
+      <p class="panel__foot">The chain root is a single value that stands for the whole sequence. Publishing it once means a later copy cannot be quietly rewritten and still match.</p>
+    </div>
+
+    <div class="panel panel--fail">
+      <div class="panel__head">
+        <span class="panel__mark panel__mark--fail" aria-hidden="true">&#10007;</span>
+        <h3 class="panel__title">The tamper check</h3>
+      </div>
+      <p>A record is only worth keeping if a change to it is detectable. To show that, one field on receipt 3 was edited after it was signed: <code>in_policy</code> was changed from <code>false</code> to <code>true</code>, which would make the blocked read look as though it had been allowed. Nothing else was touched. The same verifier was run again.</p>
+      <div class="strip"><span class="chip chip--ok">1</span><span class="link link--ok" aria-hidden="true"></span><span class="chip chip--ok">2</span><span class="link link--ok" aria-hidden="true"></span><span class="chip chip--broken">3</span><span class="link link--cut" aria-hidden="true"></span><span class="chip chip--suspect">4</span><span class="link link--cut" aria-hidden="true"></span><span class="chip chip--suspect">5</span><span class="link link--cut" aria-hidden="true"></span><span class="chip chip--suspect">6</span></div>
+      <p class="broke">Verification stops at <strong>receipt 3</strong> and reports the changed field. Every receipt after it is now marked suspect, because each one is linked to the one before.</p>
+      <p class="raw__caption">The verifier's own output:</p>
+      <pre class="code code--fail"><code>chain invalid
+  break at receipt 3 (id a3000003-0000-4000-8000-000000000003)
+  type: signature_invalid
+  receipt [2]: signature verification failed, a signed field was tampered
+  changed field: in_policy  false -> true</code></pre>
+      <p class="panel__foot">The check names the exact receipt and does not need to be told where to look. This is what a plain log cannot do: a log can be edited in place and still read as consistent.</p>
+    </div>
+  </section>
+
+  <section class="howto" aria-label="How to verify this yourself">
+    <h2 class="section-title">How to verify this yourself</h2>
+    <p class="section-intro">You do not have to trust this page. The six receipts shown here are also in a downloadable evidence file, byte for byte the same. Check them on your own machine. You need Node 18 or newer and nothing else: no install, no account, and no network.</p>
+    <pre class="code code--cmd"><code>git clone https://github.com/aerf-spec/agentmint-sdk
+cd agentmint-sdk/examples/sample-evidence-packet
+unzip evidence.zip -d packet
+node packet/verify.mjs</code></pre>
+    <p>A pass prints <code>All checks passed: 6 receipt(s), chain intact.</code> and exits 0. Change any field in any receipt and the check fails and names the receipt, the same way the tamper check above does.</p>
+    <ul class="links">
+      <li><a href="https://github.com/aerf-spec/agentmint-sdk">Source repository</a></li>
+      <li><a href="https://github.com/aerf-spec/agentmint-sdk/blob/main/FOR-REVIEWERS.md">FOR-REVIEWERS.md</a>, the one command in plain language</li>
+      <li><a href="./receipts.json">The six receipts on this page (JSON)</a></li>
+      <li><a href="./public_key.pem">The public key that verifies them</a></li>
+    </ul>
+  </section>
+
+  <footer class="foot">
+    <p>Built by Aniketh. <a href="https://github.com/aerf-spec/agentmint-sdk">Repository</a>. <a href="mailto:anikethcov@gmail.com">anikethcov@gmail.com</a>.</p>
+    <p class="foot__fine">AgentMint produces cryptographic receipts for agent actions. This page renders one synthetic session. Sample data, no real patient information.</p>
+  </footer>
+
+</main>
+</body>
+</html>
