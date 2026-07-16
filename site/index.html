@@ -4,199 +4,173 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<title>Prior authorization receipts PA-2210 &middot; AgentMint</title>
-<meta name="description" content="Signed receipts from one prior authorization agent session, how they are produced, how a hospital verifies them, and how they compare to detailed logs. Sample data.">
+<title>How a signed receipt is created &middot; AgentMint</title>
+<meta name="description" content="How an AI agent's action becomes a signed receipt, and how a reviewer checks it. Sample data.">
 <meta name="robots" content="noindex">
 <style>
 
 :root {
-  --paper: #f4f6f8;
-  --surface: #ffffff;
-  --ink: #1a232f;
-  --ink-2: #303c4c;
-  --muted: #59626f;
-  --faint: #838d9a;
-  --line: #e4e8ed;
-  --line-2: #ccd3db;
-  --accent: #123b5c;
-
+  --bg: #fcfcfb;
+  --ink: #1c2530;
+  --ink-2: #3c4654;
+  --muted: #6b7280;
+  --faint: #9aa1ab;
+  --line: #e6e8eb;
+  --code-bg: #f3f4f6;
   --allow: #1a7350;
   --block: #b0392f;
-  --allow-line: #bfe0ce;
-  --block-line: #ecc8c3;
-
-  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
-  --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-
-  --wrap: 44rem;
 }
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
-  font-family: var(--sans);
+  font-family: var(--font);
   font-size: 17px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
-code { font-family: var(--mono); font-size: 0.86em; }
-a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+a { color: var(--ink); text-underline-offset: 2px; }
 a:hover { text-decoration-thickness: 2px; }
-h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.005em; }
-
-.banner {
-  background: var(--accent);
-  color: #eaf1f6;
-  font-size: 14px; line-height: 1.5;
-  padding: 11px clamp(18px, 5vw, 40px);
-  text-align: center;
-}
-.banner strong { color: #fff; font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.85em; }
 
 .page {
-  max-width: var(--wrap);
+  max-width: 40rem;
   margin: 0 auto;
-  padding: clamp(36px, 6vw, 60px) clamp(20px, 5vw, 40px) 60px;
+  padding: clamp(40px, 8vw, 80px) clamp(20px, 5vw, 32px) 64px;
 }
 
-.eyebrow {
-  font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--faint); margin: 0 0 16px; font-weight: 600;
-}
-.masthead h1 {
-  font-size: clamp(28px, 5.2vw, 40px);
-  line-height: 1.1; margin: 0 0 20px; color: var(--ink);
-}
-.lede {
-  font-size: clamp(16px, 2.2vw, 18px);
-  color: var(--ink-2); margin: 0; max-width: 40rem;
+.note {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--faint);
+  margin: 0 0 40px;
 }
 
-.artifacts, .how, .verify, .compare { margin-top: 52px; }
-.section-title {
-  font-size: 22px; margin: 0 0 10px; color: var(--ink);
-  padding-bottom: 12px; border-bottom: 1px solid var(--line);
+.opening {
+  font-size: clamp(20px, 3.4vw, 25px);
+  line-height: 1.4;
+  color: var(--ink);
+  margin: 0 0 8px;
+  font-weight: 400;
 }
-.section-intro { color: var(--ink-2); margin: 0 0 24px; max-width: 40rem; font-size: 15.5px; }
 
-/* Artifact list */
-.reclist { list-style: none; margin: 0 0 28px; padding: 0; display: grid; gap: 2px; }
-.reclist li {
-  display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: 4px 16px;
-  align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--line);
+.flow {
+  list-style: none;
+  counter-reset: step;
+  margin: 0;
+  padding: 0;
 }
-.reclist a { font-family: var(--mono); font-size: 14px; font-weight: 600; word-break: break-all; }
-.reclist span { color: var(--muted); font-size: 14.5px; }
+.step {
+  counter-increment: step;
+  position: relative;
+  padding: 40px 0 0 0;
+  border-top: 1px solid var(--line);
+  margin-top: 40px;
+}
+.step:first-child { border-top: 0; }
+.step__text {
+  position: relative;
+  padding-left: 34px;
+  margin: 0 0 18px;
+  font-size: 18px;
+  color: var(--ink);
+}
+.step__text::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -1px;
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+.step__sub {
+  padding-left: 34px;
+  margin: 16px 0 0;
+  font-size: 15px;
+  color: var(--muted);
+}
+.step__sub a { color: var(--ink-2); }
 
-.sample { margin: 0; }
-.sample figcaption { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+/* Artifacts */
+.art { margin: 0 0 0 34px; }
+pre.art, .art pre {
+  background: var(--code-bg);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+pre.art code { font-size: inherit; color: inherit; }
+.art--quiet {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
 
-/* Code blocks (the secondary terminal element) */
-.code {
-  background: #101822; color: #d7e0ea; border-radius: 8px;
-  padding: 16px 18px; overflow-x: auto;
-  font-family: var(--mono); font-size: 12.5px; line-height: 1.6; margin: 0;
+/* Step 2 moments */
+.moments { display: grid; gap: 12px; }
+.moment {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #fff;
 }
-.code code { font-size: inherit; color: inherit; }
-.code--sm { font-size: 13px; margin-bottom: 26px; }
-.code--cmd { font-size: 13.5px; margin: 0; }
+.moment__top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+.moment__top code { color: var(--ink-2); word-break: break-all; }
+.status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.status--allow { color: var(--allow); }
+.status--block { color: var(--block); }
+.moment__why { margin: 0; font-size: 14.5px; color: var(--muted); }
 
-/* Two ways to verify */
-.verify__ways { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
-.way {
-  display: flex; flex-direction: column; gap: 8px;
-  border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: var(--surface);
+/* Step 4 file list */
+.files { list-style: none; margin: 0 0 0 34px; padding: 0; }
+.files li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 0;
+  flex-wrap: wrap;
 }
-.way--browser {
-  text-decoration: none; border-color: var(--allow-line);
-  background: linear-gradient(var(--allow-soft), var(--surface) 110px);
-}
-.way--browser:hover { border-color: var(--allow); }
-.way__tag {
-  align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-  padding: 3px 8px; border-radius: 5px; color: var(--muted); background: var(--paper);
-}
-.way--browser .way__tag { color: var(--allow); background: #fff; }
-.way__title { font-family: var(--serif); font-weight: 600; font-size: 18px; color: var(--ink); }
-.way__desc { color: var(--ink-2); font-size: 14.5px; }
-.way pre { margin-top: auto; }
+.files code { color: var(--ink); }
+.files span { color: var(--muted); font-size: 14.5px; }
+.files__in { padding-left: 22px; }
+.files__in code { color: var(--ink-2); }
 
-/* How-it-works steps */
-.steps { list-style: none; counter-reset: s; margin: 0; padding: 0; }
-.steps li {
-  position: relative; padding: 0 0 22px 52px; counter-increment: s;
+.foot {
+  margin-top: 56px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
 }
-.steps li::before {
-  content: counter(s);
-  position: absolute; left: 0; top: 2px;
-  width: 32px; height: 32px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface); border: 2px solid var(--accent);
-  color: var(--accent); font-family: var(--mono); font-size: 14px; font-weight: 600;
-}
-.steps li::after {
-  content: ""; position: absolute; left: 16px; top: 36px; bottom: 4px; width: 2px;
-  background: var(--line-2); transform: translateX(-50%);
-}
-.steps li:last-child { padding-bottom: 0; }
-.steps li:last-child::after { display: none; }
-.steps h3 { font-size: 17px; margin: 4px 0 5px; color: var(--ink); }
-.steps p { margin: 0; color: var(--ink-2); font-size: 15px; }
-.steps code { background: var(--paper); padding: 1px 5px; border-radius: 4px; color: var(--ink); word-break: break-all; }
+.foot a { color: var(--ink-2); }
 
-/* Verify rows */
-.vgrid { display: grid; gap: 14px; }
-.vrow {
-  display: flex; gap: 14px; align-items: flex-start;
-  border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; background: var(--surface);
-}
-.vrow--pass { border-color: var(--allow-line); }
-.vrow--fail { border-color: var(--block-line); }
-.vmark {
-  display: flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: 700; flex: none; margin-top: 1px;
-}
-.vmark--pass { background: var(--allow); color: #fff; }
-.vmark--fail { background: var(--block); color: #fff; }
-.vrow p { margin: 0; color: var(--ink-2); font-size: 14.5px; }
-.vrow code { background: rgba(18,59,92,0.06); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
-
-/* Comparison table */
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
-table { border-collapse: collapse; width: 100%; min-width: 34rem; background: var(--surface); }
-thead th {
-  text-align: left; font-family: var(--sans); font-size: 12px; font-weight: 700;
-  letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint);
-  padding: 14px 16px; border-bottom: 1px solid var(--line-2);
-}
-thead th:nth-child(3) { color: var(--accent); }
-tbody th {
-  text-align: left; font-family: var(--sans); font-weight: 600; font-size: 14px;
-  color: var(--ink); padding: 14px 16px; vertical-align: top; width: 11rem;
-  border-bottom: 1px solid var(--line);
-}
-tbody td {
-  padding: 14px 16px; vertical-align: top; font-size: 14px; color: var(--ink-2);
-  border-bottom: 1px solid var(--line);
-}
-tbody td:last-child { background: #f8fbfc; }
-tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
-.compare__limits { color: var(--ink-2); font-size: 14.5px; margin: 22px 0 0; max-width: 40rem; }
-
-.foot { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
-.foot a { color: var(--accent); }
-.foot__fine { color: var(--faint); font-size: 13px; margin-bottom: 0; }
-
-@media (max-width: 560px) {
+@media (max-width: 430px) {
   body { font-size: 16px; }
-  .reclist li { grid-template-columns: 1fr; gap: 2px; }
-  .steps li { padding-left: 46px; }
-  .verify__ways { grid-template-columns: 1fr; }
+  .files li { gap: 6px; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -204,36 +178,38 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 </style>
 </head>
 <body>
-<div class="banner" role="note">
-  <strong>Sample data. No real patient information.</strong>
-  Identifiers, amounts, and the payer name are fictional. The signatures and hashes are real, computed by the SDK over this synthetic session.
-</div>
-
 <main class="page">
 
-  <header class="masthead">
-    <p class="eyebrow">AgentMint &middot; Prior authorization session PA-2210</p>
-    <h1>Signed receipts from one agent session</h1>
-    <p class="lede">
-      These are the artifacts an AI prior authorization agent produced while it worked one case. The agent's tools were wrapped with the AgentMint SDK, so each action it took was signed and linked into a tamper-evident chain as it happened. A hospital can verify them without trusting the vendor.
-    </p>
-  </header>
+  <p class="note">Sample data. No real patient information.</p>
 
-  <section class="artifacts" aria-label="The artifacts">
-    <h2 class="section-title">The artifacts</h2>
-    <p class="section-intro">Six signed receipts, the plan they run under, and the key that checks them. All generated by the SDK from this one session.</p>
-    <ul class="reclist">
-      <li><a href="https://github.com/aerf-spec/agentmint-sdk/raw/main/examples/sample-evidence-packet/evidence.zip">evidence.zip</a><span>The full packet a hospital receives: receipts, plan, public key, and a standalone checker.</span></li>
-      <li><a href="./receipts.md">receipts.md</a><span>Every receipt in plain language, one section each.</span></li>
-      <li><a href="./receipts.json">receipts.json</a><span>The six receipts as raw signed JSON.</span></li>
-      <li><a href="./verification.md">verification.md</a><span>The verification report: the clean pass and the tamper check.</span></li>
-      <li><a href="./public_key.pem">public_key.pem</a><span>The key that verifies every signature.</span></li>
-      <li><a href="./verify.html">verify.html</a><span>Check every receipt in your browser, no install.</span></li>
-    </ul>
+  <p class="opening">Every action an AI agent takes gets a signed receipt, created the moment it happens, that a hospital can check without trusting the vendor's logs.</p>
 
-    <figure class="sample">
-      <figcaption>One receipt, the out-of-scope read the agent was blocked from making. This is exactly what one artifact looks like.</figcaption>
-      <pre class="code"><code>{
+  <ol class="flow">
+
+    <li class="step">
+      <p class="step__text">The vendor wraps the agent's tool calls.</p>
+      <pre class="art"><code>import { harden } from "@npmsai/agentmint";
+const tools = harden(myTools);</code></pre>
+    </li>
+
+    <li class="step">
+      <p class="step__text">The agent acts, and each action is checked against a signed plan.</p>
+      <div class="art moments">
+        <div class="moment">
+          <div class="moment__top"><span class="status status--allow">Allowed</span><code>read:patient_record:PT-4821</code></div>
+          <p class="moment__why">The record of the patient the agent is assisting. Inside the plan's scope, so it ran and was recorded.</p>
+        </div>
+        <div class="moment">
+          <div class="moment__top"><span class="status status--block">Blocked</span><code>read:patient_record:PT-4498</code></div>
+          <p class="moment__why">A different patient, outside the plan's scope. The call never ran, and the block itself was recorded.</p>
+        </div>
+      </div>
+    </li>
+
+    <li class="step">
+      <p class="step__text">Each decision becomes a signed receipt linked to the one before it.</p>
+      <p class="step__sub">The blocked read, as a receipt. The signature covers the fields; the previous hash links it to the receipt before it; the sequence number fixes its place.</p>
+      <pre class="art art--quiet"><code>{
   &quot;id&quot;: &quot;a3000003-0000-4000-8000-000000000003&quot;,
   &quot;type&quot;: &quot;notarised_evidence&quot;,
   &quot;plan_id&quot;: &quot;a0000000-0000-4000-8000-000000000000&quot;,
@@ -260,109 +236,30 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
   &quot;seq&quot;: 3,
   &quot;signature&quot;: &quot;2ed3878500b14ad0bc30146e963f5861bfd715a4a41de709f2854114390ce572c5733345796f899a328cbe143156fd478d75748d14f881faa9910acc025b970c&quot;
 }</code></pre>
-    </figure>
-  </section>
+    </li>
 
-  <section class="how" aria-label="How they are produced">
-    <h2 class="section-title">How they are produced</h2>
-    <p class="section-intro">The team that runs the agent installs the SDK and wraps the agent's tools. Nothing else changes about how the agent works.</p>
-    <pre class="code code--sm"><code>import { harden } from "@npmsai/agentmint";
+    <li class="step">
+      <p class="step__text">The vendor exports one packet for the reviewer.</p>
+      <ul class="art files">
+        <li><code>evidence.zip</code><span>the packet the reviewer receives, containing:</span></li>
+        <li class="files__in"><code>receipts/</code><span>one signed receipt per action</span></li>
+        <li class="files__in"><code>plan.json</code><span>the signed plan the actions were checked against</span></li>
+        <li class="files__in"><code>public_key.pem</code><span>the key that checks every signature</span></li>
+        <li class="files__in"><code>verify.mjs</code><span>a standalone verifier</span></li>
+      </ul>
+    </li>
 
-const tools = harden(myTools); // every tool call now emits a signed receipt</code></pre>
-    <ol class="steps">
-      <li>
-        <h3>The vendor installs it, around the agent's tools</h3>
-        <p>The team running the agent wraps its tools with one call. From then on, every tool the agent uses produces a receipt. The agent's behavior does not change.</p>
-      </li>
-      <li>
-        <h3>A plan is signed before the session</h3>
-        <p>The plan states what the agent may do, the scope <code>read:patient_record:PT-4821:*</code>, and which actions a clinician must approve, the checkpoints <code>submit:appeal:*</code>. It is signed with key <code>c770accea5578c92</code> before any action runs.</p>
-      </li>
-      <li>
-        <h3>Each action becomes a signed, linked receipt</h3>
-        <p>As the agent works, allowed actions, blocked actions, and clinician checkpoints all become Ed25519-signed receipts, each linked to the one before it by hash. A blocked action is recorded too, so there is proof the boundary held.</p>
-      </li>
-      <li>
-        <h3>The hospital receives the receipts and the key</h3>
-        <p>The vendor keeps the signing key private and hands the hospital the receipts and the matching public key. The hospital checks them itself, with no account and no call back to the vendor.</p>
-      </li>
-    </ol>
-  </section>
-
-  <section class="verify" aria-label="How a hospital verifies">
-    <h2 class="section-title">How a hospital verifies</h2>
-    <p class="section-intro">Two ways, both without trusting the vendor. Neither sends anything to a server.</p>
-    <div class="verify__ways">
-      <a class="way way--browser" href="./verify.html">
-        <span class="way__tag">No code</span>
-        <span class="way__title">Verify in your browser</span>
-        <span class="way__desc">Open a page. It checks every signature and hash link on your device, using the browser's built-in cryptography. Nothing is uploaded.</span>
-      </a>
-      <div class="way">
-        <span class="way__tag">Command line</span>
-        <span class="way__title">Verify with Node</span>
-        <span class="way__desc">A standalone checker, Node 18 or newer and nothing else. No install, no account, no network.</span>
-        <pre class="code code--cmd"><code>unzip evidence.zip -d packet
+    <li class="step">
+      <p class="step__text">The reviewer checks it on their own machine.</p>
+      <pre class="art"><code>unzip evidence.zip -d packet
 node packet/verify.mjs</code></pre>
-      </div>
-    </div>
-    <div class="vgrid">
-      <div class="vrow vrow--pass">
-        <span class="vmark vmark--pass" aria-hidden="true">&#10003;</span>
-        <p>A clean packet prints <code>All checks passed: 6 receipt(s), chain intact.</code> and exits 0. Every signature is valid, every hash link matches, and the sequence is unbroken.</p>
-      </div>
-      <div class="vrow vrow--fail">
-        <span class="vmark vmark--fail" aria-hidden="true">&#10007;</span>
-        <p>Change one field and the check fails and names the receipt. Editing <code>in_policy</code> on receipt 3 from <code>false</code> to <code>true</code> stops verification at receipt 3. Full output in <a href="./verification.md">verification.md</a>.</p>
-      </div>
-    </div>
-  </section>
+      <p class="step__sub">A pass reports that every receipt checked out and the chain is intact. If any receipt changed after signing, the check fails and names the exact receipt that changed. It needs Node 18 and nothing else: no install, no network. A receipt proves what was signed, not that the action was correct. The fuller guide is <a href="https://github.com/aerf-spec/agentmint-sdk/blob/main/FOR-REVIEWERS.md">FOR-REVIEWERS.md</a>.</p>
+    </li>
 
-  <section class="compare" aria-label="Compared to detailed logs">
-    <h2 class="section-title">Compared to detailed logs</h2>
-    <p class="section-intro">Signed receipts do not replace application logs. Logs hold far more detail. The two answer different questions, and it is fair to say where each is stronger.</p>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th></th><th>Detailed logs</th><th>Signed receipts</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <th>Detail captured</th>
-            <td>High. Full inputs, outputs, timing, and traces.</td>
-            <td>Focused. One record per decision: the action, the verdict, and the reason.</td>
-          </tr>
-          <tr>
-            <th>Editing after the fact</th>
-            <td>Possible in place, and can look consistent afterward.</td>
-            <td>Any edit breaks the signature and the check names the changed receipt.</td>
-          </tr>
-          <tr>
-            <th>A removed entry</th>
-            <td>Often invisible. A gap can look like nothing happened.</td>
-            <td>Breaks the hash chain and the sequence at a named point.</td>
-          </tr>
-          <tr>
-            <th>Trust required</th>
-            <td>You trust the vendor's systems and staff to keep them intact.</td>
-            <td>You verify signatures against a public key. No trust in the vendor.</td>
-          </tr>
-          <tr>
-            <th>Checked by a third party</th>
-            <td>Usually needs the vendor's tooling and access.</td>
-            <td>A standalone checker, Node only, no network.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <p class="compare__limits">
-      Being precise about the limits: a receipt does not prove the plan was the right plan, and it does not prove the tool did what it reported. It proves the record of the agent's decisions was not changed after the fact. Keep the logs for detail; keep the receipts for proof. Sourced from the project's <a href="https://github.com/aerf-spec/agentmint-sdk/blob/main/THREAT-MODEL.md">THREAT-MODEL.md</a>.
-    </p>
-  </section>
+  </ol>
 
   <footer class="foot">
-    <p>Built by Aniketh. <a href="https://github.com/aerf-spec/agentmint-sdk">Repository</a>. <a href="https://github.com/aerf-spec/agentmint-sdk/blob/main/FOR-REVIEWERS.md">FOR-REVIEWERS.md</a>. <a href="mailto:anikethcov@gmail.com">anikethcov@gmail.com</a>.</p>
-    <p class="foot__fine">AgentMint produces cryptographic receipts for agent actions. This page renders one synthetic session. Sample data, no real patient information. Northgate Health Plan is a fictional example payer.</p>
+    Aniketh &middot; <a href="mailto:aniketh@agentmint.run">aniketh@agentmint.run</a> &middot; <a href="https://github.com/aerf-spec/agentmint-sdk">github.com/aerf-spec/agentmint-sdk</a>
   </footer>
 
 </main>
