@@ -62,6 +62,9 @@ export interface Step {
   status: "Allowed" | "Blocked" | "Checkpoint" | "Approved" | "Submitted";
   kind: "allow" | "block" | "check";
   title: string;
+  /** One short sentence for the compact card on the one-pager. */
+  short: string;
+  /** The fuller description, used in the linked long-format receipts.md. */
   plain: string;
 }
 
@@ -77,6 +80,7 @@ const STEPS: Step[] = [
     status: "Allowed",
     kind: "allow",
     title: "Patient record read",
+    short: "Read the assigned patient's record, PT-4821. Inside scope, so it ran.",
     plain: "The agent read the record for the patient assigned to this case, PT-4821. This is inside the authorized scope, so it ran and was recorded.",
   },
   {
@@ -90,6 +94,7 @@ const STEPS: Step[] = [
     status: "Allowed",
     kind: "allow",
     title: "Prior authorization submitted",
+    short: "Submitted prior auth PA-2210. Billed amount matched the authorized amount.",
     plain: "The agent submitted prior authorization PA-2210. The billed amount matched the authorized amount from the lookup, so it stayed in scope.",
   },
   {
@@ -103,6 +108,7 @@ const STEPS: Step[] = [
     status: "Blocked",
     kind: "block",
     title: "Out-of-scope record read blocked",
+    short: "Tried to read a different patient, PT-4498. Out of scope, so it was blocked before it ran.",
     plain: "The agent tried to read a different patient's record, PT-4498. That record is outside this session's authorized scope, so the call was blocked before it ran. The block itself is recorded.",
   },
   {
@@ -116,6 +122,7 @@ const STEPS: Step[] = [
     status: "Checkpoint",
     kind: "check",
     title: "Appeal held for clinician approval",
+    short: "Reached an appeal. A clinician, not the agent, has to decide, so it was held.",
     plain: "The agent reached an appeal. Under CMS-4201-F and California SB 1120 a clinician, not an algorithm, has to make this determination, so the action was held at a checkpoint.",
   },
   {
@@ -129,6 +136,7 @@ const STEPS: Step[] = [
     status: "Approved",
     kind: "allow",
     title: "Clinician approval recorded",
+    short: "A clinician approved the appeal. The approval is its own signed receipt.",
     plain: "A clinician reviewed the appeal and approved it. The approval is its own signed receipt in the chain, carrying the clinician key that authorized it.",
   },
   {
@@ -142,6 +150,7 @@ const STEPS: Step[] = [
     status: "Submitted",
     kind: "allow",
     title: "Appeal submitted under approval",
+    short: "Submitted the appeal, only after the approval was in place.",
     plain: "The appeal was submitted, and only after the clinician approval was in place. The receipt records that the clinician's decision, not the agent's, authorized the submission.",
   },
 ];
