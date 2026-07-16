@@ -21,11 +21,17 @@ import { signPlan, computePolicyHash } from "../src/plan.js";
 import {
   buildAerfReceipt,
   aerfChainHash,
+  verifyAerfReceipt,
   type AerfReceipt,
 } from "../src/receipt-aerf.js";
 import { verifyAerfChain } from "../src/chain.js";
 import { privateKeyFromPem, publicKeyToPem } from "../src/kernel/sign.js";
 import { renderPage } from "./receipt-viewer-template.js";
+import {
+  renderReceiptsMarkdown,
+  renderVerificationMarkdown,
+  type ReceiptCheck,
+} from "./receipt-exports.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const siteDir = join(here, "..", "site");
@@ -258,19 +264,36 @@ function main(): void {
     },
   };
 
+  // Per-receipt issuer-signature checks, for the verification report. Each is
+  // the real result of the SDK verifier, not an assertion.
+  const checks: ReceiptCheck[] = views.map((v) => {
+    const r = v.receipt as unknown as Record<string, unknown>;
+    const res = verifyAerfReceipt(r, { issuerPublicKey: pub });
+    return { seq: Number(r.seq), action: String(r.action), id: String(r.id), ok: res.issuerOk };
+  });
+  if (checks.some((c) => !c.ok)) {
+    throw new Error("a receipt failed its issuer-signature check");
+  }
+
   const html = renderPage(data);
   mkdirSync(siteDir, { recursive: true });
   writeFileSync(join(siteDir, "index.html"), html);
 
-  // A machine-readable copy of the exact receipts on the page, for anyone who
-  // wants the raw chain without scraping the HTML.
+  // Linkable side files, all built from the same SDK-produced data:
+  //   receipts.json    the raw signed chain (machine format)
+  //   receipts.md      a plain-language rendering of every receipt
+  //   verification.md  the clean pass and the tamper failure, both real
+  //   public_key.pem   the key that verifies the signatures
   writeFileSync(
     join(siteDir, "receipts.json"),
     JSON.stringify(receipts, null, 2) + "\n",
   );
+  writeFileSync(join(siteDir, "receipts.md"), renderReceiptsMarkdown(data));
+  writeFileSync(join(siteDir, "verification.md"), renderVerificationMarkdown(data, checks));
   writeFileSync(join(siteDir, "public_key.pem"), publicKeyPem);
 
   console.log(`Wrote site/index.html (${views.length} receipts).`);
+  console.log("Wrote site/receipts.json, site/receipts.md, site/verification.md, site/public_key.pem.");
   console.log(`Clean chain root: ${clean.rootHash}`);
   console.log(
     `Tamper check: breaks at receipt ${tamperedIndex + 1} (${broken.breakType}).`,
