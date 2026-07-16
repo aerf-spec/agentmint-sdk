@@ -104,7 +104,27 @@ h1, h2, h3 { font-family: var(--serif); font-weight: 600; letter-spacing: -0.005
 }
 .code code { font-size: inherit; color: inherit; }
 .code--sm { font-size: 13px; margin-bottom: 26px; }
-.code--cmd { font-size: 13.5px; margin-bottom: 22px; }
+.code--cmd { font-size: 13.5px; margin: 0; }
+
+/* Two ways to verify */
+.verify__ways { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 22px; }
+.way {
+  display: flex; flex-direction: column; gap: 8px;
+  border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; background: var(--surface);
+}
+.way--browser {
+  text-decoration: none; border-color: var(--allow-line);
+  background: linear-gradient(var(--allow-soft), var(--surface) 110px);
+}
+.way--browser:hover { border-color: var(--allow); }
+.way__tag {
+  align-self: flex-start; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 5px; color: var(--muted); background: var(--paper);
+}
+.way--browser .way__tag { color: var(--allow); background: #fff; }
+.way__title { font-family: var(--serif); font-weight: 600; font-size: 18px; color: var(--ink); }
+.way__desc { color: var(--ink-2); font-size: 14.5px; }
+.way pre { margin-top: auto; }
 
 /* How-it-works steps */
 .steps { list-style: none; counter-reset: s; margin: 0; padding: 0; }
@@ -176,6 +196,7 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
   body { font-size: 16px; }
   .reclist li { grid-template-columns: 1fr; gap: 2px; }
   .steps li { padding-left: 46px; }
+  .verify__ways { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -207,6 +228,7 @@ tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
       <li><a href="./receipts.json">receipts.json</a><span>The six receipts as raw signed JSON.</span></li>
       <li><a href="./verification.md">verification.md</a><span>The verification report: the clean pass and the tamper check.</span></li>
       <li><a href="./public_key.pem">public_key.pem</a><span>The key that verifies every signature.</span></li>
+      <li><a href="./verify.html">verify.html</a><span>Check every receipt in your browser, no install.</span></li>
     </ul>
 
     <figure class="sample">
@@ -269,9 +291,21 @@ const tools = harden(myTools); // every tool call now emits a signed receipt</co
 
   <section class="verify" aria-label="How a hospital verifies">
     <h2 class="section-title">How a hospital verifies</h2>
-    <p class="section-intro">One command. Node 18 or newer, nothing else. No install, no account, no network.</p>
-    <pre class="code code--cmd"><code>unzip evidence.zip -d packet
+    <p class="section-intro">Two ways, both without trusting the vendor. Neither sends anything to a server.</p>
+    <div class="verify__ways">
+      <a class="way way--browser" href="./verify.html">
+        <span class="way__tag">No code</span>
+        <span class="way__title">Verify in your browser</span>
+        <span class="way__desc">Open a page. It checks every signature and hash link on your device, using the browser's built-in cryptography. Nothing is uploaded.</span>
+      </a>
+      <div class="way">
+        <span class="way__tag">Command line</span>
+        <span class="way__title">Verify with Node</span>
+        <span class="way__desc">A standalone checker, Node 18 or newer and nothing else. No install, no account, no network.</span>
+        <pre class="code code--cmd"><code>unzip evidence.zip -d packet
 node packet/verify.mjs</code></pre>
+      </div>
+    </div>
     <div class="vgrid">
       <div class="vrow vrow--pass">
         <span class="vmark vmark--pass" aria-hidden="true">&#10003;</span>
