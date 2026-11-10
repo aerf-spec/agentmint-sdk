@@ -17,6 +17,7 @@ import { SignerClient } from "./signer.js";
 import { DisclosureStore, FAILURE_KINDS, runCall, type FailureKind } from "./call.js";
 import { otel } from "./links.js";
 import type { TraceLinkPlugin } from "../src/trace-links.js";
+import { SALTED_COMMITMENT_ALG } from "../src/commitments.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 4173);
@@ -212,15 +213,27 @@ const server = createServer((req, res) => {
   }
   const disclose = /^\/disclose\/([0-9a-f-]{36})$/.exec(path);
   if (disclose) {
+    const t0 = process.hrtime.bigint();
     const d = disclosures.get(disclose[1]!);
     if (!d) return json(res, 404, { error: "unknown receipt id" });
+    const { notify, ...opening } = d;
     // Demo only: in production this is gated to parties entitled to the text.
-    return json(res, 200, {
-      ...d,
-      commitment_alg: "sha256-salted-v1",
+    json(res, 200, {
+      ...opening,
+      commitment_alg: SALTED_COMMITMENT_ALG,
       salt: d.reasoning?.salt ?? null,
       text: d.reasoning?.text ?? null,
     });
+    notify?.({
+      method: "GET",
+      url: path,
+      request_summary: "",
+      status: 200,
+      response_summary: `{ reasoning: { salt, text: ${d.reasoning?.text.length ?? 0} chars }, context: { salt, canonical: ${d.context?.canonical.length ?? 0} chars }${d.claims ? ", claims: { salt, canonical }" : ""} }`,
+      ms: Math.round(Number(process.hrtime.bigint() - t0) / 1e5) / 10,
+      receipt_ids: [d.receipt_id],
+    });
+    return;
   }
   if (path === "/" || path === "/index.html") {
     try {

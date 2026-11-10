@@ -23,10 +23,17 @@ export type FailureKind = (typeof FAILURE_KINDS)[number];
 type R = Record<string, unknown>;
 
 /** Vendor-side store of commitment openings (salts + private text), by receipt id. */
+export type StoredDisclosure = Disclosure & {
+  claims?: { salt: string; canonical: string };
+  fields_salt?: string;
+  /** Reports a fetch of this disclosure into the owning call's stream (not serialized). */
+  notify?: (api: Record<string, unknown>) => void;
+};
+
 export class DisclosureStore {
-  private readonly map = new Map<string, Disclosure & { claims?: { salt: string; canonical: string }; fields_salt?: string }>();
+  private readonly map = new Map<string, StoredDisclosure>();
   constructor(private readonly cap = 5000) {}
-  put(d: Disclosure & { claims?: { salt: string; canonical: string }; fields_salt?: string }): void {
+  put(d: StoredDisclosure): void {
     this.map.set(d.receipt_id, d);
     if (this.map.size > this.cap) this.map.delete(this.map.keys().next().value as string);
   }
@@ -137,7 +144,7 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
     stats.hot.push(hot_path_us);
     stats.sign.push(res.sign_us);
     stats.rtt.push(res.rtt_us);
-    if (extra.disclosure) o.disclosures?.put({ receipt_id: receipt.id as string, ...extra.disclosure });
+    if (extra.disclosure) o.disclosures?.put({ receipt_id: receipt.id as string, ...extra.disclosure, notify: (api) => emit("api", { ...api, step }) });
     emit("signed", {
       step,
       seq,
@@ -285,11 +292,18 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
     emit("failure", { step: downStep, span_id: null, kind: "signer_crash", attempt: 1, recovered: true, downtime_ms: u.downtime_ms });
     void track(issue("error:signer_crash", { error: { kind: "signer_crash", attempt: 1, downtime_ms: u.downtime_ms, recovered: true } }, downStep));
   };
+  const onApi = (a: { plans: string[]; receipt_ids?: string[]; [k: string]: unknown }) => {
+    if (!a.plans.includes(plan.id)) return;
+    const { ev: _ev, plans: _plans, receipt_ids, ...rest } = a;
+    const mine = receipt_ids?.filter((id) => meta.has(id));
+    emit("api", { ...rest, ...(mine ? { receipt_ids: mine } : {}) });
+  };
   signer.on("batch", onBatch);
   signer.on("consistency", onConsistency);
   signer.on("anchor_failure", onAnchorFailure);
   signer.on("down", onDown);
   signer.on("up", onUp);
+  signer.on("api", onApi);
 
   // ── Trace hooks: every model / tool / downstream event comes from the wrappers ──
   const hooks: CallHooks = {
@@ -420,6 +434,7 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
   signer.off("anchor_failure", onAnchorFailure);
   signer.off("down", onDown);
   signer.off("up", onUp);
+  signer.off("api", onApi);
   void signer.closePlan(plan.id).catch(() => undefined);
   if (pending.size > 0) emit("error", { message: `${pending.size} receipt(s) not anchored before timeout` });
 

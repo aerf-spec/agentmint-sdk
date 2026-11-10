@@ -21,7 +21,7 @@ import type { Sth } from "./authority.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PASS_ENV = [
-  "PATH", "HOME", "SIGNER_SPIN", "SIGNER_KEEPWARM_MS", "TMPDIR", "NODE_ENV", "NODE_OPTIONS", "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
+  "PATH", "HOME", "SIGNER_KEEPWARM_MS", "TMPDIR", "NODE_ENV", "NODE_OPTIONS", "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
   "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy",
 ];
 
@@ -217,6 +217,7 @@ export class SignerClient extends EventEmitter {
     if (m.ev === "batch") this.emit("batch", m as unknown as BatchEvent);
     else if (m.ev === "consistency") this.emit("consistency", m);
     else if (m.ev === "anchor_failure") this.emit("anchor_failure", m);
+    else if (m.ev === "api") this.emit("api", m);
   }
 
   private request(msg: Record<string, unknown>): Promise<Record<string, unknown>> {

@@ -213,7 +213,73 @@ const agentOpts = { keepAlive: true, maxSockets: 4 };
 const httpAgent = new http.Agent(agentOpts);
 const httpsAgent = new https.Agent(agentOpts);
 
-function request(method: "GET" | "POST", path: string, body?: unknown): Promise<{ status: number; json: unknown }> {
+interface ApiCtx {
+  plans: string[];
+  receipt_ids?: string[];
+  batch_id?: number;
+}
+
+const short = (h: unknown) => (typeof h === "string" ? `${h.slice(0, 12)}…` : String(h));
+
+function summarizeRequest(path: string, body: unknown): string {
+  const b = body as Record<string, unknown> | undefined;
+  if (path === "/v1/issuers") return "{ public_key_pem: <Ed25519 SPKI> }";
+  if (path === "/v1/batches") {
+    const n = Array.isArray(b?.leaf_hashes) ? b!.leaf_hashes.length : 0;
+    return `{ key_id: ${String(b?.key_id)}, leaf_hashes: [${n} × sha256], batch_signature: ${short(b?.batch_signature)} }`;
+  }
+  return "";
+}
+
+function summarizeResponse(path: string, status: number, json: unknown): string {
+  const j = json as Record<string, unknown> | undefined;
+  if (status !== 200) return String(j?.error ?? `HTTP ${status}`);
+  const sth = j?.sth as Sth | undefined;
+  if (path === "/v1/key") return `{ log_id: ${String(j?.log_id)}, public_key_pem: <Ed25519 SPKI> }`;
+  if (path === "/v1/issuers") return `{ key_id: ${String(j?.key_id)} }`;
+  if (path === "/v1/sth") return `{ tree_size: ${sth?.tree_size}, root_hash: ${short(sth?.root_hash)} }`;
+  if (path === "/v1/batches") {
+    const proofs = Array.isArray(j?.proofs) ? j!.proofs.length : 0;
+    return `{ proofs: [${proofs}], sth: { tree_size: ${sth?.tree_size}, root_hash: ${short(sth?.root_hash)} }, sth_signature: ${short(j?.sth_signature)} }`;
+  }
+  if (path.startsWith("/v1/consistency")) {
+    return `{ from: ${String(j?.from)}, to: ${String(j?.to)}, proof: [${Array.isArray(j?.proof) ? j!.proof.length : 0} hashes] }`;
+  }
+  return "";
+}
+
+/** An authority HTTP call, reported to the agent side as an `api` notification. */
+async function request(
+  method: "GET" | "POST",
+  path: string,
+  body?: unknown,
+  ctx: ApiCtx = { plans: [] },
+): Promise<{ status: number; json: unknown }> {
+  const t0 = process.hrtime.bigint();
+  const report = (status: number, response_summary: string) =>
+    broadcast({
+      ev: "api",
+      method,
+      url: AUTHORITY + path,
+      request_summary: summarizeRequest(path.split("?")[0]!, body),
+      status,
+      response_summary,
+      ms: Math.round(Number(process.hrtime.bigint() - t0) / 1e5) / 10,
+      ...ctx,
+    });
+  try {
+    const res = await rawRequest(method, path, body);
+    const bid = (res.json as { batch_id?: unknown } | undefined)?.batch_id;
+    if (typeof bid === "number") ctx = { ...ctx, batch_id: bid };
+    report(res.status, summarizeResponse(path.split("?")[0]!, res.status, res.json));
+    return res;
+  } catch (err) {
+    report(Number((err as { status?: number }).status ?? 0), err instanceof Error ? err.message : String(err));
+    throw err;
+  }
+}
+
+function rawRequest(method: "GET" | "POST", path: string, body?: unknown): Promise<{ status: number; json: unknown }> {
   if (Date.now() < failUntil) return Promise.reject(Object.assign(new Error("authority unavailable (injected)"), { status: 503 }));
   const url = new URL(AUTHORITY + path);
   const lib = url.protocol === "https:" ? https : http;
@@ -247,19 +313,19 @@ function request(method: "GET" | "POST", path: string, body?: unknown): Promise<
   });
 }
 
-async function ensureRegistered(): Promise<void> {
+async function ensureRegistered(ctx: ApiCtx = { plans: [] }): Promise<void> {
   if (registered) return;
   if (!logKey) {
-    const k = await request("GET", "/v1/key");
+    const k = await request("GET", "/v1/key", undefined, ctx);
     if (k.status !== 200) throw new Error(`GET /v1/key -> ${k.status}`);
     logKey = pubFromPem((k.json as { public_key_pem: string }).public_key_pem);
   }
-  const r = await request("POST", "/v1/issuers", { public_key_pem: PUBLIC_PEM });
+  const r = await request("POST", "/v1/issuers", { public_key_pem: PUBLIC_PEM }, ctx);
   if (r.status !== 200) throw new Error(`POST /v1/issuers -> ${r.status}`);
   registered = true;
   if (!lastSth) {
     // Start consistency checks from the log's current signed head.
-    const s = await request("GET", "/v1/sth");
+    const s = await request("GET", "/v1/sth", undefined, ctx);
     const head = s.json as { sth?: Sth; sth_signature?: string } | undefined;
     if (s.status === 200 && head?.sth && head.sth_signature &&
         edVerify(null, canonicalBytes(head.sth), logKey, Buffer.from(head.sth_signature, "hex"))) {
@@ -286,15 +352,16 @@ async function flush(): Promise<void> {
   const sealed_ns = process.hrtime.bigint().toString();
   const leaf_hashes = items.map((i) => i.leaf);
   const batch_signature = edSign(null, batchDigest(leaf_hashes), key).toString("hex");
+  const ctx: ApiCtx = { plans: [...new Set(items.map((i) => i.plan_id))], receipt_ids: items.map((i) => i.receipt_id) };
   let sent_ns = sealed_ns;
   try {
-    await ensureRegistered();
+    await ensureRegistered(ctx);
     sent_ns = process.hrtime.bigint().toString();
-    let res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature });
+    let res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature }, ctx);
     if (res.status === 403) {
       registered = false; // authority restarted and forgot us
-      await ensureRegistered();
-      res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature });
+      await ensureRegistered(ctx);
+      res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature }, ctx);
     }
     if (res.status !== 200) throw Object.assign(new Error(`POST /v1/batches -> ${res.status}`), { status: res.status });
     const done_ns = process.hrtime.bigint().toString();
@@ -346,7 +413,7 @@ async function checkConsistency(prev: Sth | undefined, next: Sth, batch_id: numb
   }
   let ok = false;
   try {
-    const r = await request("GET", `/v1/consistency?from=${prev.tree_size}&to=${next.tree_size}`);
+    const r = await request("GET", `/v1/consistency?from=${prev.tree_size}&to=${next.tree_size}`, undefined, { plans: plansIn, batch_id });
     const proof = (r.json as { proof?: string[] })?.proof;
     ok = r.status === 200 && Array.isArray(proof) && verifyConsistency(prev.tree_size, next.tree_size, prev.root_hash, next.root_hash, proof);
   } catch {
@@ -421,17 +488,11 @@ server.listen(SOCKET);
 for (const p of unanchored.values()) queue.push(p);
 schedule();
 
-// Wake-up latency. SIGNER_SPIN=1 busy-polls the event loop (setImmediate:
-// epoll with zero timeout) so a request is picked up in microseconds, at the
-// cost of one CPU core. Otherwise a 1 ms keep-warm tick keeps the CPU out of
-// deep idle between receipts.
-if (process.env.SIGNER_SPIN === "1") {
-  const spin = () => setImmediate(spin);
-  spin();
-} else {
-  const warmMs = Number(process.env.SIGNER_KEEPWARM_MS ?? 1);
-  if (warmMs > 0) setInterval(() => undefined, warmMs);
-}
+// Keep-warm tick: keeps the CPU out of deep idle between receipts, which
+// otherwise dominates IPC wake-up latency on small VMs (busy-polling was
+// measured and made the tail worse on a 4-vCPU host, so it is not offered).
+const warmMs = Number(process.env.SIGNER_KEEPWARM_MS ?? 1);
+if (warmMs > 0) setInterval(() => undefined, warmMs);
 
 // Exit with the parent: stdin closes when the parent goes away.
 process.stdin.on("end", () => shutdown());
