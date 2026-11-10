@@ -27,6 +27,9 @@ const SOCKET = must("SIGNER_SOCKET");
 const STATE = must("SIGNER_STATE_DIR");
 // AUTHORITY_URL is the authority origin; the API lives under /authority/v1/... (CONTRACT).
 const AUTHORITY = authorityBase(must("AUTHORITY_URL"));
+// Bearer token for authorities that require one on writes (never logged or reported).
+const AUTH_TOKEN = process.env.AUTHORITY_TOKEN;
+delete process.env.AUTHORITY_TOKEN;
 const FLUSH_MS = Number(process.env.ANCHOR_FLUSH_MS ?? 250);
 const MAX_BATCH = Number(process.env.ANCHOR_MAX_BATCH ?? 64);
 const WAL_PATH = join(STATE, "wal.jsonl");
@@ -290,7 +293,10 @@ function rawRequest(method: "GET" | "POST", path: string, body?: unknown): Promi
       {
         method,
         agent: url.protocol === "https:" ? httpsAgent : httpAgent,
-        headers: data ? { "content-type": "application/json", "content-length": data.length } : {},
+        headers: {
+          ...(data ? { "content-type": "application/json", "content-length": data.length } : {}),
+          ...(AUTH_TOKEN ? { authorization: `Bearer ${AUTH_TOKEN}` } : {}),
+        },
         timeout: 5000,
       },
       (res) => {

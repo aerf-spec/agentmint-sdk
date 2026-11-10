@@ -21,7 +21,7 @@ import type { Sth } from "./authority.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PASS_ENV = [
-  "PATH", "HOME", "SIGNER_KEEPWARM_MS", "TMPDIR", "NODE_ENV", "NODE_OPTIONS", "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
+  "PATH", "HOME", "SIGNER_KEEPWARM_MS", "AUTHORITY_TOKEN", "TMPDIR", "NODE_ENV", "NODE_OPTIONS", "NODE_EXTRA_CA_CERTS", "SSL_CERT_FILE",
   "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "NO_PROXY", "no_proxy",
 ];
 
