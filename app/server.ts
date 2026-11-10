@@ -172,7 +172,7 @@ async function events(req: IncomingMessage, res: ServerResponse, url: URL): Prom
   sseHeaders(res);
   subscribe(run, req, res);
   runCall({
-    speed: Number.isFinite(speed) ? speed : 1,
+    speed: Number.isFinite(speed) ? Math.min(10, Math.max(0.25, speed)) : 1,
     failures: parseFailures(url.searchParams.get("fail")),
     signer,
     logPublicKeyPem: logKey.public_key_pem,

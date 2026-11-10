@@ -9,7 +9,7 @@ export interface MockResponse {
   thinking: string;
   say: string;
   tool?: { name: string; input: Record<string, unknown> };
-  decision: Record<string, unknown>;
+  decision?: Record<string, unknown>;
 }
 
 export interface MockProvider {
@@ -21,24 +21,23 @@ export interface MockProvider {
 }
 
 export function createMockProvider(opts: {
-  responses: MockResponse[];
+  /** Scripted response for a request (by conversation position); undefined = a short generic reply. */
+  respond: (req: unknown) => MockResponse | undefined;
   wait: Wait;
   onGenerate?: (chunk: string) => void;
   timeoutMs?: number;
 }): MockProvider {
-  const queue = [...opts.responses];
   const provider: MockProvider = {
     log: [],
     client: {
       messages: {
-        async create(_req: unknown) {
+        async create(req: unknown) {
           if (provider.failNext === "timeout") {
             provider.failNext = undefined;
             await opts.wait(opts.timeoutMs ?? 1200);
             throw Object.assign(new Error("Request timed out."), { name: "APIConnectionTimeoutError", kind: "llm_timeout" });
           }
-          const next = queue.shift();
-          if (!next) throw new Error("mock provider: no scripted response left");
+          const next = opts.respond(req) ?? { thinking: "Nothing scripted for this turn.", say: "Okay.", decision: undefined };
           const request_id = `req_${randomBytes(12).toString("hex")}`;
           provider.log.push(request_id);
           await opts.wait(400); // time to first token
@@ -52,7 +51,7 @@ export function createMockProvider(opts: {
             { type: "text", text: next.say },
           ];
           if (next.tool) content.push({ type: "tool_use", id: `toolu_${randomBytes(8).toString("hex")}`, ...next.tool });
-          content.push({ type: "tool_use", id: `toolu_${randomBytes(8).toString("hex")}`, name: "record_decision", input: next.decision });
+          if (next.decision) content.push({ type: "tool_use", id: `toolu_${randomBytes(8).toString("hex")}`, name: "record_decision", input: next.decision });
           return {
             id: `msg_${randomBytes(12).toString("hex")}`,
             _request_id: request_id,

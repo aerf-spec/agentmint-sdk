@@ -78,7 +78,7 @@ const r1 = (x: number) => Math.round(x * 10) / 10;
 
 export async function runCall(o: CallOptions): Promise<CallResult> {
   const failures = o.failures ?? new Set<FailureKind>();
-  const speed = Math.min(10, Math.max(0.25, o.speed || 1));
+  const speed = Math.min(100, Math.max(0.25, o.speed || 1)); // the HTTP route clamps to 0.25–10; tests run faster
   const t0 = process.hrtime.bigint();
   const tUs = (ns = process.hrtime.bigint()) => Number((ns - t0) / 1000n);
   const emit = (event: string, data: Record<string, unknown>) =>
@@ -319,6 +319,8 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
         dur_us: s.dur_us,
         attrs: s.attrs,
         attrs_sha256: s.attrs_sha256,
+        nonce: s.nonce,
+        public_name: s.public_name,
         status: s.status,
         attempt: s.attempt,
         ...(s.error_kind ? { error_kind: s.error_kind } : {}),

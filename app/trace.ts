@@ -13,7 +13,7 @@
 // a traced call every wrapper is a transparent pass-through.
 import { AsyncLocalStorage } from "node:async_hooks";
 import { randomBytes } from "node:crypto";
-import { canonicalBytes, canonicalizeLoose, sha256Hex } from "../src/kernel/canonical.js";
+import { canonicalizeLoose, sha256Hex } from "../src/kernel/canonical.js";
 
 // ── Types ───────────────────────────────────────────────────────────
 
@@ -31,7 +31,12 @@ export interface Span {
   t_us: number;
   wall: string;
   attrs: Record<string, Json>;
+  /** sha256(nonce + ":" + canonical(attrs)): a salted commitment, so low-entropy attrs cannot be guessed from the receipt. */
   attrs_sha256: string;
+  /** Per-span random salt for attrs_sha256 (streamed to the vendor view, never signed). */
+  nonce: string;
+  /** Name as committed in receipts: identifiers in routes replaced by ":id". */
+  public_name: string;
   status: "ok" | "error" | "open";
   attempt: number;
   error_kind?: string;
@@ -152,7 +157,7 @@ const recorded = new WeakSet<object>();
 const spanId = () => randomBytes(8).toString("hex");
 const digest = (v: unknown) => sha256Hex(Buffer.from(canonicalizeLoose(v ?? null), "utf8"));
 
-function openSpan(ctx: Ctx, kind: string, name: string, attrs: Record<string, Json>): { span: Span; startNs: bigint } {
+function openSpan(ctx: Ctx, kind: string, name: string, attrs: Record<string, Json>, publicName = name): { span: Span; startNs: bigint } {
   const startNs = process.hrtime.bigint();
   const step = ctx.step;
   const key = `${kind}:${name}`;
@@ -171,6 +176,8 @@ function openSpan(ctx: Ctx, kind: string, name: string, attrs: Record<string, Js
     wall: "",
     attrs,
     attrs_sha256: "",
+    nonce: randomBytes(16).toString("hex"),
+    public_name: publicName,
     status: "open",
     attempt,
   };
@@ -188,10 +195,22 @@ function closeSpan(ctx: Ctx, span: Span, startNs: bigint, err?: unknown): void {
     span.error_kind = errorKind(err, span.kind);
     span.attrs.error_kind = span.error_kind;
   }
-  span.attrs_sha256 = sha256Hex(canonicalBytes(span.attrs));
+  span.attrs_sha256 = attrsCommitment(span);
   ctx.step?.open.delete(span.span_id);
   ctx.step?.spans.push(span);
   ctx.call.hooks.onSpan?.(span);
+}
+
+/** Salted commitment to a span's attrs (verifiable from the streamed span: nonce + attrs). */
+export function attrsCommitment(span: Pick<Span, "nonce" | "attrs">): string {
+  return sha256Hex(Buffer.from(`${span.nonce}:${canonicalizeLoose(span.attrs)}`, "utf8"));
+}
+
+/** "/members/NH-552019/benefits?type=pt" -> "/members/:id/benefits?…": no identifiers in signed names. */
+export function routeTemplate(route: string): string {
+  const [path, query] = route.split("?", 2);
+  const segs = (path ?? "").split("/").map((seg) => (/\d/.test(seg) || seg.length > 24 ? ":id" : seg));
+  return segs.join("/") + (query !== undefined ? "?…" : "");
 }
 
 function errorKind(err: unknown, spanKind: string): string {
@@ -210,10 +229,11 @@ async function withSpan<T>(
   name: string,
   attrs: Record<string, Json>,
   fn: (span: Span | undefined) => Promise<T> | T,
+  publicName?: string,
 ): Promise<T> {
   const ctx = als.getStore();
   if (!ctx) return fn(undefined);
-  const { span, startNs } = openSpan(ctx, kind, name, attrs);
+  const { span, startNs } = openSpan(ctx, kind, name, attrs, publicName);
   let result: T;
   try {
     result = await als.run({ ...ctx, span }, () => fn(span));
@@ -252,14 +272,14 @@ function snapshotStack(step: StepState): StackEntry[] {
   const now = process.hrtime.bigint();
   const all: Span[] = [...step.spans];
   for (const { span, startNs } of step.open.values()) {
-    all.push({ ...span, dur_us: Number((now - startNs) / 1000n), attrs_sha256: sha256Hex(canonicalBytes(span.attrs)) });
+    all.push({ ...span, dur_us: Number((now - startNs) / 1000n), attrs_sha256: attrsCommitment(span) });
   }
   all.sort((a, b) => a.start_us - b.start_us);
   return all.map((s) => ({
     span_id: s.span_id,
     parent_id: s.parent_id,
     kind: s.kind,
-    name: s.name,
+    name: s.public_name,
     dur_us: s.dur_us,
     attrs_sha256: s.attrs_sha256,
     status: s.status,
@@ -523,6 +543,7 @@ export function traceDownstream<T extends object>(service: string, client: T, op
         cache.set(prop, (...args: unknown[]) => {
           const { verb, route } = routeOf(prop, args);
           const name = `${service} ${verb}${route ? " " + route : ""}`;
+          const publicName = `${service} ${verb}${route ? " " + routeTemplate(route) : ""}`;
           return withSpan("downstream.call", name, { service, method: verb, route }, async (span) => {
             const ctx = als.getStore();
             if (ctx && span) ctx.call.counts.downstream_calls += 1;
@@ -530,7 +551,7 @@ export function traceDownstream<T extends object>(service: string, client: T, op
             const status = obj(res).status;
             if (span && typeof status === "number" && Number.isInteger(status)) span.attrs.status = status;
             return res;
-          });
+          }, publicName);
         });
       }
       return cache.get(prop);

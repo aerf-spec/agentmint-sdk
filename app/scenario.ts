@@ -397,13 +397,23 @@ export function buildAgent(opts: { wait: Wait; onGenerate?: (chunk: string) => v
   agent: MemberLineAgent;
   provider: MockProvider;
 } {
-  const responses: MockResponse[] = STEPS.map((s) => ({
-    thinking: s.thinking,
-    say: s.say,
-    tool: { name: s.tool.name, input: s.tool.input },
-    decision: { ...s.decision, prompt_version: PROMPT_VERSION, member_id: MEMBER },
-  }));
-  const provider = createMockProvider({ responses, wait: opts.wait, onGenerate: opts.onGenerate });
+  // The scripted reply for each step is keyed by conversation length at that step.
+  const byTurns = new Map<number, MockResponse>();
+  let turns = 0;
+  for (const line of SCRIPT) {
+    if (line.who === "agent" && line.step) {
+      const s = line.step;
+      byTurns.set(turns, {
+        thinking: s.thinking,
+        say: s.say,
+        tool: { name: s.tool.name, input: s.tool.input },
+        decision: { ...s.decision, prompt_version: PROMPT_VERSION, member_id: MEMBER },
+      });
+    }
+    turns++;
+  }
+  const respond = (req: unknown) => byTurns.get(((req as { messages?: unknown[] })?.messages ?? []).length);
+  const provider = createMockProvider({ respond, wait: opts.wait, onGenerate: opts.onGenerate });
   const clients = {} as Clients;
   for (const service of Object.keys(LATENCY) as Downstream["service"][]) {
     clients[service] = traceDownstream(service, new MockService(routesFor(service), opts.wait, LATENCY[service]));
