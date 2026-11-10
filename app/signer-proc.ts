@@ -421,10 +421,17 @@ server.listen(SOCKET);
 for (const p of unanchored.values()) queue.push(p);
 schedule();
 
-// Keep-warm tick: stops the CPU from dropping into deep idle between receipts,
-// which otherwise dominates IPC wake-up latency on small VMs.
-const warmMs = Number(process.env.SIGNER_KEEPWARM_MS ?? 1);
-if (warmMs > 0) setInterval(() => undefined, warmMs);
+// Wake-up latency. SIGNER_SPIN=1 busy-polls the event loop (setImmediate:
+// epoll with zero timeout) so a request is picked up in microseconds, at the
+// cost of one CPU core. Otherwise a 1 ms keep-warm tick keeps the CPU out of
+// deep idle between receipts.
+if (process.env.SIGNER_SPIN === "1") {
+  const spin = () => setImmediate(spin);
+  spin();
+} else {
+  const warmMs = Number(process.env.SIGNER_KEEPWARM_MS ?? 1);
+  if (warmMs > 0) setInterval(() => undefined, warmMs);
+}
 
 // Exit with the parent: stdin closes when the parent goes away.
 process.stdin.on("end", () => shutdown());

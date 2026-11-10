@@ -36,7 +36,7 @@ export interface Harness {
 }
 
 /** Local authority on an ephemeral port + a signer process pointed at it. */
-export async function startHarness(opts: { stateDir?: string } = {}): Promise<Harness> {
+export async function startHarness(opts: { stateDir?: string; flushMs?: number } = {}): Promise<Harness> {
   const authority = new Authority();
   const server = createServer((req, res) => {
     const u = new URL(req.url ?? "/", "http://x");
@@ -45,7 +45,7 @@ export async function startHarness(opts: { stateDir?: string } = {}): Promise<Ha
   await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
   const authorityUrl = `http://127.0.0.1:${(server.address() as { port: number }).port}`;
   const stateDir = opts.stateDir ?? mkdtempSync(join(tmpdir(), "filet-bench-"));
-  const signer = await SignerClient.start({ authorityUrl, stateDir });
+  const signer = await SignerClient.start({ authorityUrl, stateDir, flushMs: opts.flushMs });
   return {
     signer,
     authority,
