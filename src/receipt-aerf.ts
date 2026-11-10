@@ -129,6 +129,11 @@ function requireNonEmptyString(value: string, name: string, maxLen: number): str
 }
 
 function requireEvidence(evidence: unknown): Record<string, unknown> {
+  return requireEvidenceBytes(evidence).evidence;
+}
+
+/** Validate evidence and return its canonical bytes (canonicalized once). */
+function requireEvidenceBytes(evidence: unknown): { evidence: Record<string, unknown>; raw: Buffer } {
   if (typeof evidence !== "object" || evidence === null || Array.isArray(evidence)) {
     throw new AerfReceiptError(`evidence must be an object, got ${evidence === null ? "null" : typeof evidence}`);
   }
@@ -138,7 +143,7 @@ function requireEvidence(evidence: unknown): Record<string, unknown> {
       `serialized evidence is ${raw.length.toLocaleString("en-US")} bytes, max is ${MAX_EVIDENCE_BYTES.toLocaleString("en-US")}`,
     );
   }
-  return evidence as Record<string, unknown>;
+  return { evidence: evidence as Record<string, unknown>, raw };
 }
 
 // ── Hashes ──────────────────────────────────────────────────────────
@@ -215,7 +220,7 @@ function asPrivateKey(key: string | KeyObject): KeyObject {
 export function buildAerfSignable(init: AerfReceiptInit, issuerKeyId: string, agentKeyId = "", agentSignature = ""): Record<string, unknown> {
   const action = requireNonEmptyString(init.action, "action", MAX_ACTION_LEN);
   const agent = requireNonEmptyString(init.agent, "agent", MAX_IDENTITY_LEN);
-  const evidence = requireEvidence(init.evidence);
+  const { evidence, raw: evidenceBytes } = requireEvidenceBytes(init.evidence);
   if (init.previousReceiptHash !== undefined && !init.previousReceiptHash) {
     throw new AerfReceiptError(
       "previousReceiptHash must be omitted on genesis, not empty (SPEC §8.1)",
@@ -230,7 +235,7 @@ export function buildAerfSignable(init: AerfReceiptInit, issuerKeyId: string, ag
     action,
     in_policy: init.inPolicy,
     policy_reason: init.policyReason,
-    evidence_hash_sha512: evidenceHashSha512(evidence),
+    evidence_hash_sha512: sha512Hex(evidenceBytes),
     evidence,
     observed_at: init.observedAt ?? isoNowUtc(),
     aiuc_controls: [...(init.aiucControls ?? AIUC_CONTROLS)],

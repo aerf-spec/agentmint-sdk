@@ -49,7 +49,13 @@ function isRawNumberLexeme(value: unknown): value is RawNumberLexeme {
   );
 }
 
+// Printable ASCII other than '"' and '\': NFC-invariant and needs no escaping.
+const PLAIN_ASCII = /^[\x20\x21\x23-\x5b\x5d-\x7e]*$/;
+// UTF-16 code-unit order equals code-point order unless surrogates are present.
+const SURROGATE = /[\ud800-\udfff]/;
+
 function encodeString(value: string): string {
+  if (PLAIN_ASCII.test(value)) return '"' + value + '"';
   let out = '"';
   for (const ch of value.normalize("NFC")) {
     switch (ch) {
@@ -135,7 +141,7 @@ function encode(value: unknown, path: string, loose: boolean): string {
     // Skip undefined-valued keys (mirrors JSON.stringify object semantics).
     const keys = Object.keys(obj)
       .filter((k) => obj[k] !== undefined)
-      .map((k) => ({ raw: k, norm: k.normalize("NFC") }));
+      .map((k) => ({ raw: k, norm: PLAIN_ASCII.test(k) ? k : k.normalize("NFC") }));
     const seen = new Set<string>();
     for (const k of keys) {
       if (seen.has(k.norm)) {
@@ -156,6 +162,7 @@ function encode(value: unknown, path: string, loose: boolean): string {
 }
 
 function compareCodePoints(a: string, b: string): number {
+  if (!SURROGATE.test(a) && !SURROGATE.test(b)) return a < b ? -1 : a > b ? 1 : 0;
   const ap = Array.from(a);
   const bp = Array.from(b);
   const len = Math.min(ap.length, bp.length);
@@ -166,9 +173,59 @@ function compareCodePoints(a: string, b: string): number {
   return ap.length - bp.length;
 }
 
+/**
+ * Fast path for the common case (plain-ASCII keys): no JSON-path bookkeeping,
+ * no NFC work on keys. Produces byte-identical output to encode(); any value
+ * it cannot handle (or any error) falls back to encode() for the exact error.
+ */
+class NeedsSlowPath extends Error {}
+
+function encodeFast(value: unknown, loose: boolean): string {
+  if (value === null) return "null";
+  if (value === true) return "true";
+  if (value === false) return "false";
+  if (typeof value === "string") return encodeString(value);
+  if (typeof value === "number") {
+    if (Number.isSafeInteger(value)) return Object.is(value, -0) ? "0" : String(value);
+    return encodeNumber(value, "$", loose);
+  }
+  if (typeof value === "bigint") return value.toString();
+  if (Array.isArray(value)) {
+    let out = "[";
+    for (let i = 0; i < value.length; i++) out += (i ? "," : "") + encodeFast(value[i], loose);
+    return out + "]";
+  }
+  if (typeof value === "object") {
+    if (isRawNumberLexeme(value)) return value.value;
+    const obj = value as Record<string, unknown>;
+    const keys: string[] = [];
+    for (const k of Object.keys(obj)) {
+      if (obj[k] === undefined) continue;
+      if (!PLAIN_ASCII.test(k)) throw new NeedsSlowPath();
+      keys.push(k);
+    }
+    keys.sort();
+    let out = "{";
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i]!;
+      out += (i ? ',"' : '"') + k + '":' + encodeFast(obj[k], loose);
+    }
+    return out + "}";
+  }
+  throw new NeedsSlowPath();
+}
+
+function encodeTop(value: unknown, loose: boolean): string {
+  try {
+    return encodeFast(value, loose);
+  } catch {
+    return encode(value, "$", loose);
+  }
+}
+
 /** Canonicalize a value to a JCS string per AERF SPEC.md §5.1. */
 export function canonicalize(value: unknown): string {
-  return encode(value, "$", false);
+  return encodeTop(value, false);
 }
 
 /**
@@ -178,7 +235,7 @@ export function canonicalize(value: unknown): string {
  * which must stay integer-only.
  */
 export function canonicalizeLoose(value: unknown): string {
-  return encode(value, "$", true);
+  return encodeTop(value, true);
 }
 
 /** Canonicalize a value to UTF-8 bytes — the exact bytes that get signed. */

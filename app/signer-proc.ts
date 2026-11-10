@@ -104,6 +104,12 @@ function replay(): void {
   resumed.unanchored = unanchored.size;
 }
 
+/** The response omits `evidence`: the agent sent it and re-attaches it (less IPC on the hot path). */
+function slim(s: Signed): Signed {
+  const { evidence: _e, ...head } = s.receipt;
+  return { ...s, receipt: head };
+}
+
 function remember(k: string, s: Signed): void {
   done.set(k, s);
   if (done.size > DONE_CAP) done.delete(done.keys().next().value as string);
@@ -150,7 +156,7 @@ interface SignReq {
 
 function signOne(m: SignReq): Signed & { sign_us: number; queue_depth: number; replay?: boolean } {
   const prior = done.get(m.k);
-  if (prior) return { ...prior, sign_us: 0, queue_depth: queue.length, replay: true };
+  if (prior) return { ...slim(prior), sign_us: 0, queue_depth: queue.length, replay: true };
   const t0 = process.hrtime.bigint();
   const p = plans.get(m.plan_id);
   if (!p) throw new Error(`unknown plan ${m.plan_id}`);
@@ -186,7 +192,7 @@ function signOne(m: SignReq): Signed & { sign_us: number; queue_depth: number; r
   remember(m.k, s);
   const sign_us = Number((process.hrtime.bigint() - t0) / 1000n);
   enqueue({ leaf: leaf_hash, receipt_id: receipt.id as string, plan_id: p.plan.id, seq: chain.seq, queued_ns: process.hrtime.bigint().toString() });
-  return { ...s, sign_us, queue_depth: queue.length };
+  return { ...slim(s), sign_us, queue_depth: queue.length };
 }
 
 // ── Cold path: batching to the authority ────────────────────────────
@@ -387,6 +393,19 @@ function handle(sock: Socket, m: { id: number; op: string; [k: string]: unknown 
   }
 }
 
+// JIT warm-up of the hot path before serving (dummy payloads; never stored or sent).
+{
+  const dummy = signPlan({ user: "warmup", action: "warmup", scope: ["decide:*"], ttlSeconds: 60 }, key);
+  const ph = computePolicyHash(dummy);
+  const evidence = { decision_record: { point: "warmup", n: 1 }, stack: { trace_id: "0".repeat(32), spans: [{ span_id: "1".repeat(16), parent_id: null, kind: "turn", name: "turn 0", dur_us: 1, attrs_sha256: "2".repeat(64) }] } };
+  for (let i = 0; i < 400; i++) {
+    const ev = evaluatePolicy("decide:warmup", "w", dummy);
+    const s = buildAerfSignable({ planId: dummy.id, agent: "w", action: "decide:warmup", inPolicy: ev.inPolicy, policyReason: ev.reason, evidence, seq: i + 1, policyHash: ph }, KEY_ID);
+    const payload = canonicalBytes(s);
+    JSON.stringify({ ...s, signature: edSign(null, payload, key).toString("hex"), h: sha256Hex(payload), l: logLeafHash(payload) });
+  }
+}
+
 if (existsSync(SOCKET)) unlinkSync(SOCKET);
 const server = createServer((sock) => {
   clients.add(sock);
@@ -399,6 +418,11 @@ server.listen(SOCKET);
 // Re-queue receipts the WAL shows as signed but never anchored.
 for (const p of unanchored.values()) queue.push(p);
 schedule();
+
+// Keep-warm tick: stops the CPU from dropping into deep idle between receipts,
+// which otherwise dominates IPC wake-up latency on small VMs.
+const warmMs = Number(process.env.SIGNER_KEEPWARM_MS ?? 1);
+if (warmMs > 0) setInterval(() => undefined, warmMs);
 
 // Exit with the parent: stdin closes when the parent goes away.
 process.stdin.on("end", () => shutdown());

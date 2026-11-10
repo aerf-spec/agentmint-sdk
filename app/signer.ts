@@ -233,7 +233,9 @@ export class SignerClient extends EventEmitter {
   }
 
   async sign(input: SignInput, idempotencyKey = crypto.randomUUID()): Promise<SignResult> {
-    return (await this.request({ op: "sign", k: idempotencyKey, ...input })) as unknown as SignResult;
+    const res = (await this.request({ op: "sign", k: idempotencyKey, ...input })) as unknown as SignResult;
+    res.receipt = { ...res.receipt, evidence: input.evidence };
+    return res;
   }
 
   closePlan(planId: string): Promise<unknown> {
