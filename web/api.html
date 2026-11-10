@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>filet API</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+/* agentmint.run palette, dark only */
+:root {
+  --bg: #0B1120; --fg: #E2E8F0; --surface: #141E30; --border: #1E3A5F; --code: #0D1117;
+  --blue: #3B82F6; --green: #10B981; --red: #EF4444; --yellow: #FBBF24;
+  --muted: #94A3B8; --dim: #475569;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.6 var(--mono); }
+.app { height: 100%; display: grid; grid-template-rows: auto 1fr; gap: 20px;
+  padding: 24px max(24px, env(safe-area-inset-right)) 24px max(24px, env(safe-area-inset-left)); }
+header { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+.brand { font-weight: 700; font-size: 15px; } .brand span { color: var(--blue); }
+header a { color: var(--muted); text-decoration: none; } header a:hover { color: var(--fg); }
+.stat { color: var(--dim); } .stat b { color: var(--fg); font-weight: 500; }
+.sp { flex: 1; }
+button { font: 500 12px var(--mono); padding: 7px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--fg); cursor: pointer; }
+button:hover { border-color: var(--blue); }
+.log { overflow-y: auto; min-height: 0; border: 1px solid var(--border); background: var(--surface); border-radius: 10px; padding: 8px 24px 24px; }
+.e { padding: 16px 0; border-bottom: 1px solid var(--border); animation: in .35s var(--ease) both; scroll-margin: 24px; }
+.e:last-child { border-bottom: 0; }
+@keyframes in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.e.target { box-shadow: -12px 0 0 -10px var(--blue); }
+.line { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.t { color: var(--dim); min-width: 72px; }
+.m { font-weight: 700; min-width: 44px; }
+.m.POST { color: var(--blue); } .m.GET { color: var(--green); }
+.o { color: var(--muted); } .p { color: var(--fg); overflow-wrap: anywhere; }
+.s { padding: 1px 8px; border-radius: 999px; font-size: 11px; }
+.s.ok { color: var(--green); background: rgba(16,185,129,.12); } .s.bad { color: var(--red); background: rgba(239,68,68,.12); }
+.ms { color: var(--dim); }
+.tag { font-size: 11px; color: var(--dim); border: 1px solid var(--border); border-radius: 4px; padding: 0 6px; }
+.tag.live { color: var(--green); border-color: rgba(16,185,129,.4); }
+.bodies { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 10px; }
+.b { background: var(--code); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.b h4 { font: 600 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 var(--mono); color: var(--muted); }
+.k { color: var(--muted); } .str { color: var(--fg); } .num { color: var(--yellow); } .bool { color: var(--green); }
+.empty { color: var(--dim); padding: 24px 0; }
+@media (max-width: 800px) { .bodies { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .e { animation: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">filet<span>.ai</span> API</div>
+    <span class="stat">requests <b id="n">0</b></span>
+    <span class="stat">tree size <b id="size">–</b></span>
+    <span class="stat" id="mode"></span>
+    <span class="sp"></span>
+    <button id="restart" type="button">Restart run</button>
+    <a href="/">← call</a>
+  </header>
+  <main class="log" id="log"><div class="empty" id="empty">Waiting for the run…</div></main>
+</div>
+<script>
+const AUTH = "https://filet-authority.anikethsubs.workers.dev";
+const ORIGIN = AUTH.replace("https://", "");
+const log = document.getElementById("log");
+const nEl = document.getElementById("n");
+const sizeEl = document.getElementById("size");
+let count = 0, timers = [], lastLiveSize = null;
+
+const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+const short = (h) => (typeof h === "string" && /^[0-9a-f]{40,}$/.test(h) ? h.slice(0, 12) + "…" : h);
+function shorten(v) {
+  if (Array.isArray(v)) return v.length > 4 ? [...v.slice(0, 3).map(shorten), `… ${v.length - 3} more`] : v.map(shorten);
+  if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, shorten(x)]));
+  return short(v);
+}
+function pretty(obj) {
+  return esc(JSON.stringify(shorten(obj), null, 2))
+    .replace(/&quot;|"/g, '"')
+    .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="str">"$1"</span>')
+    .replace(/: (-?\d+(\.\d+)?)/g, ': <span class="num">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="bool">$1</span>');
+}
+function add({ id, t, method, origin, path, status, ms, req, res, live }) {
+  document.getElementById("empty")?.remove();
+  const el = document.createElement("div");
+  el.className = "e"; if (id) el.id = id;
+  el.innerHTML =
+    `<div class="line"><span class="t">${esc(t)}</span><span class="m ${method}">${method}</span>` +
+    `<span class="o">${esc(origin)}</span><span class="p">${esc(path)}</span>` +
+    `<span class="s ${status < 400 ? "ok" : "bad"}">${status}</span>` +
+    (ms != null ? `<span class="ms">${ms} ms</span>` : "") +
+    `<span class="tag ${live ? "live" : ""}">${live ? "live" : "recorded"}</span></div>` +
+    `<div class="bodies"><div class="b"><h4>request</h4><pre>${req ? pretty(req) : "—"}</pre></div>` +
+    `<div class="b"><h4>response</h4><pre>${res ? pretty(res) : "—"}</pre></div></div>`;
+  log.appendChild(el);
+  nEl.textContent = ++count;
+  if (location.hash && location.hash.slice(1) === id) { el.classList.add("target"); el.scrollIntoView({ block: "center" }); }
+  else if (log.scrollHeight - log.scrollTop - log.clientHeight < 200) log.scrollTop = log.scrollHeight;
+}
+const clock = (us) => { const s = (us || 0) / 1e6; return `${String(Math.floor(s / 60)).padStart(2, "0")}:${(s % 60).toFixed(1).padStart(4, "0")}`; };
+
+// Turns recorded call events into the HTTP requests they correspond to.
+function toRequests(events) {
+  const out = []; let keyId = "";
+  for (const ev of events) {
+    const d = ev.data || {}; const name = ev.event;
+    if (name === "start") {
+      keyId = d.issuer_key_id || d.key_id || "";
+      out.push({ id: `a-${ev.id}`, t: clock(d.t_us), method: "POST", origin: ORIGIN, path: "/authority/v1/issuers", status: 200,
+        req: { public_key_pem: "-----BEGIN PUBLIC KEY----- …" }, res: { key_id: keyId } });
+    } else if (name === "loop") {
+      out.push({ id: `a-${ev.id}`, t: clock(d.t_us), method: "POST", origin: "api.anthropic.com", path: "/v1/messages", status: 200, ms: d.ms,
+        req: { model: d.model || "claude-opus-5-5", turn: d.turn, iteration: d.iteration, stream: true },
+        res: { request_id: d.request_id, stop_reason: d.stop_reason, usage: { input_tokens: d.input_tokens, output_tokens: d.output_tokens, cache_read_input_tokens: d.cache_read_tokens } } });
+    } else if (name === "batch") {
+      out.push({ id: `a-${ev.id}`, t: clock(d.t_us), method: "POST", origin: ORIGIN, path: "/authority/v1/batches", status: 200, ms: d.authority_ms,
+        req: { key_id: keyId, leaf_hashes: d.leaf_hashes, batch_signature: "…" },
+        res: { tree_size_before: d.tree_size_before, tree_size_after: d.tree_size_after, sth: d.sth, sth_signature: d.sth_signature, proofs: `${(d.leaf_hashes || []).length} inclusion proof(s)` },
+        size: d.tree_size_after });
+    } else if (name === "consistency") {
+      out.push({ id: `a-${ev.id}`, t: clock(d.t_us), method: "GET", origin: ORIGIN, path: `/authority/v1/consistency?from=${d.from_size}&to=${d.to_size}`, status: d.ok === false ? 409 : 200,
+        req: null, res: { from: d.from_size, to: d.to_size, ok: d.ok } });
+    } else if (name === "api") {
+      out.push({ id: `a-${ev.id}`, t: clock(d.t_us), method: d.method, origin: (d.url || "").replace(/^https?:\/\/([^/]+).*/, "$1"), path: (d.url || "").replace(/^https?:\/\/[^/]+/, ""),
+        status: d.status, ms: d.ms, req: d.request_summary, res: d.response_summary });
+    }
+  }
+  return out;
+}
+
+async function run() {
+  timers.forEach(clearTimeout); timers = [];
+  log.innerHTML = '<div class="empty" id="empty">Waiting for the run…</div>'; count = 0; nEl.textContent = 0;
+  let events = [];
+  try {
+    const j = await (await fetch("/events.json", { cache: "no-store" })).json();
+    const runs = j.runs || {}; const first = runs.none || runs[Object.keys(runs)[0]];
+    events = Array.isArray(first) ? first : (first?.events || []);
+  } catch (e) {}
+  document.getElementById("mode").innerHTML = '<span class="tag">recorded run</span>';
+  const reqs = toRequests(events);
+  // Show everything immediately if the page was opened on a specific request; otherwise play it in.
+  const instant = !!location.hash;
+  reqs.forEach((r, i) => {
+    const show = () => { add(r); if (r.size != null) sizeEl.textContent = r.size; };
+    if (instant) show(); else timers.push(setTimeout(show, 900 * i));
+  });
+}
+
+// The real authority: poll its signed tree head and log every change.
+async function pollLive() {
+  try {
+    const t0 = performance.now();
+    const res = await fetch(`${AUTH}/authority/v1/sth`, { cache: "no-store" });
+    const body = await res.json();
+    const ms = Math.round(performance.now() - t0);
+    const size = body?.sth?.tree_size;
+    if (size !== lastLiveSize) {
+      lastLiveSize = size;
+      add({ id: `live-${Date.now()}`, t: new Date().toLocaleTimeString(), method: "GET", origin: ORIGIN, path: "/authority/v1/sth",
+        status: res.status, ms, req: null, res: body, live: true });
+    }
+  } catch (e) {}
+}
+
+// Live call: /api.html?call=<id> streams that call's real requests from filet-call.
+const CALL_API = "https://filet-call.anikethsubs.workers.dev";
+function runLive(callId) {
+  log.innerHTML = '<div class="empty" id="empty">Connecting to live call…</div>'; count = 0; nEl.textContent = 0;
+  document.getElementById("mode").innerHTML = `<span class="tag live">live call ${esc(callId.slice(0, 8))}</span>`;
+  const es = new EventSource(`${CALL_API}/call/${encodeURIComponent(callId)}/events`);
+  const names = ["start", "loop", "batch", "consistency", "api"];
+  for (const name of names) {
+    es.addEventListener(name, (m) => {
+      let data; try { data = JSON.parse(m.data); } catch (e) { return; }
+      for (const r of toRequests([{ id: m.lastEventId, event: name, data }])) {
+        // The api event is the real request record; skip the derived duplicates when it exists.
+        if (name !== "api" && data.request_id === undefined && name !== "start" && name !== "loop") { /* keep derived */ }
+        add({ ...r, live: true });
+        if (r.size != null) sizeEl.textContent = r.size;
+      }
+    });
+  }
+  es.addEventListener("done", () => es.close());
+}
+
+document.getElementById("restart").addEventListener("click", () => { history.replaceState(null, "", location.pathname); run(); });
+const liveCall = new URLSearchParams(location.search).get("call");
+if (liveCall) runLive(liveCall); else run();
+pollLive(); setInterval(pollLive, 4000);
+</script>
+</body>
+</html>

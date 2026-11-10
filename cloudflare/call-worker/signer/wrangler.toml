@@ -1,0 +1,5 @@
+name = "filet-signer"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+# No public URL: reachable only through the service binding from filet-call.
+workers_dev = false

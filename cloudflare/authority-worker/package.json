@@ -1,0 +1,19 @@
+{
+  "name": "agentmint-authority",
+  "version": "1.0.0",
+  "description": "AgentMint signing authority: RFC 6962 transparency log on Cloudflare Workers + Durable Objects",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "typecheck": "tsc -p .",
+    "dev-key": "node scripts/gen-dev-key.mjs",
+    "deploy": "wrangler deploy",
+    "test": "cd ${AGENTMINT_SDK:-/home/user/agentmint-sdk} && npx tsx --test \"$INIT_CWD/test/authority.test.ts\""
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20241218.0",
+    "typescript": "7.0.2",
+    "wrangler": "3.99.0"
+  },
+  "private": true,
+  "type": "module"
+}

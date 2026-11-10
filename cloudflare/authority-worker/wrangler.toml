@@ -1,0 +1,26 @@
+name = "filet-authority"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Optional: override the log identifier returned in proofs (default: "agentmint-log-<key_id of log key>").
+# [vars]
+# LOG_ID = "agentmint-log-prod-1"
+
+[[durable_objects.bindings]]
+name = "AUTHORITY_LOG"
+class_name = "AuthorityLog"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AuthorityLog"]
+
+[vars]
+LOG_ID = "filet-log-9bdc0b9a070538c5"
+
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["RateLimiter"]

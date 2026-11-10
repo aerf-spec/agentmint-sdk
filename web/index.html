@@ -1,0 +1,1379 @@
+<!doctype html>
+<!-- copy slots (data-copy): subtitle, col-model, col-call, col-filet, authority, empty-model, empty-call, empty-filet -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>filet</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%233B82F6%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+/* agentmint.run palette: dark only, by design */
+:root {
+  --bg: #0B1120; --fg: #E2E8F0; --fg-2: #CBD5E1; --surface: #141E30; --border: #1E3A5F; --code-bg: #0D1117;
+  --blue: #3B82F6; --green: #10B981; --red: #EF4444; --yellow: #FBBF24;
+  --text-secondary: #94A3B8; --text-tertiary: #475569; --faint: #64748B; --off: #26354B;
+  --hl: rgba(59, 130, 246, 0.26); --hl-soft: rgba(59, 130, 246, 0.10);
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  --serif: "Source Serif 4", Georgia, serif;
+  --pad: clamp(12px, 1.7vw, 24px);
+  --gut: 14px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 16px/1.7 var(--serif); -webkit-font-smoothing: antialiased; }
+button, select, input { font: 500 12px var(--mono); color: inherit; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+[data-copy]:empty { display: none; }
+[hidden] { display: none !important; }
+.lbl { font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
+.tag { font: 500 10px var(--mono); letter-spacing: 0.04em; color: var(--faint); border: 1px solid var(--border); border-radius: 3px; padding: 0 5px; margin-left: 6px; text-transform: none; }
+.t { font: 400 10.5px var(--mono); color: var(--faint); white-space: nowrap; }
+.ok { color: var(--green); } .bad { color: var(--red); } .warn { color: var(--yellow); }
+
+/* shell: slim header, panes fill the viewport */
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: var(--pad) max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left)); }
+.top { display: flex; align-items: center; gap: 8px 14px; min-height: 36px; max-height: 48px; }
+.brand { font: 700 15px var(--mono); white-space: nowrap; }
+.brand span { color: var(--blue); }
+.mode { font: 500 10.5px var(--mono); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.mode[data-live="1"] { color: var(--green); border-color: rgba(16, 185, 129, 0.4); }
+.clock { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; color: var(--fg); min-width: 5ch; }
+.cost { font: 500 11.5px var(--mono); color: var(--fg-2); text-decoration: none; white-space: nowrap; }
+.cost:hover { color: var(--blue); }
+.ih .usd { color: var(--fg-2); margin-left: 8px; }
+.ctl { display: flex; align-items: center; gap: 6px; flex: none; }
+.btn { font: 500 12px var(--mono); padding: 5px 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); cursor: pointer; text-decoration: none; line-height: 1.4; }
+.btn--play { background: var(--blue); border-color: var(--blue); color: #fff; min-width: 5.4rem; }
+.more { position: relative; }
+.more > summary { list-style: none; cursor: pointer; padding: 3px 11px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 600 14px var(--mono); line-height: 1.3; }
+.more > summary::-webkit-details-marker { display: none; }
+.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: min(19rem, 86vw); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: grid; gap: 10px; font: 12px/1.5 var(--mono); }
+.menu label { display: grid; gap: 4px; }
+.menu select, .menu input { width: 100%; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+.menu .row { display: flex; gap: 6px; }
+.menu .row input { flex: 1; min-width: 0; }
+.saved { display: grid; gap: 2px; }
+.saved button { text-align: left; background: none; border: 0; color: var(--blue); cursor: pointer; padding: 2px 0; }
+.err { font: 600 11px var(--mono); color: var(--red); white-space: nowrap; }
+.scrub { position: relative; flex: 1; min-width: 80px; height: 22px; cursor: pointer; touch-action: none; }
+.scrub .track { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--border); border-radius: 1px; }
+.scrub .fill { position: absolute; left: 0; top: 10px; height: 2px; background: var(--blue); border-radius: 1px; width: 0; }
+.scrub .head { position: absolute; top: 5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--fg); left: 0; pointer-events: none; }
+.scrub .tk { position: absolute; top: 4px; width: 2px; height: 14px; margin-left: -1px; background: var(--text-tertiary); border: 0; padding: 0; cursor: pointer; }
+.scrub .tk.f { background: var(--red); width: 3px; }
+
+/* layout: side panels + centered conversation */
+.cols { display: grid; grid-template-columns: var(--wl, 30vw) var(--gut) minmax(320px, 1fr) var(--gut) var(--wr, 30vw); min-height: 0; }
+.side { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.rail { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 14px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text-tertiary); font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-align: left; }
+.rail:hover { color: var(--fg); }
+.rail .chev { font-size: 12px; letter-spacing: 0; }
+.side.collapsed > :not(.rail) { display: none !important; }
+.side.collapsed .rail { height: 100%; border-bottom: 0; writing-mode: vertical-rl; justify-content: flex-start; padding: 14px 0; align-items: center; }
+.center { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.pane { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.feed { flex: 1; overflow-y: auto; min-height: 0; padding: 10px 18px 28px; font: 12.5px/1.6 var(--mono); color: var(--text-secondary); overscroll-behavior: contain; overflow-anchor: auto; overflow-wrap: anywhere; }
+.chat { padding: 18px max(18px, calc((100% - 720px) / 2)) 28px; }
+.gutter { cursor: col-resize; display: flex; justify-content: center; touch-action: none; }
+.gutter::after { content: ""; width: 2px; border-radius: 1px; background: transparent; transition: background-color 150ms var(--ease); }
+.gutter:hover::after, .gutter.drag::after { background: var(--border); }
+.gutter:focus-visible { outline: none; } .gutter:focus-visible::after { background: var(--blue); }
+.gutter.off { pointer-events: none; }
+.hgut { flex: none; height: 10px; cursor: row-resize; display: flex; align-items: center; touch-action: none; }
+.hgut::after { content: ""; flex: 1; height: 2px; margin: 0 14px; border-radius: 1px; background: var(--border); opacity: 0.5; }
+.hgut:hover::after, .hgut.drag::after, .hgut:focus-visible::after { background: var(--blue); opacity: 1; }
+.hgut:focus-visible { outline: none; }
+.pill { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 3; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--blue); background: var(--surface); color: var(--fg); font: 600 11px var(--mono); cursor: pointer; }
+.am-top { flex: none; padding: 8px 18px 2px; font: 11.5px var(--mono); }
+.termd { flex: none; border-top: 1px solid var(--border); }
+.termd > summary { list-style: none; cursor: pointer; padding: 6px 14px; font: 500 11px var(--mono); color: var(--text-tertiary); }
+.termd > summary::-webkit-details-marker { display: none; }
+.termd > summary::before { content: "▸ "; } .termd[open] > summary::before { content: "▾ "; }
+.termd > summary:hover { color: var(--fg); }
+@media (max-width: 900px) {
+  .app { height: auto; }
+  .top { flex-wrap: wrap; max-height: none; }
+  .scrub { order: 10; flex-basis: 100%; }
+  .cols { grid-template-columns: 1fr; gap: 14px; }
+  .center { order: -1; min-height: 70vh; }
+  .gutter, .hgut { display: none; }
+  .side { max-height: 85vh; }
+  .side:not(.collapsed) { min-height: 60vh; }
+  .side.collapsed .rail { writing-mode: horizontal-tb; height: auto; padding: 8px 14px; }
+}
+
+/* parts, tethers, flash */
+.part { border-radius: 4px; cursor: default; transition: background-color 150ms var(--ease); }
+.part:hover { background: var(--hl-soft); }
+.part.rel { background: var(--hl); }
+.flash { animation: flash 1.4s var(--ease); }
+@keyframes flash { 0%, 40% { background: var(--hl); box-shadow: 0 0 0 1.5px var(--blue); } 100% { background: transparent; box-shadow: 0 0 0 0 transparent; } }
+.jp { display: inline-block; white-space: nowrap; opacity: 0; padding: 0 3px; margin-left: 3px; color: var(--blue); text-decoration: none; font: 600 11px var(--mono); transition: opacity 150ms var(--ease); }
+.part:hover > .jp, .part:focus-within > .jp, .part:focus > .jp { opacity: 1; }
+.jp:focus-visible { opacity: 1; }
+#tether { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 30; }
+#tether line { stroke: var(--blue); stroke-width: 1; opacity: 0.85; transition: opacity 400ms var(--ease); }
+#tether.fade line { opacity: 0; }
+.enter { animation: enter 180ms var(--ease) both; }
+@keyframes enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+
+/* conversation */
+.turn { display: block; padding: 6px 10px; margin: 0 -10px 18px; }
+.turn .who { display: block; font: 600 10.5px var(--mono); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
+.turn[data-who="agent"] .who { color: var(--blue); }
+.turn .tx { display: block; font: 17px/1.6 var(--serif); color: var(--fg); white-space: pre-wrap; }
+.say { flex: none; padding: 8px max(12px, calc((100% - 720px) / 2)) 4px; }
+.composer { position: relative; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); padding: 12px 54px 12px 14px; transition: border-color 150ms var(--ease); }
+.composer:focus-within { border-color: var(--blue); }
+.composer textarea { display: block; width: 100%; resize: none; border: 0; outline: none; background: transparent; color: var(--fg); font: 15px/1.5 var(--serif); height: 3em; min-height: 3em; max-height: 12em; overflow-y: auto; }
+.composer textarea::placeholder { color: var(--faint); }
+.composer .note { display: block; margin-top: 4px; font: 500 11px var(--mono); color: var(--yellow); }
+.send { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border-radius: 8px; border: 0; background: var(--blue); color: #fff; font: 700 15px var(--mono); cursor: pointer; }
+.send[data-stop="1"] { background: var(--surface); border: 1px solid var(--border); color: var(--fg); font-size: 12px; }
+
+/* model tree */
+.rules { margin-bottom: 18px; }
+.node { display: block; padding: 1px 6px; margin: 0 -6px; }
+.kids { margin-left: 8px; padding-left: 12px; border-left: 1px solid var(--border); }
+.card { padding: 0 0 22px; }
+.hd { display: block; padding: 2px 6px; margin: 0 -6px; }
+.hd b { font: 600 12px var(--mono); color: var(--fg); letter-spacing: 0.04em; }
+.hd .pt { color: var(--text-secondary); margin-left: 8px; }
+.k { color: var(--faint); }
+.v { color: var(--fg-2); }
+.ih .in { color: var(--blue); font-weight: 600; }
+.ih .il { color: var(--fg); }
+.sr[data-s="timeout"] { color: var(--yellow); } .sr[data-s="end_turn"] { color: var(--green); }
+.think { display: block; font: 15px/1.65 var(--serif); color: var(--fg-2); padding: 2px 6px; margin: 0 -6px; }
+.think .part { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
+.caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--blue); opacity: 0.55; border-radius: 1px; }
+.claim .cid { color: var(--faint); margin-right: 6px; }
+.claim .ct { font: 14.5px/1.55 var(--serif); color: var(--fg); }
+.claim.unsup .ct, .claim.unsup .cid { color: var(--yellow); }
+.claim.final .cid { color: var(--blue); }
+.cite { display: block; color: var(--text-secondary); padding: 0 6px; margin: 0 -6px; }
+.cite::before { content: "↳ "; color: var(--faint); }
+.cite[data-kind="rule"] .cv { color: var(--blue); } .cite[data-kind="tool"] .cv { color: var(--green); }
+.cite.warn { color: var(--yellow); }
+.tn { color: var(--green); }
+.pending { color: var(--faint); }
+.srow .sk { color: var(--faint); margin-right: 6px; }
+.srow .sn { color: var(--fg-2); }
+.srow .sd { color: var(--fg); margin-left: 6px; }
+.srow.err .sk, .srow.err .sn { color: var(--yellow); }
+.pol { color: var(--text-secondary); }
+.pol::before { content: attr(data-pol) " "; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+
+/* failure story */
+.story { display: block; margin: 10px -6px; padding: 4px 6px 6px; }
+.story .sh b { font-weight: 600; margin-right: 8px; }
+.story .st { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+.story[data-state="recovering"] .sh { color: var(--yellow); }
+.story[data-state="recovered"] .sh { color: var(--green); }
+.story[data-state="failed"] .sh { color: var(--red); }
+.story ol { list-style: none; margin: 2px 0 0 8px; padding-left: 12px; border-left: 1px solid var(--border); }
+.story li { color: var(--fg-2); }
+.story li:last-child { color: var(--fg); }
+
+/* filet column */
+.aline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; color: var(--text-tertiary); min-height: 20px; }
+.aline .tick { align-self: center; width: 6px; height: 6px; border-radius: 50%; background: var(--off); }
+.aline.live .tick { background: var(--green); animation: tick 250ms steps(2, jump-none) infinite; }
+@keyframes tick { from { opacity: 1; } to { opacity: 0.2; } }
+.tok { padding: 0 3px; white-space: nowrap; }
+.tok:not([hidden]) ~ .tok:not([hidden])::before { content: "· "; color: var(--text-tertiary); }
+.tok .tv { display: inline-block; color: var(--fg); }
+.tok.warn .tv { color: var(--yellow); }
+.tv.bump { animation: bump 250ms var(--ease) both; }
+@keyframes bump { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+.rcpt { font: 12.5px/1.65 var(--mono); margin: 0 0 24px; color: var(--fg); scroll-margin: 24px; }
+.rcpt .br, .rcpt .pn { color: var(--text-tertiary); }
+.jl { display: block; padding-left: 2ch; }
+.jk { color: var(--text-tertiary); }
+.js { position: relative; color: var(--fg); padding: 0 2px; margin: 0 -2px; }
+.js > .jp, .tok > .jp { position: absolute; left: 100%; top: 0; margin: 0; }
+.tok { position: relative; }
+.js.pend { color: var(--faint); }
+.js.bad, .js.warn { color: var(--yellow); }
+.js.rec { color: var(--green); }
+.ckb { border: 0; background: none; padding: 0 0 0 8px; font: 500 11px var(--mono); color: var(--blue); cursor: pointer; }
+.ckb.ok { color: var(--green); } .ckb.bad { color: var(--red); }
+.summary { display: block; font: 600 12px var(--mono); margin: 4px 0 20px; }
+
+/* terminal */
+.term { height: var(--th, 200px); margin: 0 12px 12px; border-radius: 8px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; position: relative; }
+.tbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 10px; font: 11px/1.6 var(--mono); color: var(--text-secondary); overflow-wrap: anywhere; white-space: pre-wrap; }
+.tl { display: block; padding: 0 3px; margin: 0 -3px; }
+.tl .tp { color: var(--text-tertiary); }
+.tl .cmd { color: var(--fg-2); }
+.tl .tr { display: block; color: var(--text-secondary); padding-left: 2ch; }
+.tl.warn .tr { color: var(--yellow); } .tl.bad .tr { color: var(--red); } .tl.ok .tr { color: var(--green); }
+.tl .go { color: var(--faint); text-decoration: none; margin-left: 6px; }
+.tl .go:hover { color: var(--blue); }
+
+/* thread modal */
+.modal { position: fixed; inset: 0; z-index: 40; background: rgba(5, 9, 18, 0.72); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.mbox { width: min(720px, 100%); max-height: min(86vh, 900px); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
+.mhd { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); font: 600 12px var(--mono); }
+.mhd .mt { flex: 1; color: var(--fg); }
+.mbody { flex: 1; overflow-y: auto; padding: 14px 18px 24px; font: 12.5px/1.6 var(--mono); color: var(--text-secondary); overflow-wrap: anywhere; }
+.mn { display: block; text-decoration: none; padding: 2px 6px; margin: 0 -6px 2px; border-radius: 4px; scroll-margin: 40px; }
+.mn:hover { background: var(--hl-soft); }
+.mn .lbl { display: block; }
+.mn pre, .mn .mx { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 var(--mono); color: var(--fg-2); }
+.mn .ms { font: 15px/1.6 var(--serif); color: var(--fg); }
+.msec { margin: 0 0 10px 0; padding-left: 12px; border-left: 1px solid var(--border); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <span class="brand">filet<span>.ai</span></span>
+    <span class="mode" id="mode" hidden></span>
+    <span class="clock" id="clock" hidden></span>
+    <a class="cost" id="cost" href="costs.html" target="_blank" rel="noopener" hidden></a>
+    <p data-copy="subtitle"></p>
+    <div class="scrub rec-only" id="scrub" aria-label="Timeline"><div class="track"></div><div class="fill" id="fill"></div><div id="ticks"></div><div class="head" id="head"></div></div>
+    <span class="err" id="err" role="status" hidden></span>
+    <div class="ctl">
+      <button class="btn rec-only" id="prev" type="button" aria-label="Previous step">←</button>
+      <button class="btn btn--play rec-only" id="play" type="button">Play</button>
+      <button class="btn rec-only" id="next" type="button" aria-label="Next step">→</button>
+      <button class="btn" id="endcall" type="button" hidden>End call</button>
+      <a class="btn" id="apilink" href="api.html" target="_blank" rel="noopener">API</a>
+      <a class="btn" id="pkglink" href="package.html" target="_blank" rel="noopener" hidden>Package</a>
+      <details class="more" id="more">
+        <summary aria-label="More">⋯</summary>
+        <div class="menu">
+          <label><span class="lbl">Run</span>
+            <select id="run">
+              <option value="">recorded call</option>
+              <option value="llm_timeout">recorded · llm_timeout</option>
+              <option value="tool_error">recorded · tool_error</option>
+              <option value="authority_down">recorded · authority_down</option>
+              <option value="signer_crash">recorded · signer_crash</option>
+            </select>
+          </label>
+          <button class="btn" id="newcall" type="button">New call</button>
+          <label><span class="lbl">Speed</span><select id="speed"><option value="1">normal</option><option value="3">fast</option></select></label>
+          <label><span class="lbl">API</span><span class="row"><input id="api" type="url" placeholder="https://…" spellcheck="false"><button class="btn" id="api-save" type="button">Save</button></span></label>
+          <div><span class="lbl">Saved calls</span><div class="saved" id="saved"></div></div>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <main class="cols" id="cols">
+    <section class="side" id="side-l" data-pane="model" aria-label="Model">
+      <button class="rail" type="button" data-toggle="l" aria-expanded="true" title="Model ( [ )"><span>Model</span><span class="chev">‹</span></button>
+      <p data-copy="col-model"></p>
+      <div class="pane"><div class="feed" id="model"><p data-copy="empty-model"></p></div></div>
+    </section>
+    <div class="gutter" role="separator" aria-orientation="vertical" aria-label="Resize Model panel" tabindex="0" data-g="l"></div>
+    <section class="center" data-pane="call" aria-label="Conversation">
+      <p data-copy="col-call"></p>
+      <div class="pane"><div class="feed chat" id="call"><p data-copy="empty-call"></p></div></div>
+      <form class="say" id="say" autocomplete="off"><div class="composer"><textarea id="say-in" rows="2" placeholder="Speak as the caller…" aria-label="Speak as the caller"></textarea><span class="note" id="say-note" hidden>connect live to reply</span><button class="send" id="say-go" type="submit" aria-label="Send">↑</button></div></form>
+    </section>
+    <div class="gutter" role="separator" aria-orientation="vertical" aria-label="Resize filet panel" tabindex="0" data-g="r"></div>
+    <section class="side" id="side-r" data-pane="filet" aria-label="filet">
+      <button class="rail" type="button" data-toggle="r" aria-expanded="true" title="filet ( ] )"><span>filet</span><span class="chev">›</span></button>
+      <p data-copy="col-filet"></p>
+      <div class="am-top"><div class="aline" id="aline"></div><p data-copy="authority"></p></div>
+      <div class="pane"><div class="feed" id="am"><p data-copy="empty-filet"></p></div></div>
+      <details class="termd" id="termd"><summary id="termsum">terminal</summary>
+        <div class="hgut" id="hgut" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" tabindex="0"></div>
+        <div class="term" id="termbox"><div class="tbody" id="term"></div></div>
+      </details>
+    </section>
+  </main>
+</div>
+<svg id="tether" aria-hidden="true"></svg>
+<div class="modal" id="modal" hidden>
+  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <div class="mhd"><button class="btn" id="m-prev" type="button" aria-label="Previous decision">←</button><span class="mt" id="m-title"></span><button class="btn" id="m-next" type="button" aria-label="Next decision">→</button><button class="btn" id="m-x" type="button" aria-label="Close">×</button></div>
+    <div class="mbody" id="m-body"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const RM = matchMedia("(prefers-reduced-motion: reduce)");
+const WIDE = matchMedia("(min-width: 901px)");
+const EVENTS = ["start", "turn", "model_input", "thinking", "span", "loop", "tool_call", "tool_result", "failure", "decision", "signed",
+  "queued", "batch", "consistency", "anchored", "verified", "gap", "reconciled", "done", "cost", "call_cost", "interrupted", "api"];
+const MODEL_DEFAULT = "claude-opus-5-5";
+const AUTH = "https://filet-authority.anikethsubs.workers.dev";
+const AUTH_HOST = "filet-authority.anikethsubs.workers.dev";
+
+// ── browser storage ──
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(`filet.${k}`); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { if (v == null) localStorage.removeItem(`filet.${k}`); else localStorage.setItem(`filet.${k}`, JSON.stringify(v)); return true; } catch { return false; } },
+};
+const qs = new URLSearchParams(location.search);
+if (qs.has("api")) { const a = qs.get("api"); store.set("api", a ? a.replace(/\/+$/, "") : null); }
+if (qs.has("presenter")) { const t = qs.get("presenter"); store.set("presenter", t && t !== "off" ? t : null); }
+const API_DEFAULT = "https://filet-call.anikethsubs.workers.dev";
+{ const a = store.get("api", null); window.FILET_API = a === "off" ? null : a || window.FILET_API || API_DEFAULT; }
+const PRESENTER = store.get("presenter", null);
+
+// ── helpers ──
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const short = (x) => (x && x.length > 16 ? `${x.slice(0, 8)}…${x.slice(-4)}` : String(x ?? ""));
+const s4 = (x) => (x ? `${String(x).slice(0, 4)}…` : "…");
+const J = (v) => JSON.stringify(v, null, 2);
+const pad = (n, w = 2) => String(n).padStart(w, "0");
+const live = () => S.mode === "live";
+const fmtT = (us) => { const ms = Math.max(0, Math.floor((us || 0) / 1000)); const b = `${pad(Math.floor(ms / 60000))}:${pad(Math.floor(ms / 1000) % 60)}`; return live() ? `${b}.${pad(ms % 1000, 3)}` : b; };
+const fmtDur = (us) => !live() || us == null ? "" : us < 1000 ? `${Math.round(us)} µs` : us < 1e6 ? `${(us / 1000).toFixed(us < 1e4 ? 1 : 0)} ms` : `${(us / 1e6).toFixed(2)} s`;
+const turnId = (at, who) => `turn-${String(at).replace(/\D/g, "")}-${who}`;
+const info = new WeakMap();
+// a part: clickable, tethers to everything sharing a key; `to` adds a ↗ link that jumps to the target
+function part(tag, cls, text, inf = {}) {
+  const e = h(tag, `part ${cls || ""}`.trim(), text);
+  e.tabIndex = 0;
+  e.dataset.k = (inf.keys || []).filter(Boolean).join(" ");
+  if (inf.id) e.id = inf.id;
+  info.set(e, inf);
+  if (inf.to) jump(e, inf.to);
+  return e;
+}
+function jump(e, to) {
+  const ext = to.startsWith("api.html");
+  const a = h("a", "jp", "↗"); a.href = ext ? to : `#${to}`; if (ext) { a.target = "_blank"; a.rel = "noopener"; }
+  a.setAttribute("aria-label", "Go to linked item"); e.append(a); return e;
+}
+function addKey(el, k) { if (!el || !k) return; const s = new Set((el.dataset.k || "").split(" ").filter(Boolean)); s.add(k); el.dataset.k = [...s].join(" "); }
+function enter(el) { if (!S.instant && !RM.matches) el.classList.add("enter"); return el; }
+function line(k, v, inf) { const e = part("div", "node", null, inf); e.append(h("span", "k", `${k} `)); if (typeof v === "string") e.append(h("span", "v", v)); else e.append(v); if (inf?.to) e.append(e.querySelector(".jp")); return e; }
+function polOf(v) { return v && typeof v === "object" && !Array.isArray(v) ? ("hashed" in v ? "hashed" : "dropped" in v ? "dropped" : null) : null; }
+function valNode(v) {
+  const pol = polOf(v);
+  if (pol) { const e = h("span", "pol", pol === "hashed" ? short(v.hashed) : ""); e.dataset.pol = pol; return e; }
+  return h("span", "v", typeof v === "object" ? JSON.stringify(v) : String(v));
+}
+
+// ── view state ──
+let S;
+const cols = { model: $("#model"), call: $("#call"), am: $("#am") };
+const termEl = $("#term");
+const PANES = [cols.model, cols.call, cols.am, termEl];
+function fresh(mode) {
+  return { mode, instant: false, rules: {}, steps: new Map(), atStep: {}, lastCallerAt: null, curStep: null, turns: new Map(),
+    rec: new Map(), rid: new Map(), byHash: new Map(), batches: new Map(), queue: [], stories: new Map(), lastSeq: 0,
+    delayedAny: false, gap: false, start: null, usd: 0, tok: 0, costFinal: false, maxT: 0, curId: 0, lastB: null, ver: new Map(), startId: 0 };
+}
+function copySlot(name) { const p = h("p"); p.dataset.copy = name; return p; }
+function clearEmpty(col) { col.querySelector(":scope > [data-copy]")?.remove(); }
+function resetView(mode) {
+  S = fresh(mode);
+  cols.model.replaceChildren(copySlot("empty-model"));
+  cols.call.replaceChildren(copySlot("empty-call"));
+  cols.am.replaceChildren(copySlot("empty-filet"));
+  termEl.replaceChildren(); $("#termsum").textContent = "terminal";
+  for (const c of PANES) setFollow(c, true);
+  buildStrip(); buildAline();
+  $("#clock").hidden = true; $("#cost").hidden = true;
+  const m = $("#mode"); m.hidden = false; m.dataset.live = mode === "live" ? "1" : "";
+  m.textContent = mode === "live" ? `live · ${MODEL_DEFAULT}` : "recorded";
+  document.querySelectorAll(".rec-only").forEach((e) => { e.hidden = mode === "live"; });
+  $("#err").hidden = true;
+}
+
+// ── follow: only while the pane sits at the bottom ──
+for (const c of PANES) {
+  const pill = h("button", "pill", "↓ live"); pill.type = "button"; pill.hidden = true;
+  pill.addEventListener("click", () => {
+    if (P.src?.kind === "live" && P.pos < P.ev.length) { seek(P.ev.length); setPlaying(true); return; } // catch up to live
+    setFollow(c, true); toBottom(c);
+  });
+  (c === termEl ? $("#termbox") : c.parentElement).append(pill); c.pill = pill;
+  c.userAt = 0;
+  for (const ev of ["wheel", "touchstart", "pointerdown", "keydown"]) c.addEventListener(ev, () => { c.userAt = performance.now(); }, { passive: true });
+  c.addEventListener("scroll", () => {
+    if (c.prog) return;
+    const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40;
+    if (!atBottom && performance.now() - c.userAt > 1200) { if (c.follow) toBottom(c); return; } // reflow, not the user
+    setFollow(c, atBottom);
+  }, { passive: true });
+}
+function setFollow(c, on) { c.follow = on; c.pill.hidden = (on && !(P.src?.kind === "live" && P.pos < P.ev.length)) || !S || P.ev.length === 0; }
+function toBottom(c) { c.prog = true; c.scrollTop = c.scrollHeight; requestAnimationFrame(() => { c.prog = false; }); }
+
+// ── status strip: lights only from server data ──
+const LIGHTS = [["salted", "salted"], ["key_isolated", "key isolated"], ["anchored", "anchored"], ["reconciled", "requests matched"], ["leak_scan", "leak scan"], ["no_gaps", "no gaps"]];
+function buildStrip() {}
+function light(k, s) {
+  if (k === "no_gaps" && s !== "off") { setTok("tk-c", s === "ok" ? "valid" : "broken", ["chain"]); $("#tk-c").classList.toggle("warn", s !== "ok"); }
+}
+function anchCount() {
+  const tot = S.rec.size, ok = [...S.rec.values()].filter((r) => S.ver.get(r.seq)?.log === "passed").length;
+  if (tot) { setTok("tk-a", `${ok}/${tot}`, [...S.rec.values()].map((r) => `anc:${r.seq}`)); $("#tk-a").classList.toggle("warn", S.delayedAny && ok < tot); }
+}
+
+// ── authority line ──
+function tok(id, label, keys) { const e = part("span", "tok", null, { keys }); e.id = id; e.hidden = true; e.append(`${label} `, h("span", "tv", "")); return e; }
+function buildAline() {
+  const a = $("#aline"); a.replaceChildren(); a.classList.remove("live");
+  const arr = (id) => { const e = h("span", "arr", "→"); e.id = id; e.hidden = true; return e; };
+  const tick = h("span", "tick"); tick.hidden = true;
+  a.append(tick, tok("tk-a", "anchored", []), tok("tk-q", "queue", ["queue"]), tok("tk-b", "batch", []), tok("tk-s", "tree", []), tok("tk-r", "root", []), tok("tk-c", "chain", ["chain"]));
+}
+function setTok(id, text, keys) {
+  const e = $("#" + id); if (!e) return;
+  e.hidden = id === "tk-q" && Number(text) === 0 && !e.classList.contains("warn");
+  $("#aline .tick").hidden = false;
+  const old = e.querySelector(".tv");
+  if (old.textContent !== String(text)) old.replaceWith(h("span", S.instant || RM.matches ? "tv" : "tv bump", String(text)));
+  if (keys) e.dataset.k = keys.filter(Boolean).join(" ");
+}
+
+// ── terminal ──
+function term(cmd, resp, keys, cls = "", api = null, id = null) {
+  const e = part("div", `tl ${cls}`.trim(), null, { keys, id, noThread: true });
+  e.append(h("span", "tp", "$ "), h("span", "cmd", cmd));
+  if (api != null) { const a = h("a", "go", "↗"); a.href = `api.html#${api}`; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Open in API viewer"); e.append(a); }
+  if (resp != null) e.append(h("span", "tr", `→ ${resp}`));
+  termEl.append(enter(e));
+  $("#termsum").textContent = `terminal · ${termEl.childElementCount}`;
+  return e;
+}
+
+// ── model column: turn → iteration → thinking → claims → tool_use → tool_result → spans ──
+function ensureStep(n, t) {
+  if (S.steps.has(n)) return S.steps.get(n);
+  const st = { n, thinking: "", spans: new Map(), failBySpan: new Map(), iters: [], cur: 0, loops: [] };
+  clearEmpty(cols.model);
+  const mc = enter(h("article", "card"));
+  st.mHead = part("div", "hd", null, { keys: [`step:${n}`], id: `s-${n}`, step: n });
+  st.mHead.append(h("b", null, `STEP ${n + 1}`), st.mPoint = h("span", "pt"));
+  st.kids = h("div", "kids");
+  st.mInput = h("div"); st.mLoop = h("div"); st.mFail = h("div"); st.mStack = h("div");
+  st.kids.append(st.mInput, st.mLoop, st.mFail, st.mStack);
+  mc.append(st.mHead, st.kids);
+  cols.model.append(mc);
+  S.steps.set(n, st); S.curStep = n;
+  return st;
+}
+function iter(st, i) {
+  if (st.iters[i]) return st.iters[i];
+  const box = enter(h("div"));
+  const hd = part("div", "node ih", null, { keys: [`it:${st.n}:${i}`, i === 1 ? `mi:${st.n}` : null, "llmreq"], id: `s-${st.n}-i${i}`, step: st.n });
+  hd.append(h("span", "in", `#${i} `), h("span", "il", "model call"));
+  const kids = h("div", "kids"); const stat = h("div", "node pending", "…"); kids.append(stat);
+  box.append(hd, kids); st.mLoop.append(box);
+  const it = { i, box, hd, kids, stat, done: false, text: "", sent: 0 };
+  st.iters[i] = it; st.cur = i;
+  return it;
+}
+const lastIter = (st) => st.iters[st.cur] || iter(st, 1);
+const openIter = (st) => { const it = lastIter(st); return it.done ? iter(st, st.cur + 1) : it; };
+function renderThinking(st, it, final) {
+  if (!it.thinkEl) {
+    const lab = h("div", "lbl", "Thinking"); lab.append(h("span", "tag", S.thinkingKind || (live() ? "summary" : "scripted")));
+    it.thinkEl = part("div", "think", null, { keys: [`think:${st.n}`], id: st.thinkId ? null : `s-${st.n}-think`, step: st.n });
+    st.thinkId = st.thinkId || `s-${st.n}-think`;
+    it.tail = h("span"); it.caret = h("span", "caret");
+    it.thinkEl.append(it.tail, it.caret); it.thinkSec = h("div"); it.thinkSec.append(lab, it.thinkEl); it.kids.append(it.thinkSec);
+  }
+  const parts = it.text.split(/(?<=[.?!])\s+/);
+  const complete = final ? parts.filter(Boolean) : parts.slice(0, -1);
+  const ids = Object.keys(S.rules);
+  for (let i = it.sent; i < complete.length; i++) {
+    const sent = complete[i];
+    const cites = ids.filter((id) => new RegExp(`(^|[^\\w-])${id.replace(/-/g, "\\-")}(?![\\w-])`).test(sent));
+    const node = cites.length ? part("span", null, sent, { keys: cites.map((c) => `rule:${c}`), step: st.n }) : h("span", null, sent);
+    it.thinkEl.insertBefore(node, it.tail); it.thinkEl.insertBefore(document.createTextNode(" "), it.tail);
+  }
+  it.sent = complete.length;
+  it.tail.textContent = final ? "" : (parts.at(-1) ?? "");
+  if (final) { it.caret?.remove(); it.caret = null; }
+}
+function finishThinking(st) { for (const it of st.iters) if (it?.thinkEl && it.caret) renderThinking(st, it, true); }
+function citeKey(n, c) { return c.kind === "rule" ? `rule:${c.ref}` : c.kind === "tool" ? `tr:${n}:${c.ref}` : c.kind === "turn" ? `at:${c.ref}` : c.kind === "claim" ? `claim:${n}:${c.ref}` : `cite:${c.ref}`; }
+function citeTo(n, c) {
+  if (c.kind === "rule") return `rule-${c.ref}`;
+  if (c.kind === "tool") return `s-${n}-res`;
+  if (c.kind === "claim") return `s-${n}-c-${c.ref}`;
+  if (c.kind === "turn") return S.turns.has(turnId(c.ref, "caller")) ? turnId(c.ref, "caller") : turnId(c.ref, "agent");
+  return null;
+}
+function renderClaims(st, claims) {
+  const n = st.n; st.claims = claims;
+  const sec = enter(h("div"));
+  const lab = h("div", "lbl", "Claims"); lab.append(h("span", "tag", S.claimsSource === "model" ? "model-reported" : S.claimsSource || (live() ? "model-reported" : "scripted"))); sec.append(lab);
+  claims.forEach((c, i) => {
+    const cites = c.cites || [], final = i === claims.length - 1;
+    const el = part("div", `node claim ${cites.length ? "" : "unsup"} ${final ? "final" : ""}`, null,
+      { keys: [`claim:${n}:${c.id}`, ...cites.map((x) => citeKey(n, x)), final ? `dec:${n}` : null], id: `s-${n}-c-${c.id}`, step: n });
+    el.append(h("span", "cid", c.id), h("span", "ct", c.text));
+    const kids = h("div", "kids");
+    for (const x of cites) {
+      const e = part("div", "cite", null, { keys: [citeKey(n, x)], step: n, to: citeTo(n, x) });
+      e.dataset.kind = x.kind; e.prepend(h("span", "ck", `${x.kind} `), h("span", "cv", x.ref)); kids.append(e);
+    }
+    if (!cites.length) kids.append(part("div", "cite warn", "unsupported", { keys: [`claim:${n}:${c.id}`], step: n }));
+    if (final) kids.append(part("div", "cite", "decision", { keys: [`dec:${n}`], step: n, to: st.seq ? `r-${S.rec.get(st.seq)?.rid}` : null }));
+    sec.append(el, kids);
+  });
+  const it1 = st.iters[1] || lastIter(st);
+  if (it1.thinkSec) it1.thinkSec.after(sec); else it1.kids.append(sec);
+}
+const SPAN_KEYS = { turn: (n) => [`step:${n}`], "llm.request": (n) => [`mi:${n}`, "llmreq"], "llm.response": (n) => [`think:${n}`],
+  "tool.dispatch": (n) => [`tool:${n}`], "tool.exec": (n) => [`tool:${n}`], "downstream.call": () => [], "tool.result": (n) => [`toolres:${n}`], decision: (n) => [`dec:${n}`] };
+function renderStack(st) {
+  const spans = [...st.spans.values()], kids = new Map();
+  for (const s of spans) { const p = s.parent_id && st.spans.has(s.parent_id) ? s.parent_id : null; if (!kids.has(p)) kids.set(p, []); kids.get(p).push(s); }
+  const box = h("div"); box.append(h("div", "lbl", "Spans"));
+  const walk = (pid, parent) => {
+    for (const s of (kids.get(pid) || []).sort((a, b) => a.start_us - b.start_us)) {
+      const f = st.failBySpan.get(s.span_id);
+      const row = part("div", `node srow ${s.status === "error" ? "err" : ""}`, null,
+        { keys: [`span:${s.span_id}`, ...(SPAN_KEYS[s.kind]?.(st.n) || []), f ? `fail:${f}` : null], id: `sp-${s.span_id}`, step: st.n, to: s.parent_id ? `sp-${s.parent_id}` : null });
+      row.prepend(h("span", "sk", s.kind), h("span", "sn", `${s.name}${(s.attempt ?? 1) > 1 || s.status === "error" ? ` · attempt ${s.attempt ?? 1}` : ""}${s.error_kind ? ` · ${s.error_kind}` : ""}`));
+      const dur = fmtDur(s.dur_us); if (dur) row.querySelector(".sn").after(h("span", "sd", dur));
+      parent.append(row);
+      if (kids.get(s.span_id)?.length) { const k = h("div", "kids"); parent.append(k); walk(s.span_id, k); }
+    }
+  };
+  const root = h("div"); walk(null, root); box.append(root);
+  st.mStack.replaceChildren(box);
+}
+
+// ── failure stories ──
+function story(d) {
+  const id = d.failure_id || `${d.kind}-${d.span_id || d.step}`;
+  let st = S.stories.get(id);
+  if (!st) {
+    const el = enter(part("div", "story", null, { keys: [`fail:${id}`, `failk:${d.kind}`, d.span_id ? `span:${d.span_id}` : null], id: `f-${id}`, step: d.step ?? undefined, to: d.span_id ? `sp-${d.span_id}` : null }));
+    const hd = h("div", "sh"); const stt = h("span", "st");
+    hd.append(h("b", null, d.kind), stt); el.prepend(hd); el.append(h("ol"));
+    const inModel = d.step != null && (d.kind === "llm_timeout" || d.kind === "tool_error");
+    if (inModel) ensureStep(d.step, d.t_us).mFail.append(el); else { clearEmpty(cols.am); cols.am.append(el); }
+    st = { id, el, stt, kind: d.kind, step: d.step, state: "recovering", stages: [] };
+    S.stories.set(id, st);
+  }
+  if (d.span_id) { addKey(st.el, `span:${d.span_id}`); const sp = S.steps.get(d.step); if (sp) { sp.failBySpan.set(d.span_id, id); if (sp.spans.size) renderStack(sp); } }
+  const state = d.state || (d.recovered ? "recovered" : "recovering");
+  st.state = state; st.el.dataset.state = state; st.stt.textContent = state;
+  const text = d.stage || `attempt ${d.attempt ?? 1}${d.recovered ? " · recovered" : ""}`;
+  st.stages.push(text);
+  st.el.querySelector("ol").append(enter(h("li", null, text)));
+  for (const r of S.rec.values()) if (r.errKind === d.kind) markErr(r);
+  if (d.kind === "authority_down") $("#tk-q").classList.toggle("warn", state === "recovering");
+  const isReq = d.kind === "authority_down" && /unreachable/.test(text);
+  term(isReq ? `curl -s -X POST ${AUTH}/authority/v1/batches` : `filet trace --kind ${d.kind}`, isReq ? `503 {"error":"authority unavailable"}` : text,
+    [`fail:${id}`, d.span_id ? `span:${d.span_id}` : null], state === "recovered" ? "ok" : state === "failed" ? "bad" : "warn", isReq ? S.curId : null);
+}
+
+// ── receipts: one JSON block each, fields one per line, nested objects indented ──
+const q = (v) => `"${v}"`;
+function jl(body, key, depth = 1) { const l = h("div", "jl"); l.style.paddingLeft = `${depth * 2}ch`; l.dataset.key = key; body.append(l); return l; }
+function setJ(l, vals, last) { l.replaceChildren(h("span", "jk", `"${l.dataset.key}"`), h("span", "pn", ": "), ...vals); if (!last) l.append(h("span", "pn", ",")); }
+function V(text, keys, cls = "", extra = {}) { return part("span", `js ${cls}`.trim(), text, { keys, ...extra }); }
+function obj(l, rows, last) { // nested object under a key
+  l.replaceChildren(h("span", "jk", `"${l.dataset.key}"`), h("span", "pn", ": {"));
+  const depth = parseInt(l.style.paddingLeft) / 2 + 1;
+  const frag = []; rows.forEach(([k, vals], i) => { const r = h("div", "jl"); r.style.paddingLeft = `${depth * 2}ch`; r.dataset.key = k; setJ(r, vals, i === rows.length - 1); frag.push(r); });
+  const close = h("div", "jl"); close.style.paddingLeft = l.style.paddingLeft; close.append(h("span", "pn", last ? "}" : "},"));
+  l.append(...frag, close);
+}
+function blockFor(step) {
+  clearEmpty(cols.am);
+  const el = enter(h("div", "rcpt")); const body = h("div");
+  el.append(h("span", "br", "{"), body, h("span", "br", "}"));
+  const L = {};
+  for (const k of ["seq", "decision", "rule", "evidence", "question", "claims", "reasoning", "prev", "signed_by", "anchored_by"]) L[k] = jl(body, k);
+  cols.am.append(el);
+  return { el, L, step };
+}
+function fillDecision(blk, n, dr) {
+  const st = S.steps.get(n); const lastClaim = st?.claims?.at(-1)?.id;
+  setJ(blk.L.seq, [V("…", [`step:${n}`], "pend", { step: n })]);
+  setJ(blk.L.decision, [V(q(dr.decision), [`dec:${n}`], "", { step: n, to: lastClaim ? `s-${n}-c-${lastClaim}` : `s-${n}` })]);
+  if (dr.rule_id) setJ(blk.L.rule, [V(q(dr.rule_id), [`rule:${dr.rule_id}`], "", { step: n, to: `rule-${dr.rule_id}` })]); else blk.L.rule.remove();
+  if (Array.isArray(dr.evidence) && dr.evidence.length) {
+    const l = blk.L.evidence; l.replaceChildren(h("span", "jk", '"evidence"'), h("span", "pn", ": ["));
+    dr.evidence.forEach((e, i) => {
+      const r = h("div", "jl"); r.style.paddingLeft = "4ch";
+      const to = e.speaker === "tool" ? `s-${n}-res` : turnId(e.at, e.speaker);
+      r.append(V(q(e.at), [`at:${e.at}`, e.speaker === "tool" ? `toolres:${n}` : null], "", { step: n, to }), h("span", "pn", i < dr.evidence.length - 1 ? "," : ""));
+      l.append(r);
+    });
+    const c = h("div", "jl"); c.style.paddingLeft = "2ch"; c.append(h("span", "pn", "],")); l.append(c);
+  } else blk.L.evidence.remove();
+  fillReasoning(blk, n, null);
+  setJ(blk.L.reasoning, [V(q("…"), [`think:${n}`], "pend", { step: n })]);
+  setJ(blk.L.prev, [V(q("…"), [], "pend")]);
+  setJ(blk.L.signed_by, [V(q("signing…"), [], "pend")]);
+  setJ(blk.L.anchored_by, [V(q("pending"), [], "pend")], true);
+}
+// reasoning in the receipt: the question and the claims, each with its cites and their values
+function citeValue(n, c) {
+  if (c.value != null) return typeof c.value === "string" ? c.value : JSON.stringify(c.value);
+  if (c.kind === "rule") return S.rules[c.ref] ?? "";
+  if (c.kind === "tool") { const v = S.steps.get(n)?.result?.[c.ref]; return v == null ? "" : typeof v === "string" ? v : JSON.stringify(v); }
+  if (c.kind === "turn") return (S.turns.get(turnId(c.ref, "caller")) || S.turns.get(turnId(c.ref, "agent")))?.text ?? "";
+  if (c.kind === "claim") return S.steps.get(n)?.claims?.find((x) => x.id === c.ref)?.text ?? "";
+  return "";
+}
+function fillReasoning(blk, n, reasoning) {
+  const st = n != null ? S.steps.get(n) : null;
+  const question = reasoning?.question ?? (st?.re ? S.turns.get(turnId(st.re, "caller"))?.text : null);
+  const claims = reasoning?.claims ?? st?.claims;
+  if (!blk.L.question.isConnected && !blk.L.claims.isConnected) return;
+  if (question) setJ(blk.L.question, [V(q(question), st?.re ? [`at:${st.re}`] : [], "", { step: n ?? undefined, to: st?.re ? turnId(st.re, "caller") : null })]); else blk.L.question.remove();
+  if (!claims?.length) { blk.L.claims.remove(); return; }
+  const l = blk.L.claims; l.replaceChildren(h("span", "jk", '"claims"'), h("span", "pn", ": ["));
+  claims.forEach((c, i) => {
+    const cites = c.cites || [];
+    const r = h("div", "jl"); r.style.paddingLeft = "4ch";
+    r.append(V(q(`${c.id} ${c.text}`), [`claim:${n}:${c.id}`, ...cites.map((x) => citeKey(n, x))], cites.length ? "" : "warn", { step: n ?? undefined, to: `s-${n}-c-${c.id}` }));
+    l.append(r);
+    for (const x of cites) {
+      const cr = h("div", "jl"); cr.style.paddingLeft = "6ch";
+      const val = citeValue(n, x);
+      cr.append(h("span", "pn", "↳ "), V(`${x.kind} ${x.ref}${val ? ` = ${q(val.length > 140 ? `${val.slice(0, 140)}…` : val)}` : ""}`, [citeKey(n, x)], "", { step: n ?? undefined, to: citeTo(n, x) }));
+      l.append(cr);
+    }
+    if (!cites.length) { const cr = h("div", "jl"); cr.style.paddingLeft = "6ch"; cr.append(h("span", "pn", "↳ "), V("unsupported", [`claim:${n}:${c.id}`], "warn", { step: n ?? undefined })); l.append(cr); }
+    if (i < claims.length - 1) r.append(h("span", "pn", ","));
+  });
+  const c = h("div", "jl"); c.style.paddingLeft = "2ch"; c.append(h("span", "pn", "],")); l.append(c);
+}
+function fillSigned(blk, d, rec) {
+  const r = d.receipt || {}, ev = r.evidence || {}, dr = ev.decision_record || {}, n = d.step, seq = d.seq;
+  blk.el.id = `r-${d.receipt_id}`;
+  const X = { seq, step: n ?? undefined };
+  setJ(blk.L.seq, [V(String(seq), [`r:${seq}`, n != null ? `step:${n}` : null], "", X)]);
+  if (rec.kind !== "decide") {
+    rec.decEl = V(q(r.action), rec.kind === "err" ? [`failk:${ev.error_kind}`, ev.span_id ? `span:${ev.span_id}` : null] : ["close"], rec.kind === "err" ? "bad" : "", X);
+    setJ(blk.L.decision, [rec.decEl]);
+    if (rec.kind === "err") markErr(rec);
+    blk.L.rule.remove(); blk.L.evidence.remove(); blk.L.question.remove(); blk.L.claims.remove();
+    if (ev.counts) { const l = jl(blk.L.decision.parentElement, "counts"); blk.L.decision.after(l); obj(l, Object.entries(ev.counts).map(([k, v]) => [k, [V(String(v), ["close"], "", X)]])); }
+  } else if (!blk.filled) fillDecision(blk, n, dr);
+  if (rec.kind === "decide" && (r.evidence?.reasoning || ev.reasoning)) fillReasoning(blk, n, r.evidence?.reasoning || ev.reasoning);
+  if (r.reasoning_hash) {
+    setJ(blk.L.reasoning, [V(q(short(r.reasoning_hash)), n != null ? [`think:${n}`] : [], "", { ...X, to: n != null ? S.steps.get(n)?.thinkId : null })]);
+    if (PRESENTER) { const b = h("button", "ckb", "check"); b.type = "button"; b.addEventListener("click", (e) => { e.stopPropagation(); runCheck(seq, b); }); blk.L.reasoning.insertBefore(b, blk.L.reasoning.lastChild); }
+  } else blk.L.reasoning.remove();
+  const prev = d.previous_receipt_hash ?? r.previous_receipt_hash ?? null;
+  const prevSeq = prev ? S.byHash.get(prev) : null; const prevRec = prevSeq != null ? S.rec.get(prevSeq) : null;
+  setJ(blk.L.prev, [V(prev ? q(short(prev)) : "null", [prev ? `r:${prevSeq ?? "?"}` : null], "", { ...X, to: prevRec ? `r-${prevRec.rid}` : null })]);
+  obj(blk.L.signed_by, [
+    ["issuer", [V(q(d.key_id || r.key_id), ["issuer"], "", { ...X, to: `api.html#${S.startId}-2` })]],
+    ["signer", [V(q("filet signer"), ["issuer"], "", X)]],
+    ["sig", [V(q(short(d.signature || r.signature)), [`sig:${seq}`], "", X)]],
+  ]);
+  setJ(blk.L.anchored_by, [V(q("pending"), [`anc:${seq}`], "pend", X)], true);
+}
+function markErr(rec) {
+  const st = [...S.stories.values()].find((s) => s.kind === rec.errKind);
+  const recovered = rec.data?.receipt?.evidence?.recovered || st?.state === "recovered";
+  if (!rec.decEl) return;
+  rec.decEl.firstChild.textContent = q(`${rec.data.receipt.action}${recovered ? " · recovered" : ""}`);
+  rec.decEl.classList.toggle("bad", !recovered); rec.decEl.classList.toggle("rec", !!recovered);
+  if (st) { addKey(rec.decEl, `fail:${st.id}`); if (!rec.decEl.querySelector(".jp")) jump(rec.decEl, `f-${st.id}`); }
+}
+
+// ── cost ──
+const usd = (v) => `$${Number(v).toFixed(4)}`;
+const ktok = (n) => n >= 1000 ? `${(n / 1000).toFixed(1)}k tok` : `${n} tok`;
+function showCost() { const c = $("#cost"); c.hidden = false; c.textContent = `${usd(S.usd)} · ${ktok(S.tok)}${live() ? "" : " · recorded"}`; }
+
+// ── event handlers ──
+const H = {
+  start(d) {
+    S.start = d; S.rules = d.rules || {}; S.startId = S.curId;
+    if (d.model) $("#mode").textContent = `live · ${d.model}`;
+    S.thinkingKind = d.thinking_kind; S.claimsSource = d.claims_source;
+    if (d.key_isolated === true) light("key_isolated", "ok");
+    clearEmpty(cols.model);
+    const box = h("div", "rules"); box.id = "rules"; box.append(h("div", "lbl", "Rules"));
+    const kids = h("div", "kids");
+    for (const [id, text] of Object.entries(S.rules)) { const e = part("div", "node", null, { keys: [`rule:${id}`], id: `rule-${id}` }); e.append(h("span", "cv", `${id} `), h("span", "v", text)); kids.append(e); }
+    box.append(kids); cols.model.append(box);
+    if (!S.realApi && !live()) term(`curl -s ${AUTH}/authority/v1/key`, `200 {"log_id":"${s4(d.log_id)}"}`, ["log"], "", S.curId);
+    if (!S.realApi && !live()) term(`curl -s -X POST ${AUTH}/authority/v1/issuers`, `200 {"key_id":"${d.issuer_key_id || d.key_id || "…"}"}`, ["issuer"], "", `${S.curId}-2`);
+  },
+  turn(d) {
+    clearEmpty(cols.call);
+    const step = d.step ?? (d.who === "agent" ? S.atStep[d.at] : undefined);
+    if (d.who === "caller") S.lastCallerAt = d.at;
+    const id = turnId(d.at, d.who);
+    const e = enter(part("div", "turn", null, { keys: [`at:${d.at}`, step != null ? `step:${step}` : null], id: S.turns.has(id) ? null : id, step, to: step != null ? `s-${step}` : null }));
+    S.turns.set(id, d);
+    e.dataset.who = d.who;
+    const who = h("span", "who", `${d.who === "agent" ? "Ava" : "Caller"} · ${d.at}`); const jpEl = e.querySelector(".jp"); if (jpEl) who.append(jpEl);
+    const tx = h("span", "tx", d.text); e.prepend(who, tx);
+    cols.call.append(e);
+    if (d.who === "agent" && !S.instant && !RM.matches) {
+      const words = d.text.split(/(\s+)/); let i = 0; tx.textContent = "";
+      const t = setInterval(() => { if (!tx.isConnected) return clearInterval(t); tx.textContent += words.slice(i, i + 2).join(""); i += 2; if (cols.call.follow) toBottom(cols.call); if (i >= words.length) clearInterval(t); }, 70);
+    }
+  },
+  model_input(d) {
+    S.atStep[d.at] = d.step;
+    const st = ensureStep(d.step, d.t_us); st.at = d.at; st.re = S.lastCallerAt; st.turn = d.turn;
+    const n = d.step;
+    if (S.lastCallerAt) st.mInput.append(line("re", S.lastCallerAt, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") }));
+    st.mInput.append(line("prompt", `${d.prompt_version} · ${short(d.prompt_sha256)}`, { keys: ["prompt", `ctx:${n}`, `mi:${n}`], step: n }));
+    st.mInput.append(line("rules", `${(d.rules_in_context || []).length} in context`, { keys: (d.rules_in_context || []).map((r) => `rule:${r}`), step: n, to: "rules" }));
+    st.mInput.append(line("turns", String(d.transcript_turns), { keys: [`ctx:${n}`], step: n }));
+    iter(st, 1);
+  },
+  thinking(d) { const st = ensureStep(d.step ?? S.curStep, d.t_us); st.thinking += d.chunk; const it = openIter(st); it.text += d.chunk; renderThinking(st, it, false); },
+  loop(d) {
+    const st = ensureStep(d.step ?? S.curStep, d.t_us);
+    const it = iter(st, d.iteration);
+    finishThinking(st);
+    it.done = true; st.cur = d.iteration; st.loops[d.iteration] = { ...d, id: S.curId };
+    const bits = [`${(d.input_tokens ?? 0).toLocaleString("en-US")}→${(d.output_tokens ?? 0).toLocaleString("en-US")} tok`];
+    if (d.cache_read_tokens) bits.push(`cache ${d.cache_read_tokens.toLocaleString("en-US")}`);
+    if (live() && d.ms != null) bits.push(`${d.ms} ms`);
+    it.stat.className = "node"; it.stat.textContent = bits.join(" · ");
+    const sr = h("span", "sr", ` ${d.stop_reason}`); sr.dataset.s = d.stop_reason; it.hd.append(sr);
+    if (d.request_id) {
+      const rq = line("request_id", d.request_id, { keys: [`req:${d.request_id}`, "llmreq"], step: st.n, to: `api.html#${S.curId}` });
+      it.stat.after(rq);
+    }
+  },
+  span(d) { const st = ensureStep(d.step, d.t_us); st.spans.set(d.span_id, d); renderStack(st); },
+  tool_call(d) {
+    const st = ensureStep(d.step, d.t_us); finishThinking(st);
+    const it = lastIter(st), sec = enter(h("div"));
+    const tu = part("div", "node", null, { keys: [`tool:${d.step}`], id: `s-${d.step}-tool`, step: d.step, to: `s-${d.step}-res` });
+    tu.prepend(h("span", "k", "tool_use "), h("span", "tn", d.name));
+    const kids = h("div", "kids");
+    for (const [k, v] of Object.entries(d.input || {})) { const e = part("div", "node", null, { keys: [`ti:${d.step}:${k}`], step: d.step }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
+    st.resBox = h("div"); st.resBox.append(h("div", "node pending", "tool_result · running…"));
+    sec.append(tu, kids, st.resBox); it.kids.append(sec);
+    st.tool = { name: d.name, input: d.input };
+  },
+  tool_result(d) {
+    const st = ensureStep(d.step, d.t_us);
+    const box = st.resBox || lastIter(st).kids; box.replaceChildren();
+    const tr = part("div", "node", null, { keys: [`toolres:${d.step}`, `tool:${d.step}`], id: `s-${d.step}-res`, step: d.step, to: `s-${d.step}-tool` });
+    tr.prepend(h("span", "k", "tool_result "), h("span", "tn", d.name));
+    const kids = h("div", "kids");
+    for (const [k, v] of Object.entries(d.result || {})) { const e = part("div", "node", null, { keys: [`tr:${d.step}:${k}`], step: d.step }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
+    box.append(tr, kids);
+    st.result = d.result;
+  },
+  failure(d) { story(d); },
+  cost(d) {
+    const st = ensureStep(d.step ?? S.curStep, d.t_us);
+    const it = d.iteration ? iter(st, d.iteration) : lastIter(st);
+    if (d.usd != null) { const old = it.hd.querySelector(".usd"); if (old) old.textContent = usd(d.usd); else it.hd.append(h("span", "usd", usd(d.usd))); }
+    if (!S.costFinal) { S.usd += d.usd || 0; S.tok += (d.input_tokens || 0) + (d.output_tokens || 0) + (d.cache_read_tokens || 0); showCost(); }
+  },
+  interrupted(d) {
+    const st = d.step != null ? S.steps.get(d.step) : [...S.steps.values()].reverse().find((x) => d.turn == null || x.turn === d.turn) || (S.curStep != null ? S.steps.get(S.curStep) : null);
+    const why = `interrupted${d.reason ? ` · ${d.reason}` : ""}`;
+    if (st) {
+      finishThinking(st);
+      const it = d.iteration ? st.iters[d.iteration] || lastIter(st) : lastIter(st);
+      if (it && !it.hd.querySelector(".cut")) it.hd.append(h("span", "sr cut warn", ` ${why}`));
+      if (it && !it.done) { it.done = true; it.stat.className = "node warn"; it.stat.textContent = d.at_ms != null && live() ? `cut at ${d.at_ms} ms` : "cut"; }
+    }
+    clearEmpty(cols.call);
+    const e = enter(part("div", "turn", null, { keys: [st ? `step:${st.n}` : null], step: st?.n, to: st ? `s-${st.n}` : null }));
+    e.dataset.who = "agent";
+    const who = h("span", "who", "Ava"); const jpEl = e.querySelector(".jp"); if (jpEl) who.append(jpEl);
+    e.prepend(who, h("span", "tx warn", `— ${why}`));
+    cols.call.append(e);
+  },
+  api(d) {
+    S.realApi = true;
+    const url = d.url || `${d.origin ? `https://${d.origin}` : ""}${d.path || ""}`;
+    const ms = live() && d.ms != null ? ` · ${d.ms} ms` : "";
+    const rids = d.receipt_ids || d.receipts || [];
+    const keys = rids.map((r) => (S.rid.has(r) ? `r:${S.rid.get(r)}` : null));
+    const st = String(d.status ?? "");
+    term(`curl -s${d.method && d.method !== "GET" ? ` -X ${d.method}` : ""} ${url}`, `${st}${ms}${d.summary ? ` ${typeof d.summary === "string" ? d.summary : JSON.stringify(d.summary)}` : ""}`,
+      keys, st.startsWith("2") ? "" : st.startsWith("4") || st.startsWith("5") ? "warn" : "", d.id ?? S.curId);
+  },
+  call_cost(d) {
+    S.costFinal = true; if (d.usd != null) S.usd = d.usd;
+    const t = d.tokens ?? d.tokens_by_kind;
+    if (typeof t === "number") S.tok = t; else if (t && typeof t === "object") S.tok = Object.values(t).reduce((a, v) => a + (Number(v) || 0), 0);
+    showCost();
+  },
+  decision(d) {
+    const st = ensureStep(d.step, d.t_us); finishThinking(st);
+    const r = d.decision_record || {}; st.decision = r;
+    st.mPoint.textContent = r.point || "";
+    if (Array.isArray(d.claims) && d.claims.length) renderClaims(st, d.claims);
+    st.blk = blockFor(d.step); fillDecision(st.blk, d.step, r); st.blk.filled = true;
+  },
+  signed(d) {
+    const r = d.receipt || {};
+    const kind = String(r.action || "").startsWith("error:") ? "err" : r.action === "close" ? "close" : "decide";
+    const st = d.step != null ? S.steps.get(d.step) : null;
+    const blk = kind === "decide" && st?.blk && !st.blk.seq ? st.blk : blockFor(d.step);
+    blk.seq = d.seq;
+    const rec = { seq: d.seq, step: d.step, rid: d.receipt_id, kind, data: d, blk, errKind: kind === "err" ? r.evidence?.error_kind : null };
+    S.rec.set(d.seq, rec); S.rid.set(d.receipt_id, d.seq); S.byHash.set(d.receipt_hash, d.seq);
+    if (kind === "decide" && st) st.seq = d.seq;
+    fillSigned(blk, d, rec);
+    const us = fmtDur(d.sign_us);
+    term(`filet sign --seq ${d.seq} --action ${r.action}`, `${us ? `${us} · ` : ""}sig ${s4(d.signature || r.signature)}`, [`r:${d.seq}`, `sig:${d.seq}`]);
+    if (r.reasoning_hash) light("salted", (r.commitment_alg || r.evidence?.commitment_alg) ? "ok" : "bad");
+    if (S.lastSeq && d.seq !== S.lastSeq + 1) { S.gap = true; light("no_gaps", "bad"); }
+    S.lastSeq = Math.max(S.lastSeq, d.seq);
+    anchCount();
+  },
+  queued(d) {
+    if (!recOf(d)) return;
+    S.queue.push(d.seq);
+    setTok("tk-q", d.queue_depth ?? S.queue.length, ["queue", ...S.queue.map((x) => `r:${x}`)]);
+  },
+  batch(d) {
+    const B = d.batch_id, n = S.batches.size + 1; S.batches.set(B, { ...d, n, id: S.curId });
+    if (d.delayed) S.delayedAny = true;
+    for (const s of d.seqs || []) { const rec = S.rec.get(s); if (rec) rec.batch = B; }
+    for (const rec of S.rec.values()) if (rec.batch) addKey(rec.blk.L.seq.querySelector(".js"), `sth:${B}`);
+    S.queue = S.queue.filter((x) => !(d.seqs || []).includes(x));
+    setTok("tk-q", S.queue.length, ["queue", ...S.queue.map((x) => `r:${x}`)]);
+    setTok("tk-b", `#${n}`, [`batch:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)]); $("#tk-b").classList.toggle("warn", !!d.delayed);
+    setTok("tk-s", d.tree_size_after, [`batch:${B}`]);
+    setTok("tk-r", short(d.root_hash), [`batch:${B}`, `sth:${B}`]);
+    S.lastB = B;
+    const ms = live() && d.authority_ms != null ? `,"authority_ms":${d.authority_ms}` : "";
+    if (!S.realApi && !live()) term(`curl -s -X POST ${AUTH}/authority/v1/batches -d '{"leaf_hashes":[${(d.leaf_hashes || []).map((x) => `"${s4(x)}"`).join(",")}]}'`,
+      `200 {"tree_size_after":${d.tree_size_after},"root_hash":"${s4(d.root_hash)}"${ms}}`, [`batch:${B}`, `sth:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)], d.delayed ? "warn" : "", S.curId, `b-${B}`);
+  },
+  consistency(d) {
+    if (!S.realApi && !live()) term(`curl -s "${AUTH}/authority/v1/consistency?from=${d.from_size}&to=${d.to_size}"`, `200 {"ok":${d.ok}}`, S.lastB ? [`batch:${S.lastB}`] : [], d.ok ? "" : "bad", S.curId);
+    if (!d.ok) $("#tk-r").classList.add("warn");
+  },
+  anchored(d) {
+    const rec = recOf(d); if (!rec) return;
+    rec.anch = d; if (d.delayed) S.delayedAny = true;
+    const B = d.batch_id, bt = S.batches.get(B), X = { seq: rec.seq, step: rec.step ?? undefined };
+    const rows = [
+      ["authority", [V(q(AUTH_HOST), [`batch:${B}`], "", { ...X, to: `api.html#${bt?.id ?? S.curId}` })]],
+      ["log_id", [V(q(short(S.start?.log_id || "")), ["log"], "", X)]],
+      ["leaf", [V(String(d.leaf_index), [`r:${rec.seq}`, `anc:${rec.seq}`], "", { ...X, to: `b-${B}` })]],
+      ["tree_size", [V(String(d.tree_size), [`batch:${B}`], "", X)]],
+      ["root", [V(q(short(d.root_hash)), [`batch:${B}`, `sth:${B}`], "", { ...X, to: `b-${B}` })]],
+    ];
+    if (d.delayed) rows.push(["delayed", [V("true", ["failk:authority_down"], "warn", { ...X, to: S.stories.has("f-auth") ? "f-f-auth" : null })]]);
+    obj(rec.blk.L.anchored_by, rows, true);
+  },
+  verified(d) {
+    const rec = recOf(d); if (!rec) return;
+    S.ver.set(rec.seq, d); rec.ver = d;
+    const all = [...S.rec.values()].every((r) => S.ver.get(r.seq)?.log === "passed");
+    const bad = [...S.ver.values()].some((v) => v.log !== "passed" || !v.issuer || !v.chain_ok);
+    light("anchored", bad ? "bad" : all ? (S.delayedAny ? "warn" : "ok") : "off"); anchCount();
+  },
+  gap() { S.gap = true; light("no_gaps", "bad"); },
+  reconciled(d) {
+    light("reconciled", (d.unmatched || []).length ? "bad" : "ok");
+  },
+  done(d) {
+    $("#aline").classList.remove("live");
+    if (d.chain?.valid && !S.gap) light("no_gaps", "ok"); else if (d.chain && !d.chain.valid) light("no_gaps", "bad");
+    if (d.leak_scan) light("leak_scan", d.leak_scan.ok ? "ok" : "bad");
+    const lb = S.batches.get(S.lastB);
+    if (lb && !S.realApi && !live()) term(`curl -s ${AUTH}/authority/v1/sth`, `200 {"tree_size":${lb.tree_size_after},"root_hash":"${s4(lb.root_hash)}"}`, [`batch:${S.lastB}`, `sth:${S.lastB}`], "", S.curId);
+    const stories = [...S.stories.values()];
+    const rec = stories.filter((s) => s.state === "recovered").length;
+    const intact = !!d.chain?.valid && !S.gap;
+    clearEmpty(cols.am);
+    const bits = [`${stories.length} failure${stories.length === 1 ? "" : "s"}`];
+    if (stories.length) bits.push(`${rec} recovered`);
+    bits.push(intact ? "chain intact" : "chain broken");
+    cols.am.append(enter(part("div", `summary ${intact && rec === stories.length ? "ok" : "bad"}`, `// ${bits.join(" · ")}`, { keys: stories.map((s) => `fail:${s.id}`) })));
+  },
+};
+function recOf(d) {
+  const seq = d.receipt_id && S.rid.has(d.receipt_id) ? S.rid.get(d.receipt_id) : d.seq != null && S.rec.has(d.seq) ? d.seq
+    : d.step != null ? [...S.rec.values()].find((r) => r.step === d.step && r.kind === "decide")?.seq : undefined;
+  return seq != null ? S.rec.get(seq) : null;
+}
+
+// ── tethers: hover/click draws thin lines to linked items in other panes ──
+const svg = $("#tether");
+let tetherFor = null, tetherTimer = 0, relEls = [];
+function related(el) {
+  const out = new Set();
+  for (const k of (el.dataset.k || "").split(" ").filter(Boolean)) document.querySelectorAll(`[data-k~="${CSS.escape(k)}"]`).forEach((e) => { if (e !== el) out.add(e); });
+  return [...out];
+}
+function visibleIn(e) {
+  const r = e.getBoundingClientRect(); if (!r.width && !r.height) return null;
+  const sc = e.closest(".feed, .tbody, .am-top");
+  if (sc && sc.classList.contains("feed") || sc?.classList.contains("tbody")) { const c = sc.getBoundingClientRect(); if (r.bottom < c.top || r.top > c.bottom) return null; }
+  return r;
+}
+function tether(el, hold) {
+  clearTimeout(tetherTimer);
+  relEls.forEach((e) => e.classList.remove("rel")); relEls = [];
+  svg.replaceChildren(); svg.classList.remove("fade");
+  tetherFor = el; if (!el) return;
+  const pane = el.closest("[data-pane]"), a = el.getBoundingClientRect();
+  for (const e of related(el)) {
+    e.classList.add("rel"); relEls.push(e);
+    if (e.closest("[data-pane]") === pane) continue;
+    const b = visibleIn(e); if (!b) continue;
+    const ax = b.left > a.right ? a.right : b.right < a.left ? a.left : a.left + a.width / 2;
+    const bx = b.left > a.right ? b.left : b.right < a.left ? b.right : b.left + b.width / 2;
+    const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    ln.setAttribute("x1", ax); ln.setAttribute("y1", a.top + a.height / 2); ln.setAttribute("x2", bx); ln.setAttribute("y2", b.top + Math.min(b.height / 2, 10));
+    svg.append(ln);
+  }
+  if (hold) tetherTimer = setTimeout(fadeTether, 1500);
+}
+function fadeTether() { svg.classList.add("fade"); relEls.forEach((e) => e.classList.remove("rel")); relEls = []; tetherFor = null; setTimeout(() => { if (!tetherFor) svg.replaceChildren(); }, 450); }
+document.addEventListener("pointerover", (e) => {
+  if (e.pointerType === "touch") return;
+  const p = e.target.closest?.(".part"); if (p && p !== tetherFor) tether(p, false);
+});
+document.addEventListener("pointerout", (e) => {
+  const p = e.target.closest?.(".part"); if (p && p === tetherFor && !p.contains(e.relatedTarget)) { clearTimeout(tetherTimer); tetherTimer = setTimeout(fadeTether, 250); }
+});
+for (const c of PANES) c.addEventListener("scroll", () => { if (tetherFor) tether(tetherFor, true); }, { passive: true });
+document.addEventListener("click", (e) => {
+  if (e.target.closest("button, input, select, summary, .menu, .scrub")) return;
+  const a = e.target.closest("a.jp");
+  if (a && a.getAttribute("href").startsWith("#")) { e.preventDefault(); const id = a.getAttribute("href").slice(1); history.pushState({ id }, "", `#${id}`); goTo(id); return; }
+  if (e.target.closest("a")) return;
+  const p = e.target.closest(".part"); if (p) tether(p, true);
+});
+function goTo(id) {
+  const t = id && document.getElementById(id); if (!t) return;
+  const sc = t.closest(".feed, .tbody");
+  if (sc && WIDE.matches) { setFollow(sc, false); const c = sc.getBoundingClientRect(), r = t.getBoundingClientRect(); sc.scrollTo({ top: sc.scrollTop + r.top - c.top - c.height / 3, behavior: RM.matches ? "auto" : "smooth" }); }
+  else t.scrollIntoView({ block: "center", behavior: RM.matches ? "auto" : "smooth" });
+  t.classList.remove("flash"); void t.offsetWidth; t.classList.add("flash");
+  setTimeout(() => tether(t, true), RM.matches ? 0 : 350);
+}
+addEventListener("popstate", () => goTo(location.hash.slice(1)));
+
+// ── thread modal: double-click or Enter ──
+const modal = $("#modal"), mbody = $("#m-body");
+let threadStep = null;
+function threadOf(el) {
+  const inf = info.get(el) || {};
+  if (inf.step != null) return inf.step;
+  if (inf.seq != null) return S.rec.get(inf.seq)?.step ?? null;
+  return null;
+}
+function mnode(id, label, content, pre) {
+  const a = h("a", "mn"); a.id = `m-${id}`; a.href = `#m-${id}`;
+  a.append(h("span", "lbl", label));
+  if (content != null) a.append(pre ? h("pre", null, content) : h("span", content.length > 80 ? "ms" : "mx", content));
+  return a;
+}
+function openThread(n) {
+  const st = S.steps.get(n); if (!st) return;
+  threadStep = n;
+  $("#m-title").textContent = `STEP ${n + 1} · ${st.decision?.point || ""}`;
+  const out = [];
+  const caller = st.re && S.turns.get(turnId(st.re, "caller"));
+  if (caller) out.push(mnode("turn", `caller · ${st.re}`, caller.text));
+  st.iters.forEach((it, i) => {
+    if (!it) return;
+    const lp = st.loops[i];
+    const sec = h("div", "msec");
+    sec.append(mnode(`it${i}`, `#${i} model call${lp ? ` · ${lp.stop_reason}` : ""}`, lp ? `${lp.input_tokens}→${lp.output_tokens} tok${lp.request_id ? ` · ${lp.request_id}` : ""}` : null));
+    if (it.text) sec.append(mnode(`think${i}`, `thinking · ${live() ? "summary" : "scripted"}`, it.text));
+    if (i === 1 && st.claims) for (const c of st.claims) sec.append(mnode(`c-${c.id}`, `claim ${c.id}${(c.cites || []).length ? "" : " · unsupported"}`, `${c.text}\n${(c.cites || []).map((x) => `↳ ${x.kind} ${x.ref}`).join("\n")}`, true));
+    if (i === st.cur || (st.tool && i === 1)) { if (st.tool && i === 1) { sec.append(mnode("tool", `tool_use · ${st.tool.name}`, J(st.tool.input), true)); if (st.result) sec.append(mnode("res", "tool_result", J(st.result), true)); } }
+    out.push(sec);
+  });
+  if (st.decision) out.push(mnode("dec", "decision record", J(st.decision), true));
+  const rec = st.seq != null ? S.rec.get(st.seq) : null;
+  if (rec) {
+    const r = rec.data.receipt;
+    out.push(mnode("rcpt", `signed receipt · seq ${rec.seq}`, J({ seq: rec.seq, action: r.action, decision: r.evidence?.decision_record?.decision, rule: r.evidence?.decision_record?.rule_id,
+      reasoning_hash: r.reasoning_hash, previous_receipt_hash: r.previous_receipt_hash ?? null, key_id: r.key_id, signature: r.signature }), true));
+    const b = rec.batch && S.batches.get(rec.batch);
+    if (b) out.push(mnode("batch", `batch ${b.batch_id}`, J({ seqs: b.seqs, tree_size_before: b.tree_size_before, tree_size_after: b.tree_size_after, root_hash: b.root_hash, delayed: !!b.delayed }), true));
+    if (rec.anch) out.push(mnode("proof", `anchor proof · leaf ${rec.anch.leaf_index}`, (rec.anch.audit_path || []).map((p, i) => `${i + 1} ${p.side === "left" ? "L" : "R"} ${p.hash}`).join("\n") + `\nroot ${rec.anch.root_hash}`, true));
+    if (rec.ver) out.push(mnode("ver", "verified", J({ issuer: rec.ver.issuer, log: rec.ver.log, chain_ok: rec.ver.chain_ok }), true));
+  }
+  mbody.replaceChildren(...out);
+  modal.hidden = false; $("#m-x").focus();
+}
+function closeThread() { modal.hidden = true; threadStep = null; }
+mbody.addEventListener("click", (e) => { const a = e.target.closest("a.mn"); if (!a) return; e.preventDefault(); a.scrollIntoView({ block: "center", behavior: RM.matches ? "auto" : "smooth" }); a.classList.remove("flash"); void a.offsetWidth; a.classList.add("flash"); });
+modal.addEventListener("click", (e) => { if (e.target === modal) closeThread(); });
+$("#m-x").addEventListener("click", closeThread);
+$("#m-prev").addEventListener("click", () => { const ks = [...S.steps.keys()].filter((k) => k < threadStep); if (ks.length) openThread(ks.at(-1)); });
+$("#m-next").addEventListener("click", () => { const ks = [...S.steps.keys()].filter((k) => k > threadStep); if (ks.length) openThread(ks[0]); });
+let preSel = false;
+document.addEventListener("pointerdown", (e) => { if (e.detail <= 1) preSel = !!String(window.getSelection?.() || "").trim(); }, true);
+document.addEventListener("dblclick", (e) => {
+  if (preSel) return; // the user was selecting text
+  window.getSelection?.().removeAllRanges();
+  const p = e.target.closest(".part"); if (!p || p.closest(".tbody") || info.get(p)?.noThread) return;
+  const n = threadOf(p); if (n != null) openThread(n);
+});
+
+// ── reasoning check (presenter only) ──
+let BUNDLE = null;
+async function loadBundle() { if (BUNDLE) return BUNDLE; const r = await fetch("events.json"); if (!r.ok) throw new Error(`events.json ${r.status}`); BUNDLE = await r.json(); return BUNDLE; }
+async function disclose(id) {
+  if (!live() && BUNDLE?.disclose?.[id]) return BUNDLE.disclose[id];
+  const base = live() && window.FILET_API ? `${window.FILET_API}/` : "";
+  const r = await fetch(`${base}disclose/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${PRESENTER}` } });
+  if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) throw new Error(`disclose ${r.status}`);
+  return r.json();
+}
+async function runCheck(seq, out) {
+  const rec = S.rec.get(seq); const r = rec?.data?.receipt; if (!r) return;
+  out.className = "ckb"; out.textContent = "…";
+  try {
+    const { salt, text } = await disclose(rec.rid);
+    const pre = (r.commitment_alg || r.evidence?.commitment_alg) ? `${salt}:${text}` : text;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pre));
+    const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    const st = S.steps.get(rec.step);
+    const ok = hex === r.reasoning_hash && (!st || rec.kind !== "decide" || text === st.thinking);
+    out.className = `ckb ${ok ? "ok" : "bad"}`; out.textContent = ok ? "✓ match" : "✗ no match";
+    term(`curl -s ${location.origin}/disclose/${s4(rec.rid)}`, `200 {"salt":"${s4(salt)}"} · sha256 ${ok ? "match" : "no match"}`, [`r:${seq}`, rec.step != null ? `think:${rec.step}` : null], ok ? "ok" : "bad");
+    if (termEl.follow) toBottom(termEl);
+  } catch { out.className = "ckb bad"; out.textContent = "✗"; }
+}
+
+// ── paced player over an event array: ingest immediately, render on a steady clock ──
+const DW = { start: 600, model_input: 2400, thinking: 80, span: 200, tool_call: 1200, tool_result: 1800, loop: 900, decision: 2000, signed: 2000,
+  queued: 700, batch: 2000, consistency: 700, anchored: 2000, verified: 400, failure: 3000, gap: 1600, reconciled: 1800, done: 1600 };
+const ITER_MIN = 4400;
+const P = { ev: [], sched: [], pos: 0, clock: 0, playing: false, open: false, src: null, last: 0, speed: Number(store.get("speed", 1)) || 1, scrubbing: false, iterStart: 0 };
+const dwell = (e) => e.event === "turn" ? (e.data.who === "caller" ? 3200 : 2800) : DW[e.event] ?? 300;
+function ingest(e) {
+  const prev = P.sched.length ? P.sched[P.sched.length - 1] : 0;
+  let d = P.src?.kind === "live" ? 0 : dwell(e); // pacing is for recorded replay only
+  if (e.event === "model_input") P.iterStart = prev + d;
+  if (e.event === "loop" && P.src?.kind !== "live") { d = Math.max(d, ITER_MIN - (prev - P.iterStart)); P.iterStart = prev + d; }
+  P.ev.push(e); P.sched.push(prev + d);
+  drawTicks();
+}
+function apply(e) {
+  S.curId = e.id;
+  if (typeof e.data.t_us === "number" && e.data.t_us > S.maxT) S.maxT = e.data.t_us;
+  try { H[e.event]?.(e.data); } catch (err) { console.error(e.event, err); }
+}
+function busy() { window.__filetBusy = !!(P.playing || P.scrubbing); }
+function setPlaying(on) {
+  P.playing = on;
+  $("#play").textContent = on ? "Pause" : P.pos >= P.ev.length && !P.open && P.ev.length ? "Replay" : "Play";
+  if (on) P.last = performance.now();
+  $("#aline").classList.toggle("live", on);
+  busy(); savePos();
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(250, now - P.last); P.last = now;
+  if (!P.playing) return;
+  P.clock += dt * P.speed;
+  let n = 0;
+  while (P.pos < P.ev.length && P.sched[P.pos] <= P.clock) { apply(P.ev[P.pos++]); n++; }
+  if (n) afterApply();
+  if (P.pos >= P.ev.length) { if (P.open) P.clock = Math.min(P.clock, P.sched[P.pos - 1] ?? 0); else setPlaying(false); }
+}
+let applyN = 0;
+function afterApply() {
+  $("#clock").textContent = fmtT(S.maxT);
+  for (const c of PANES) { if (c.follow) toBottom(c); else c.pill.hidden = false; }
+  if (tetherFor && tetherFor.isConnected) tether(tetherFor, true);
+  drawHead();
+  if (++applyN % 25 === 0) savePos();
+  if (P.src?.kind === "live" && applyN % 10 === 0) store.set("livecur", P.ev);
+}
+function seek(i) {
+  i = Math.max(0, Math.min(P.ev.length, i));
+  resetView(S.mode); S.instant = true;
+  for (let k = 0; k < i; k++) apply(P.ev[k]);
+  S.instant = false; P.pos = i; P.clock = i ? P.sched[i - 1] : 0;
+  for (const c of PANES) setFollow(c, true);
+  afterApply();
+  if (!P.playing) $("#play").textContent = P.pos >= P.ev.length && !P.open && P.ev.length ? "Replay" : "Play";
+  savePos();
+}
+const stepIdx = () => P.ev.reduce((a, e, i) => (e.event === "model_input" && a.push(i), a), []);
+function prevStep() { const cur = stepIdx().filter((i) => i < P.pos - 1); seek(cur.length > 1 ? cur[cur.length - 2] + 1 : 0); }
+function nextStep() { const s = stepIdx().find((i) => i >= P.pos); seek(s != null ? s + 1 : P.ev.length); }
+function savePos() { if (P.src && P.src.kind !== "live") store.set("pos", { src: P.src, pos: P.pos }); }
+function loadEvents(src, events, mode, startAt = 0, autoplay = true) {
+  P.ev = []; P.sched = []; P.pos = 0; P.clock = 0; P.src = src; P.open = mode === "live"; P.iterStart = 0;
+  resetView(mode);
+  for (const e of events) ingest(e);
+  store.set("src", src);
+  seek(startAt > 0 && startAt < P.ev.length ? startAt : 0);
+  setPlaying(autoplay);
+}
+
+// timeline scrubber
+const scrub = $("#scrub");
+function drawTicks() {
+  if (drawTicks.raf) return;
+  drawTicks.raf = requestAnimationFrame(() => {
+    drawTicks.raf = 0;
+    const box = $("#ticks"); box.replaceChildren();
+    const total = P.sched[P.sched.length - 1] || 1, seenF = new Set();
+    P.ev.forEach((e, i) => {
+      let f = false;
+      if (e.event === "failure") { const id = e.data.failure_id ?? e.data.kind; f = !seenF.has(id); seenF.add(id); }
+      if (e.event !== "model_input" && !f) return;
+      const b = h("button", `tk ${f ? "f" : ""}`); b.type = "button"; b.style.left = `${((i ? P.sched[i - 1] : 0) / total) * 100}%`;
+      b.setAttribute("aria-label", f ? `failure ${e.data.kind}` : `step ${e.data.step + 1}`);
+      b.addEventListener("click", (ev) => { ev.stopPropagation(); seek(i + 1); });
+      box.append(b);
+    });
+    drawHead();
+  });
+}
+function drawHead() {
+  const total = P.sched[P.sched.length - 1] || 1;
+  const pct = Math.min(100, ((P.pos ? P.sched[P.pos - 1] : 0) / total) * 100);
+  $("#fill").style.width = `${pct}%`; $("#head").style.left = `${pct}%`;
+}
+function idxAt(x) {
+  const r = scrub.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (x - r.left) / r.width));
+  if (f > 0.995) return P.ev.length;
+  const t = f * (P.sched[P.sched.length - 1] || 0);
+  let i = 0; while (i < P.sched.length && P.sched[i] <= t) i++; return i;
+}
+scrub.addEventListener("pointerdown", (e) => {
+  if (e.target.classList.contains("tk")) return;
+  P.scrubbing = true; busy(); scrub.setPointerCapture(e.pointerId);
+  const was = P.playing; P.playing = false; seek(idxAt(e.clientX));
+  let raf = 0, lastX = e.clientX;
+  const move = (ev) => { lastX = ev.clientX; if (!raf) raf = requestAnimationFrame(() => { raf = 0; seek(idxAt(lastX)); }); };
+  const up = () => { scrub.removeEventListener("pointermove", move); scrub.removeEventListener("pointerup", up); scrub.removeEventListener("pointercancel", up); P.scrubbing = false;
+    if (P.src?.kind === "live") { setPlaying(P.pos >= P.ev.length); for (const c of PANES) if (P.pos < P.ev.length) c.pill.hidden = false; } else setPlaying(was && P.pos < P.ev.length); };
+  scrub.addEventListener("pointermove", move); scrub.addEventListener("pointerup", up); scrub.addEventListener("pointercancel", up);
+});
+
+// controls + keyboard
+$("#play").addEventListener("click", () => { if (!P.playing && P.pos >= P.ev.length && !P.open) seek(0); setPlaying(!P.playing); });
+$("#prev").addEventListener("click", prevStep);
+$("#next").addEventListener("click", nextStep);
+document.addEventListener("keydown", (e) => {
+  const t = e.target;
+  if (e.key === "Escape") { if (!modal.hidden) closeThread(); $("#more").open = false; return; }
+  if (t.closest?.("input, select, textarea, summary, .menu")) return;
+  if (e.key === "Enter" && t.classList?.contains("part") && !info.get(t)?.noThread) { const n = threadOf(t); if (n != null) { e.preventDefault(); openThread(n); } return; }
+  if (t.classList?.contains("gutter") || t.id === "hgut") return;
+  if (S.mode === "live" && (e.key === " " || e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
+  if (e.key === " ") { e.preventDefault(); $("#play").click(); }
+  else if (!modal.hidden) return;
+  else if (e.key === "ArrowLeft") { e.preventDefault(); prevStep(); }
+  else if (e.key === "ArrowRight") { e.preventDefault(); nextStep(); }
+});
+const speedSel = $("#speed"); speedSel.value = String(P.speed);
+speedSel.addEventListener("change", () => { P.speed = Number(speedSel.value) || 1; store.set("speed", P.speed); });
+const runSel = $("#run");
+runSel.addEventListener("change", () => { playRecorded(runSel.value, 0); $("#more").open = false; });
+const apiIn = $("#api"); apiIn.value = window.FILET_API || "";
+$("#api-save").addEventListener("click", () => { const v = apiIn.value.trim().replace(/\/+$/, ""); store.set("api", v || "off"); window.FILET_API = v || null; setupSay(); $("#more").open = false; });
+
+// side panels: collapse to a rail, resize, keys [ and ], saved
+const colsEl = $("#cols");
+const SIDE = Object.assign({ l: { open: true, w: 0 }, r: { open: true, w: 0 } }, store.get("sides", {}));
+function defW() { return Math.round(Math.max(280, Math.min(560, innerWidth * 0.3))); }
+function applySides() {
+  for (const k of ["l", "r"]) {
+    const el = $(`#side-${k}`), st = SIDE[k];
+    el.classList.toggle("collapsed", !st.open);
+    el.querySelector(".rail").setAttribute("aria-expanded", String(st.open));
+    el.querySelector(".chev").textContent = st.open === (k === "l") ? "‹" : "›";
+    colsEl.style.setProperty(`--w${k}`, st.open ? `${st.w || defW()}px` : "34px");
+    colsEl.querySelector(`.gutter[data-g="${k}"]`).classList.toggle("off", !st.open);
+  }
+  store.set("sides", SIDE);
+}
+function toggleSide(k) { SIDE[k].open = !SIDE[k].open; applySides(); if (tetherFor) tether(tetherFor, true); }
+document.querySelectorAll(".rail").forEach((b) => b.addEventListener("click", () => toggleSide(b.dataset.toggle)));
+applySides();
+const MINW = 240;
+function nudge(k, dx) {
+  const st = SIDE[k]; const cur = st.w || defW();
+  st.w = Math.round(Math.max(MINW, Math.min(innerWidth * 0.45, cur + (k === "l" ? dx : -dx)))); applySides();
+}
+colsEl.querySelectorAll(".gutter").forEach((g) => {
+  const k = g.dataset.g;
+  g.addEventListener("pointerdown", (e) => {
+    if (!WIDE.matches || !SIDE[k].open) return;
+    e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add("drag");
+    let x = e.clientX;
+    const move = (ev) => { nudge(k, ev.clientX - x); x = ev.clientX; };
+    const up = () => { g.classList.remove("drag"); g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); };
+    g.addEventListener("pointermove", move); g.addEventListener("pointerup", up);
+  });
+  g.addEventListener("dblclick", () => { SIDE[k].w = 0; applySides(); });
+  g.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); nudge(k, e.key === "ArrowLeft" ? -24 : 24); } });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest?.("input, select, textarea") || !modal.hidden) return;
+  if (e.key === "[") { e.preventDefault(); toggleSide("l"); } else if (e.key === "]") { e.preventDefault(); toggleSide("r"); }
+});
+const termd = $("#termd");
+termd.open = !!store.get("termOpen", false);
+termd.addEventListener("toggle", () => { store.set("termOpen", termd.open); if (termd.open && termEl.follow) toBottom(termEl); });
+const termBox = $("#termbox"), hg = $("#hgut");
+let TH = store.get("termh", 200);
+const applyTH = () => termBox.style.setProperty("--th", `${TH}px`);
+applyTH();
+function setTH(v) { const max = Math.max(90, termBox.parentElement.getBoundingClientRect().height * 0.6); TH = Math.round(Math.max(80, Math.min(max, v))); applyTH(); store.set("termh", TH); }
+hg.addEventListener("pointerdown", (e) => {
+  if (!WIDE.matches) return;
+  e.preventDefault(); hg.setPointerCapture(e.pointerId); hg.classList.add("drag");
+  let y = e.clientY;
+  const move = (ev) => { setTH(TH - (ev.clientY - y)); y = ev.clientY; };
+  const up = () => { hg.classList.remove("drag"); hg.removeEventListener("pointermove", move); hg.removeEventListener("pointerup", up); };
+  hg.addEventListener("pointermove", move); hg.addEventListener("pointerup", up);
+});
+hg.addEventListener("dblclick", () => setTH(200));
+hg.addEventListener("keydown", (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setTH(TH + (e.key === "ArrowUp" ? 24 : -24)); } });
+
+// ── sources: recorded (default), saved, live API ──
+function endLive() {
+  setLiveStored(null); $("#run").disabled = false;
+  if (!LV.id) return;
+  try { fetch(`${window.FILET_API}/call/${LV.id}/end`, { method: "POST", keepalive: true }); } catch {}
+  LV.es?.close(); LV.es = null; LV.id = null; setResponding(false); $("#apilink").href = "api.html"; $("#endcall").hidden = true;
+}
+async function playRecorded(fail, startAt) {
+  endLive();
+  try { await loadBundle(); } catch { $("#err").hidden = false; $("#err").textContent = "recording unavailable"; return; }
+  const run = BUNDLE.runs[fail] ?? BUNDLE.runs[""];
+  runSel.value = BUNDLE.runs[fail] ? fail : "";
+  const want = location.hash.startsWith("#r-") ? location.hash.slice(3) : null;
+  const at = want ? run.findIndex((e) => e.event === "anchored" && e.data.receipt_id === want) : -1;
+  const sAt = want ? run.findIndex((e) => e.event === "signed" && e.data.receipt_id === want) : -1;
+  if (want && (at >= 0 || sAt >= 0)) { loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", (at >= 0 ? at : sAt) + 1, false); requestAnimationFrame(() => goTo(`r-${want}`)); return; }
+  loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", startAt, true);
+}
+const savedCalls = () => store.get("calls", []);
+function drawSaved() {
+  const box = $("#saved"); box.replaceChildren();
+  const list = savedCalls();
+  if (!list.length) { box.append(h("span", "t", "none")); return; }
+  for (const c of list) {
+    const b = h("button", null, `${c.at.slice(5, 16).replace("T", " ")} · ${c.turns} turns`); b.type = "button";
+    b.addEventListener("click", () => { loadEvents({ kind: "saved", id: c.id }, c.ev, "recorded", 0, true); $("#more").open = false; });
+    box.append(b);
+  }
+}
+const LV = { id: null, es: null };
+function setupSay() { $("#say-in").placeholder = "Speak as the caller…"; }
+const sayIn = $("#say-in"), sayGo = $("#say-go");
+function growSay() { sayIn.style.height = "auto"; const lh = parseFloat(getComputedStyle(sayIn).lineHeight) || 22; sayIn.style.height = `${Math.min(Math.max(sayIn.scrollHeight, lh * 2), lh * 8)}px`; }
+sayIn.addEventListener("input", () => { growSay(); $("#say-note").hidden = true; syncSend(); });
+function noteLive() { const nt = $("#say-note"); nt.textContent = "connect live to reply"; nt.hidden = false; }
+sayIn.addEventListener("focus", () => { if (P.playing) setPlaying(false); }); // focusing interrupts the replay at the current step
+sayIn.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#say").requestSubmit(); } });
+function setResponding(on) { LV.responding = on; syncSend(); }
+function syncSend() { const stop = LV.responding && !sayIn.value.trim(); sayGo.dataset.stop = stop ? "1" : ""; sayGo.textContent = stop ? "■" : "↑"; sayGo.setAttribute("aria-label", stop ? "Stop" : "Send"); }
+async function interrupt() {
+  if (!LV.id || !window.FILET_API) return;
+  try { await fetch(`${window.FILET_API}/call/${LV.id}/interrupt`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
+  setResponding(false);
+}
+function setLiveStored(v) { store.set("liveCall", v); window.__filetLive = !!v; }
+let liveSaveT = 0;
+function openLive(id, api, startedAt) {
+  LV.id = id; LV.api = api; LV.ending = false;
+  setLiveStored({ id, api, startedAt: startedAt || new Date().toISOString(), lastEventId: 0 });
+  $("#apilink").href = `api.html?call=${encodeURIComponent(id)}`;
+  const pk = $("#pkglink"); pk.href = `package.html?call=${encodeURIComponent(id)}`; pk.hidden = false;
+  $("#endcall").hidden = false; $("#endcall").disabled = false; $("#run").disabled = true;
+  loadEvents({ kind: "live", id, api }, [], "live", 0, true);
+  const seen = new Set();
+  LV.es?.close();
+  LV.es = new EventSource(`${api}/call/${encodeURIComponent(id)}/events?last_event_id=0`); // the server replays the whole call, then continues live
+  for (const name of [...EVENTS, "error"]) LV.es.addEventListener(name, (e) => {
+    if (name === "error") { if (e.data) { $("#err").hidden = false; try { $("#err").textContent = JSON.parse(e.data).message; } catch {} } return; }
+    if (e.lastEventId && seen.has(e.lastEventId)) return; seen.add(e.lastEventId);
+    let data; try { data = JSON.parse(e.data); } catch { return; }
+    const eid = Number(e.lastEventId) || P.ev.length + 1;
+    ingest({ id: eid, event: name, data });
+    if (!P.playing && P.pos >= P.ev.length - 1) setPlaying(true);
+    const lc = store.get("liveCall", null);
+    if (lc && lc.id === id) { lc.lastEventId = Math.max(lc.lastEventId || 0, eid); clearTimeout(liveSaveT); liveSaveT = setTimeout(() => store.get("liveCall", null)?.id === id && store.set("liveCall", lc), 300); }
+    if (name === "turn" && data.who === "caller") LV.sawCaller = true;
+    if (name === "turn" && data.who === "agent" && LV.sawCaller) { LV.sawCaller = false; setResponding(false); }
+    if (name === "done") { setResponding(false); finishLive(); }
+  });
+}
+async function sendCaller(text) {
+  const api = window.FILET_API;
+  try {
+    if (!LV.id && LV.creating) await LV.creating; // two quick lines never create two calls
+    if (!LV.id) {
+      LV.creating = (async () => {
+        const r = await fetch(`${api}/call`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+        if (!r.ok) throw new Error(`call ${r.status}`);
+        return (await r.json()).id;
+      })();
+      let id; try { id = await LV.creating; } finally { LV.creating = null; }
+      openLive(id, api);
+    }
+    setResponding(true);
+    const r = await fetch(`${LV.api || api}/call/${LV.id}/turn`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+    if (r.status === 409) { const nt = $("#say-note"); nt.textContent = "agent is answering"; nt.hidden = false; sayIn.value = text; growSay(); return; }
+    if (!r.ok) throw new Error(`turn ${r.status}`);
+  } catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); }
+}
+function finishLive() {
+  LV.es?.close(); LV.es = null; P.open = false; $("#endcall").hidden = true;
+  if (LV.ending) { setLiveStored(null); $("#run").disabled = false; } // only End call / New call clear the stored call
+  const calls = savedCalls().filter((c) => c.id !== LV.id);
+  calls.unshift({ id: LV.id, at: new Date().toISOString(), turns: P.ev.filter((e) => e.event === "turn" && e.data.who === "caller").length, ev: P.ev });
+  while (calls.length && !store.set("calls", calls.slice(0, 3))) calls.pop();
+  store.set("livecur", P.ev);
+  if (LV.ending) LV.id = null;
+  drawSaved();
+}
+$("#say").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const t = sayIn.value.trim();
+  if (!t) { if (LV.responding) interrupt(); return; } // a typed line barges in; ■ only stops
+  if (P.playing) setPlaying(false);
+  if (!window.FILET_API) { noteLive(); return; }
+  sayIn.value = ""; growSay(); sendCaller(t);
+});
+$("#more").addEventListener("toggle", drawSaved);
+$("#newcall").addEventListener("click", () => { endLive(); $("#more").open = false; playRecorded("", 0); });
+$("#endcall").addEventListener("click", async () => {
+  if (!LV.id || !window.FILET_API) return;
+  const b = $("#endcall"); b.disabled = true; b.textContent = "Ending…"; LV.ending = true;
+  try { await fetch(`${window.FILET_API}/call/${LV.id}/end`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); }
+  catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); b.disabled = false; }
+  b.textContent = "End call"; // stream stays open for reconciled, close receipt and done
+});
+
+// boot: auto-play the recorded call, resuming the last position
+window.__filetBusy = false; window.__filetLive = !!store.get("liveCall", null);
+S = fresh("recorded");
+setupSay();
+requestAnimationFrame((t) => { P.last = t; frame(t); });
+{
+  const saved = store.get("pos", null), src = store.get("src", null);
+  const same = (a, b) => a && b && a.kind === b.kind && (a.fail || "") === (b.fail || "") && a.id === b.id;
+  const lc = store.get("liveCall", null);
+  if (lc?.id && (lc.api || window.FILET_API)) openLive(lc.id, lc.api || window.FILET_API, lc.startedAt);
+  else if (src?.kind === "saved") { const c = savedCalls().find((x) => x.id === src.id); if (c) loadEvents(src, c.ev, "recorded", same(saved?.src, src) ? saved.pos : 0, true); else playRecorded("", 0); }
+  else { const fail = src?.kind === "recorded" ? src.fail || "" : ""; const at = same(saved?.src, { kind: "recorded", fail }) ? saved.pos : 0; playRecorded(fail, at); }
+}
+</script>
+</body>
+</html>

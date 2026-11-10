@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>filet · call package</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0B1120; --surface:#141E30; --border:#1E3A5F; --code:#0D1117;
+  --blue:#3B82F6; --green:#10B981; --amber:#FBBF24; --red:#EF4444;
+  --text:#E2E8F0; --muted:#94A3B8; --dim:#475569;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:"Source Serif 4",Georgia,serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
+body{font-family:var(--serif);font-size:16px;line-height:1.5;overflow-wrap:anywhere}
+a{color:var(--blue);text-decoration:none;cursor:pointer}
+a:hover{text-decoration:underline}
+button{font-family:var(--mono);font-size:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:7px 12px;cursor:pointer}
+button:hover{border-color:var(--blue)}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)} .dim{color:var(--dim)}
+.ok{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--amber)} .blue{color:var(--blue)}
+
+header{height:56px;display:flex;align-items:center;gap:16px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--bg);font-family:var(--mono);font-size:13px}
+header .brand{font-weight:700;letter-spacing:.02em}
+header .brand b{color:var(--blue)}
+header .callid{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header .tag{border:1px solid var(--amber);color:var(--amber);border-radius:3px;padding:1px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+header .sp{flex:1}
+
+main{display:grid;grid-template-columns:minmax(320px,380px) minmax(0,1fr);gap:16px;padding:16px;height:calc(100vh - 56px)}
+.pane{background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:0;overflow-y:auto;overflow-x:hidden}
+#left{display:flex;flex-direction:column;padding:0}
+#right{padding:28px 36px 48px}
+@media (max-width:900px){main{grid-template-columns:1fr;height:auto}.pane{overflow:visible}#right{padding:20px}}
+
+.label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* verification summary */
+#summary{padding:18px 20px;border-bottom:1px solid var(--border)}
+.check{display:grid;grid-template-columns:20px 1fr;gap:8px;padding:6px 0;font-family:var(--mono);font-size:12.5px;align-items:start}
+.check .mk{font-weight:700;text-align:center}
+.check .why{grid-column:2;color:var(--muted);font-size:11.5px}
+.check .why a{color:var(--red)}
+.check.fail .t{color:var(--red)}
+
+/* decision list */
+#list{flex:1;padding:8px 0}
+.row{display:grid;grid-template-columns:44px 1fr 18px;gap:8px;padding:9px 20px;font-family:var(--mono);font-size:12.5px;cursor:pointer;border-left:3px solid transparent;align-items:start}
+.row:hover{background:#18243a}
+.row.sel{background:#1a2a44;border-left-color:var(--blue)}
+.row .tm{color:var(--dim)}
+.row .dc{color:var(--text)}
+.row .rl{color:var(--blue);font-size:11.5px}
+.row.minor .dc{color:var(--muted)}
+.row .st{text-align:right;font-weight:700}
+#trans{border-top:1px solid var(--border);padding:12px 20px 18px}
+#trans summary{cursor:pointer;list-style:none}
+#trans summary::-webkit-details-marker{display:none}
+.tline{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:5px 6px;font-size:14px;border-radius:3px}
+.tline .at{font-family:var(--mono);font-size:11.5px;color:var(--dim);padding-top:2px}
+.tline .who{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;margin-right:6px}
+.tline.hl{background:#2a3550;outline:1px solid var(--amber)}
+
+/* fillet */
+.sec{margin:0 0 26px}
+.sec>.label{margin-bottom:10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.q{font-size:22px;line-height:1.4;border-left:3px solid var(--blue);padding:4px 0 4px 16px}
+.quote{font-size:15px;color:var(--muted);margin-top:8px;padding-left:19px}
+.claim{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:16px 18px;margin:0 0 12px;position:relative}
+.claim.flash{outline:2px solid var(--blue)}
+.claim .cid{font-family:var(--mono);font-size:12px;color:var(--blue);margin-right:10px}
+.claim .ctext{font-size:17px}
+.claim .nocite{display:inline-block;margin-left:10px;font-family:var(--mono);font-size:11px;color:var(--amber);border:1px solid var(--amber);border-radius:3px;padding:0 6px;vertical-align:2px}
+.cites{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.cite{display:grid;grid-template-columns:62px 1fr;gap:10px;font-size:14px;align-items:start}
+.cite .k{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--dim);padding-top:3px}
+.cite .v{min-width:0}
+.cite .ref{font-family:var(--mono);font-size:12.5px;color:var(--blue);margin-right:8px}
+.cite .val{font-family:var(--mono);font-size:12.5px;background:var(--code);border:1px solid var(--border);border-radius:3px;padding:1px 6px}
+.cite .unres{font-family:var(--mono);font-size:11px;color:var(--red);margin-left:6px}
+.cite .loc{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-left:6px}
+.decision{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:baseline;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:16px 18px}
+.decision .d{font-family:var(--mono);font-size:17px;font-weight:700}
+.decision .r{font-family:var(--mono);font-size:13px;color:var(--blue)}
+.decision .rt{flex-basis:100%;font-size:15px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:4px 16px;font-family:var(--mono);font-size:12.5px}
+.kv .k{color:var(--muted)}
+pre.json{background:var(--code);border:1px solid var(--border);border-radius:5px;padding:16px 18px;margin:0;font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-all;max-height:560px;overflow-y:auto}
+.jk{color:#7DD3FC} .js{color:#A7F3D0} .jn{color:#FBBF24} .jb{color:#F9A8D4} .jz{color:var(--dim)}
+.jk.lnk{color:var(--blue);text-decoration:underline;text-decoration-color:var(--border);cursor:pointer}
+.proof{display:flex;flex-direction:column;gap:10px}
+.pr{display:grid;grid-template-columns:22px minmax(150px,220px) 1fr;gap:10px;font-family:var(--mono);font-size:12.5px;align-items:start;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
+.pr.flash{outline:2px solid var(--blue)}
+.pr .mk{font-weight:700;font-size:14px;text-align:center}
+.pr .nm{color:var(--text)}
+.pr .dt{color:var(--muted);min-width:0;word-break:break-all}
+.path{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.path div{display:grid;grid-template-columns:52px 1fr;gap:8px}
+.path .sd{color:var(--dim)}
+.disc textarea, .modal textarea{width:100%;min-height:280px;background:var(--code);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:12px;padding:12px}
+.empty{color:var(--muted);font-family:var(--mono);font-size:13px;padding:40px 0}
+.modal{position:fixed;inset:0;background:rgba(5,8,16,.75);display:none;align-items:center;justify-content:center;z-index:10;padding:24px}
+.modal.on{display:flex}
+.modal .box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;width:min(860px,100%);max-height:90vh;overflow:auto}
+.modal .bar{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
+.drop{border:1px dashed var(--border);border-radius:5px;padding:14px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:12px}
+.drop.over{border-color:var(--blue);color:var(--blue)}
+#err{color:var(--red);font-family:var(--mono);font-size:12px}
+.status{font-family:var(--mono);font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <span class="brand"><b>filet</b> · call package</span>
+  <span class="callid" id="callid">loading…</span>
+  <span class="tag" id="rectag" hidden>recorded</span>
+  <span class="sp"></span>
+  <span class="status" id="loadst"></span>
+  <button id="btnLoad">Load package</button>
+  <button id="btnDl">Download package</button>
+</header>
+<main>
+  <aside class="pane" id="left">
+    <section id="summary"><div class="label">Verified in this browser</div><div id="checks"><div class="check"><span class="mk dim">…</span><span class="t muted">waiting for package</span></div></div></section>
+    <section id="list"></section>
+    <details id="trans"><summary class="label">Transcript</summary><div id="tlines"></div></details>
+  </aside>
+  <section class="pane" id="right"><div class="empty">loading package…</div></section>
+</main>
+
+<div class="modal" id="mLoad"><div class="box">
+  <div class="label" style="margin-bottom:12px">Load package</div>
+  <div class="drop" id="drop">drop a package .json here, or paste it below</div>
+  <textarea id="pasteTa" spellcheck="false" placeholder='{ "call_id": …, "receipts": [ … ] }'></textarea>
+  <div class="bar"><button id="btnVerify">Verify this package</button><input type="file" id="file" accept=".json,application/json" style="font-family:var(--mono);font-size:12px;color:var(--muted)"><span class="sp"></span><span id="err"></span><button data-close>Close</button></div>
+</div></div>
+<div class="modal" id="mDl"><div class="box">
+  <div class="label" style="margin-bottom:12px">Package JSON</div>
+  <textarea id="dlTa" readonly spellcheck="false"></textarea>
+  <div class="bar"><a id="dlLink" download><button>Save .json</button></a><button id="btnCopy">Copy</button><span class="sp"></span><button data-close>Close</button></div>
+</div></div>
+
+<script type="module">
+// ─────────────────────────── crypto primitives (browser, WebCrypto) ───────────────────────────
+// Canonical JSON byte-identical to the AgentMint SDK kernel (src/kernel/canonical.ts):
+// keys sorted by code point, NFC strings, RFC 8785 escapes only, raw UTF-8 otherwise.
+const enc = new TextEncoder();
+function encStr(v){let o='"';for(const ch of v.normalize("NFC")){switch(ch){case'"':o+='\\"';break;case"\\":o+="\\\\";break;case"\b":o+="\\b";break;case"\f":o+="\\f";break;case"\n":o+="\\n";break;case"\r":o+="\\r";break;case"\t":o+="\\t";break;default:{const c=ch.codePointAt(0);o+=c<=0x1f?"\\u"+c.toString(16).padStart(4,"0"):ch}}}return o+'"'}
+function encNum(v){if(!Number.isFinite(v))throw new TypeError("non-finite number");if(Object.is(v,-0))return"0";return String(v)}
+function cmpCP(a,b){const ap=Array.from(a),bp=Array.from(b);for(let i=0;i<Math.min(ap.length,bp.length);i++){const d=ap[i].codePointAt(0)-bp[i].codePointAt(0);if(d)return d}return ap.length-bp.length}
+function canon(v){
+  if(v===null)return"null";if(v===true)return"true";if(v===false)return"false";
+  if(typeof v==="string")return encStr(v);if(typeof v==="number")return encNum(v);
+  if(Array.isArray(v))return"["+v.map(canon).join(",")+"]";
+  if(typeof v==="object"){const ks=Object.keys(v).filter(k=>v[k]!==undefined).map(k=>({raw:k,n:k.normalize("NFC")}));ks.sort((a,b)=>cmpCP(a.n,b.n));return"{"+ks.map(k=>encStr(k.n)+":"+canon(v[k.raw])).join(",")+"}"}
+  throw new TypeError("unsupported value");
+}
+const canonBytes=v=>enc.encode(canon(v));
+const POST=["signature","timestamp","parent_signature","parent_key_id","log_inclusion_proof"];
+function payloadBytes(r){const o={...r};for(const f of POST)delete o[f];return canonBytes(o)}
+const toHex=b=>Array.from(b,x=>x.toString(16).padStart(2,"0")).join("");
+function fromHex(h){if(!/^(?:[0-9a-f]{2})*$/.test(h))throw new Error("bad hex");const o=new Uint8Array(h.length/2);for(let i=0;i<o.length;i++)o[i]=parseInt(h.substr(i*2,2),16);return o}
+const sha256=async d=>new Uint8Array(await crypto.subtle.digest("SHA-256",typeof d==="string"?enc.encode(d):d));
+const sha256Hex=async d=>toHex(await sha256(d));
+const sha512Hex=async d=>toHex(new Uint8Array(await crypto.subtle.digest("SHA-512",d)));
+async function leafHash(data){const b=new Uint8Array(data.length+1);b.set(data,1);return sha256Hex(b)}
+async function hashInternal(l,r){const b=new Uint8Array(65);b[0]=1;b.set(fromHex(l),1);b.set(fromHex(r),33);return sha256Hex(b)}
+// RFC 9162 §2.1.3.2 — mirrors SDK walkAuditPath; records each step for display.
+async function walkAuditPath(leaf,path,idx,size,steps){
+  if(idx<0||size<1||idx>=size)return"";let fn=idx,sn=size-1,r=leaf;
+  for(const p of path){if(sn===0)return"";
+    if(fn%2===1||fn===sn){r=await hashInternal(p,r);steps&&steps.push({side:"left",sib:p,out:r});if(fn%2===0)while(fn%2===0&&fn!==0){fn=Math.floor(fn/2);sn=Math.floor(sn/2)}}
+    else{r=await hashInternal(r,p);steps&&steps.push({side:"right",sib:p,out:r})}
+    fn=Math.floor(fn/2);sn=Math.floor(sn/2)}
+  return sn===0?r:"";
+}
+// RFC 9162 §2.1.4.2 consistency proof verification.
+async function verifyConsistency(first,second,fh,sh,proof){
+  if(first===second)return proof.length===0&&fh===sh;
+  if(first<1||first>second||!proof.length)return false;
+  const path=(first&(first-1))===0?[fh,...proof]:[...proof];
+  let fn=first-1,sn=second-1;while(fn&1){fn>>=1;sn>>=1}
+  let fr=path[0],sr=path[0];
+  for(const c of path.slice(1)){if(sn===0)return false;
+    if(fn&1||fn===sn){fr=await hashInternal(c,fr);sr=await hashInternal(c,sr);if(!(fn&1))while(!(fn&1)&&fn!==0){fn>>=1;sn>>=1}}
+    else sr=await hashInternal(sr,c);
+    fn>>=1;sn>>=1}
+  return sn===0&&fr===fh&&sr===sh;
+}
+const SPKI="302a300506032b6570032100";
+function pemRaw(pem){const m=/-----BEGIN PUBLIC KEY-----([\s\S]+?)-----END PUBLIC KEY-----/.exec(pem||"");if(!m)throw new Error("no PEM");const bin=atob(m[1].replace(/\s+/g,""));const d=Uint8Array.from(bin,c=>c.charCodeAt(0));if(d.length!==44||toHex(d.subarray(0,12))!==SPKI)throw new Error("not Ed25519 SPKI");return d.slice(12)}
+let nobleP=null;
+async function makeVerifier(pem){
+  const raw=pemRaw(pem);const kid=(await sha256Hex(raw)).slice(0,16);
+  try{const key=await crypto.subtle.importKey("raw",raw,{name:"Ed25519"},false,["verify"]);
+    return{kid,engine:"WebCrypto Ed25519",verify:async(sig,msg)=>/^[0-9a-f]{128}$/.test(sig)&&crypto.subtle.verify({name:"Ed25519"},key,fromHex(sig),msg)}}
+  catch{nobleP??=import("https://cdn.jsdelivr.net/npm/@noble/ed25519@2.1.0/+esm");const ed=await nobleP;
+    return{kid,engine:"noble-ed25519",verify:async(sig,msg)=>/^[0-9a-f]{128}$/.test(sig)&&ed.verifyAsync(fromHex(sig),msg,raw)}}
+}
+
+// ─────────────────────────── loading ───────────────────────────
+const Q=new URLSearchParams(location.search);
+const API=(Q.get("api")||"https://filet-call.anikethsubs.workers.dev").replace(/\/$/,"");
+const PRESENTER=Q.get("presenter");
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let PKG=null, V=null, SEL=0, DISC={};
+
+function setStatus(t){$("#loadst").textContent=t||""}
+
+async function fetchPackage(id){
+  setStatus("fetching package…");
+  const r=await fetch(`${API}/call/${encodeURIComponent(id)}/package`,{cache:"no-store"});
+  if(r.ok)return r.json();
+  if(r.status!==404)throw new Error(`package: HTTP ${r.status}`);
+  // /package not deployed for this call yet: rebuild it from the call's own event stream.
+  setStatus("package endpoint unavailable, replaying call events…");
+  return packageFromSSE(id);
+}
+
+async function packageFromSSE(id){
+  const ctl=new AbortController();const evs=[];
+  const r=await fetch(`${API}/call/${encodeURIComponent(id)}/events`,{signal:ctl.signal,headers:{accept:"text/event-stream"}});
+  if(!r.ok)throw new Error(`events: HTTP ${r.status}`);
+  const rd=r.body.getReader();const dec=new TextDecoder();let buf="",idle;
+  const done=new Promise(res=>{const kick=()=>{clearTimeout(idle);idle=setTimeout(()=>{ctl.abort();res()},4000)};kick();
+    (async()=>{try{for(;;){const{done,value}=await rd.read();if(done)break;kick();buf+=dec.decode(value,{stream:true});let i;
+      while((i=buf.indexOf("\n\n"))>=0){const blk=buf.slice(0,i);buf=buf.slice(i+2);let ev="message",data="";
+        for(const ln of blk.split("\n")){if(ln.startsWith("event:"))ev=ln.slice(6).trim();else if(ln.startsWith("data:"))data+=ln.slice(5).trim()}
+        if(data)try{evs.push({event:ev,data:JSON.parse(data)})}catch{}
+        if(ev==="done"){setTimeout(()=>{ctl.abort();res()},1500)}}}}catch{}res()})()});
+  await done;
+  const p=packageFromEvents(evs,{});p.call_id=id;p.source="replayed from /call/:id/events";
+  return p;
+}
+
+// Build a package from an event stream (recorded run or live replay). Only signed receipts are
+// verified; anything taken from the stream itself is marked as such.
+function packageFromEvents(evs,disclose){
+  const start=(evs.find(e=>e.event==="start")||{}).data||{};
+  const transcript=evs.filter(e=>e.event==="turn").map(e=>({at:e.data.at,who:e.data.who,text:e.data.text}));
+  const signed=evs.filter(e=>e.event==="signed").map(e=>e.data).sort((a,b)=>a.seq-b.seq);
+  const anch={};for(const e of evs)if(e.event==="anchored")anch[e.data.receipt_id]=e.data;
+  const decs={};for(const e of evs)if(e.event==="decision"&&e.data.step!=null)decs[e.data.step]=e.data;
+  const tools={};for(const e of evs)if(e.event==="tool_result"&&e.data.step!=null)(tools[e.data.step]??=[]).push(e.data);
+  const receipts=signed.map(s=>{const r={...s.receipt};const a=anch[s.receipt_id];
+    if(a)r.log_inclusion_proof=a.log_inclusion_proof||{log_id:a.log_id||start.log_id,leaf_hash:a.leaf_hash,leaf_index:a.leaf_index,tree_size:a.tree_size,
+      audit_path:(a.audit_path||[]).map(x=>typeof x==="string"?x:x.hash),sth:a.sth,sth_signature:a.sth_signature};
+    const d=decs[s.step];
+    if(d&&!(r.evidence&&r.evidence.reasoning)&&String(r.action).startsWith("decide:"))
+      Object.defineProperty(r,"_stream_reasoning",{value:{_tools:tools[s.step]||[],question:null,claims:d.claims||[],decision:d.decision_record?.decision,rule_id:d.decision_record?.rule_id,uncertainty:d.decision_record?.uncertainty},enumerable:false});
+    return r});
+  const first=receipts[0]?.observed_at;
+  return{call_id:start.call_id||start.plan_id||"recorded",started_at:first||null,ended_at:null,rules:start.rules||{},transcript,receipts,
+    authority:{origin:null,log_id:start.log_id,public_key_pem:start.log_public_key_pem||null,sth:null},
+    issuer_public_key_pem:start.issuer_public_key_pem||null,issuer_key_id:start.issuer_key_id,_disclose:disclose};
+}
+
+async function loadRecorded(){
+  setStatus("loading recorded run…");
+  const j=await (await fetch("events.json",{cache:"no-store"})).json();
+  const runs=j.runs||{};const evs=runs[""]||Object.values(runs)[0]||j.events||[];
+  const p=packageFromEvents(evs,j.disclose||{});p.recorded=true;return p;
+}
+
+// ─────────────────────────── verification (all in-browser) ───────────────────────────
+async function verifyPackage(pkg){
+  const rs=pkg.receipts||[];const out={per:[],live:null,engine:""};
+  let iss=null,logv=null;
+  try{if(pkg.issuer_public_key_pem){iss=await makeVerifier(pkg.issuer_public_key_pem);out.engine=iss.engine}}catch(e){out.issErr=e.message}
+  try{if(pkg.authority?.public_key_pem)logv=await makeVerifier(pkg.authority.public_key_pem)}catch(e){out.logErr=e.message}
+  let prevHash=null,prevSeq=null;
+  for(let i=0;i<rs.length;i++){
+    const r=rs[i];const v={i,why:[]};out.per.push(v);
+    let pb;try{pb=payloadBytes(r)}catch(e){v.sig="fail";v.why.push("not canonicalizable: "+e.message);prevHash=null;continue}
+    v.bytes=pb.length;v.hash=await sha256Hex(pb);
+    // signature
+    if(!iss)v.sig="nokey";
+    else{v.sig=(await iss.verify(String(r.signature||""),pb))?"ok":"fail";if(v.sig==="fail")v.why.push("signature");
+      v.kid=r.key_id===iss.kid?"ok":"fail";if(v.kid==="fail")v.why.push("key_id ≠ issuer key")}
+    // evidence hash
+    try{v.ev=(await sha512Hex(canonBytes(r.evidence)))===r.evidence_hash_sha512?"ok":"fail"}catch{v.ev="fail"}
+    if(v.ev==="fail")v.why.push("evidence hash");
+    // chain link
+    if(i===0){v.chain="previous_receipt_hash" in r?"fail":"genesis";if(v.chain==="fail")v.chainWhy="genesis carries previous_receipt_hash"}
+    else{v.chain=r.previous_receipt_hash===prevHash?"ok":"fail";if(v.chain==="fail")v.chainWhy=`previous_receipt_hash ≠ sha256(receipt #${i})`}
+    if(typeof r.seq==="number"){if(prevSeq!==null&&r.seq!==prevSeq+1){v.chain="fail";v.chainWhy=(v.chainWhy?v.chainWhy+"; ":"")+`seq gap ${prevSeq}→${r.seq}`}prevSeq=r.seq}
+    prevHash=v.hash;
+    // inclusion
+    const p=r.log_inclusion_proof;v.anchored=!!(p&&typeof p==="object");
+    if(v.anchored){
+      v.leafCalc=await leafHash(pb);v.leaf=v.leafCalc===p.leaf_hash?"ok":"fail";
+      v.steps=[];let root="";try{root=await walkAuditPath(p.leaf_hash,p.audit_path||[],p.leaf_index??0,p.tree_size,v.steps)}catch{}
+      v.root=root;v.path=root&&root===p.sth?.root_hash?"ok":"fail";
+      if(!logv)v.sthSig="nokey";else{try{v.sthSig=(await logv.verify(String(p.sth_signature||""),canonBytes(p.sth)))?"ok":"fail"}catch{v.sthSig="fail"}}
+      v.proof=(v.leaf==="ok"&&v.path==="ok"&&v.sthSig!=="fail")?"ok":"fail";
+      if(v.leaf==="fail")v.why.push("leaf hash");if(v.path==="fail")v.why.push("audit path");if(v.sthSig==="fail")v.why.push("STH signature");
+    }
+  }
+  out.live=await checkLive(pkg,logv);
+  return out;
+}
+
+async function checkLive(pkg,logv){
+  const origin=pkg.authority?.origin;
+  if(!origin)return{state:"na",why:pkg.recorded?"recorded run: its log was a local authority, not the live one":"package names no authority"};
+  try{
+    const [kr,sr]=await Promise.all([fetch(origin+"/authority/v1/key",{cache:"no-store"}),fetch(origin+"/authority/v1/sth",{cache:"no-store"})]);
+    const key=await kr.json(),live=await sr.json();
+    const res={state:"ok",origin,liveSize:live.sth.tree_size,liveRoot:live.sth.root_hash,per:{},why:""};
+    if(!pkg.authority.public_key_pem||toHex(pemRaw(key.public_key_pem))!==toHex(pemRaw(pkg.authority.public_key_pem))){res.state="fail";res.why="authority key differs from the package's";return res}
+    if(!logv||!(await logv.verify(live.sth_signature,canonBytes(live.sth)))){res.state="fail";res.why="live STH signature invalid";return res}
+    const sths=new Map();for(const r of pkg.receipts){const s=r.log_inclusion_proof?.sth;if(s&&!sths.has(s.tree_size))sths.set(s.tree_size,s)}
+    for(const [n,s] of sths){
+      let ok;
+      if(n>live.sth.tree_size)ok=false;
+      else if(n===live.sth.tree_size)ok=s.root_hash===live.sth.root_hash;
+      else{const c=await (await fetch(`${origin}/authority/v1/consistency?from=${n}&to=${live.sth.tree_size}`,{cache:"no-store"})).json();
+        ok=await verifyConsistency(n,live.sth.tree_size,s.root_hash,live.sth.root_hash,c.proof||[])}
+      res.per[n]=ok;if(!ok){res.state="fail";res.why=`tree head ${n} is not a prefix of the live log`}
+    }
+    res.count=sths.size;return res;
+  }catch(e){return{state:"unreach",why:`authority unreachable (${e.message})`}}
+}
+
+// ─────────────────────────── helpers over the package ───────────────────────────
+function rulesMap(p){const r=p.rules||{};if(Array.isArray(r)){const m={};for(const x of r)m[x.id]=x.text;return m}return r}
+function reasoningOf(r){return r.evidence?.reasoning||r._stream_reasoning||null}
+function txt(t){return t&&typeof t==="object"&&"withheld" in t?`<span class="dim mono">[withheld: ${esc(t.withheld)}]</span>`:esc(t)}
+function mmss(r){const b=Date.parse(PKG.started_at||PKG.receipts[0]?.observed_at);const t=Date.parse(r.observed_at);if(!isFinite(b)||!isFinite(t))return"";const s=Math.max(0,Math.round((t-b)/1000));return`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`}
+function rowInfo(r){
+  const a=String(r.action||"");const rs=reasoningOf(r);const dr=r.evidence?.decision_record;const ev=r.evidence||{};
+  if(rs)return{d:rs.decision,rule:rs.rule_id,minor:false};
+  if(dr)return{d:dr.decision,rule:dr.rule_id,minor:false};
+  if(a==="model:iteration")return{d:`model turn ${ev.turn??"?"}.${ev.iteration??"?"}${ev.tool_uses?.length?" → "+ev.tool_uses.join(", "):""}`,rule:ev.stop_reason||"",minor:true};
+  if(a==="close")return{d:"chain close",rule:"",minor:true};
+  return{d:a,rule:r.policy_reason||"",minor:true};
+}
+const MK={ok:'<span class="ok">✓</span>',genesis:'<span class="ok">✓</span>',fail:'<span class="bad">✗</span>',nokey:'<span class="warn">–</span>',na:'<span class="warn">–</span>',unreach:'<span class="warn">?</span>'};
+function rStatus(v){if(!v)return"";if(v.why.length||v.chain==="fail")return"fail";if(v.sig==="nokey")return"nokey";return"ok"}
+function rName(i){const r=PKG.receipts[i];return`#${i+1} ${r.action}`}
+
+// ─────────────────────────── render: left ───────────────────────────
+function renderChecks(){
+  const P=V.per,rs=PKG.receipts,n=rs.length;
+  const link=i=>`<a data-sel="${i}">${esc(rName(i))}</a>`;
+  const rows=[];
+  const chainBad=P.filter(v=>v.chain==="fail");
+  rows.push({s:chainBad.length?"fail":"ok",t:`Chain valid · ${n} receipts`,why:chainBad.map(v=>`${link(v.i)}: ${esc(v.chainWhy)}`).join("<br>")});
+  const noKey=P.some(v=>v.sig==="nokey");
+  const sigBad=P.filter(v=>v.sig==="fail"||v.ev==="fail"||v.kid==="fail");
+  rows.push({s:sigBad.length?"fail":noKey?"na":"ok",t:"Signatures valid",why:sigBad.length?sigBad.map(v=>`${link(v.i)}: ${esc(v.why.filter(w=>/signature|evidence|key_id|canonical/.test(w)&&w!=="STH signature").join(", "))}`).join("<br>"):noKey?"issuer public key not in this package; evidence hashes "+(P.every(v=>v.ev==="ok")?"✓":"✗"):`Ed25519 over canonical payload · key ${esc(rs[0]?.key_id||"")}`});
+  const un=P.filter(v=>!v.anchored);
+  rows.push({s:un.length?"fail":"ok",t:`Every receipt anchored · ${n-un.length}/${n}`,why:un.map(v=>`${link(v.i)}: no inclusion proof`).join("<br>")});
+  const prBad=P.filter(v=>v.anchored&&v.proof==="fail");const sthNo=P.some(v=>v.sthSig==="nokey");
+  rows.push({s:prBad.length?"fail":sthNo?"na":un.length===n?"na":"ok",t:"Inclusion proofs valid",why:prBad.length?prBad.map(v=>`${link(v.i)}: ${esc(v.why.filter(w=>/leaf|path|STH/.test(w)).join(", "))}`).join("<br>"):sthNo?"audit paths walk to the root; log key not in this package":"RFC 6962 audit path → signed tree head"});
+  const L=V.live;
+  rows.push({s:L.state,t:"Tree head matches live authority",why:L.state==="ok"?`${L.count} tree head${L.count===1?"":"s"} consistent with live size ${L.liveSize}`:esc(L.why)});
+  $("#checks").innerHTML=rows.map(r=>`<div class="check ${r.s==="fail"?"fail":""}" data-check="${r.s}"><span class="mk">${MK[r.s]}</span><span class="t">${esc(r.t)}</span>${r.why?`<span class="why">${r.why}</span>`:""}</div>`).join("");
+}
+function renderList(){
+  $("#list").innerHTML=PKG.receipts.map((r,i)=>{const x=rowInfo(r);const st=rStatus(V.per[i]);
+    return`<div class="row ${x.minor?"minor":""} ${i===SEL?"sel":""}" data-sel="${i}" data-receipt="${esc(r.id)}"><span class="tm">${mmss(r)}</span><span><span class="dc">${esc(x.d)}</span><br><span class="rl">${esc(x.rule)}</span></span><span class="st">${MK[st]||""}</span></div>`}).join("")||'<div class="empty" style="padding:20px">no receipts</div>';
+  $("#tlines").innerHTML=(PKG.transcript||[]).map((t,i)=>`<div class="tline" data-at="${esc(t.at)}" data-ti="${i}"><span class="at">${esc(t.at)}</span><span><span class="who">${t.who==="caller"?"caller":"ava"}</span>${esc(t.text)}</span></div>`).join("");
+}
+
+// ─────────────────────────── render: right (the fillet) ───────────────────────────
+function jsonHTML(v,path,ind){
+  const pad="  ".repeat(ind);
+  if(v===null)return'<span class="jz">null</span>';
+  if(typeof v==="string")return`<span class="js">${esc(JSON.stringify(v))}</span>`;
+  if(typeof v==="number")return`<span class="jn">${v}</span>`;
+  if(typeof v==="boolean")return`<span class="jb">${v}</span>`;
+  if(Array.isArray(v)){if(!v.length)return"[]";return"[\n"+v.map((x,i)=>pad+"  "+jsonHTML(x,`${path}[${i}]`,ind+1)).join(",\n")+"\n"+pad+"]"}
+  const ks=Object.keys(v);if(!ks.length)return"{}";
+  return"{\n"+ks.map(k=>{const p=path?`${path}.${k}`:k;const j=JUMP(p);
+    return`${pad}  <span class="jk${j?" lnk":""}"${j?` data-jump="${esc(j)}"`:""}>${esc(JSON.stringify(k))}</span>: ${jsonHTML(v[k],p,ind+1)}`}).join(",\n")+"\n"+pad+"}";
+}
+function JUMP(p){
+  let m;
+  if(p==="previous_receipt_hash")return"prev";
+  if(p==="signature"||p==="key_id")return"#p-sig";
+  if(p==="evidence_hash_sha512")return"#p-ev";
+  if(p==="log_inclusion_proof"||p.startsWith("log_inclusion_proof."))return"#p-inc";
+  if(p==="reasoning_hash"||p==="commitment_alg")return"#p-disc";
+  if(p==="evidence.reasoning.question")return"#f-q";
+  if(p==="evidence.reasoning.decision"||p==="evidence.reasoning.rule_id")return"#f-dec";
+  if((m=/^evidence\.reasoning\.claims\[(\d+)\]$/.exec(p)))return"#claim-"+m[1];
+  return null;
+}
+
+function questionLine(r,rs){
+  // the caller line this decision answers: first turn cite, else the caller's Nth line
+  for(const c of rs?.claims||[])for(const x of c.cites||[])if(x.kind==="turn"){const t=(PKG.transcript||[]).find(t=>t.at===x.ref&&t.who==="caller");if(t)return t}
+  const n=r.evidence?.turn??r.evidence?.decision_record?.turn;
+  const callers=(PKG.transcript||[]).filter(t=>t.who==="caller");
+  return n?callers[n-1]:null;
+}
+
+function citeHTML(x,rs){
+  const R=rulesMap(PKG);let ref=esc(x.ref),body="",loc="",unres=x.resolved===false||(x.value===null&&"value" in x);
+  let val=x.value;
+  if(!("value" in x)||x.value===undefined){loc='<span class="loc">resolved from package</span>';
+    if(x.kind==="rule")val=R[x.ref];
+    else if(x.kind==="turn"){const t=(PKG.transcript||[]).find(t=>t.at===x.ref);val=t?`${t.who==="caller"?"Caller":"Ava"} (${t.at}): ${t.text}`:undefined}
+    else if(x.kind==="claim"){const c=(rs.claims||[]).find(c=>c.id===x.ref);val=c?.text}
+    else if(x.kind==="tool"&&rs._tools){for(const t of rs._tools){const r=t.result||{};if(r&&typeof r==="object"&&x.ref in r){val=r[x.ref];loc='<span class="loc">from recorded '+esc(t.name)+' result</span>';break}}}
+    if(val===undefined){unres=true;loc=""}}
+  if(x.kind==="rule"){ref=`<span class="ref">${esc(x.ref)}</span>`;body=val!=null?txt(val):""}
+  else if(x.kind==="turn"){ref=`<a class="ref" data-at="${esc(x.ref)}">${esc(x.ref)}</a>`;body=val!=null?`<span style="font-style:italic">“${txt(typeof val==="string"?val.replace(/^(Caller|Ava) \([0-9:]+\): /,""):val)}”</span>`:""}
+  else if(x.kind==="claim"){const ci=(rs.claims||[]).findIndex(c=>c.id===x.ref);ref=`<a class="ref" data-jump="#claim-${ci}">${esc(x.ref)}</a>`;body=val!=null?`<span class="muted">builds on: </span>${txt(val)}`:""}
+  else if(x.kind==="tool"){ref=`<span class="ref">${esc(x.ref)}</span>`;body=val!==undefined&&val!==null?`= <span class="val">${esc(typeof val==="string"?val:JSON.stringify(val))}</span>`:""}
+  return`<div class="cite" data-kind="${esc(x.kind)}"><span class="k">${esc(x.kind)}</span><span class="v">${ref}${body}${unres?'<span class="unres">✗ unresolved</span>':""}${loc}</span></div>`;
+}
+
+function proofHTML(i){
+  const r=PKG.receipts[i],v=V.per[i],p=r.log_inclusion_proof;const h=s=>esc(String(s||"").slice(0,16))+"…";
+  const rows=[];
+  rows.push(`<div class="pr" id="p-sig"><span class="mk">${MK[v.sig]}</span><span class="nm">Issuer signature</span><span class="dt">${v.sig==="nokey"?"issuer public key not in package":`Ed25519 · key ${esc(r.key_id)}${v.kid==="fail"?' <span class="bad">≠ package key</span>':""} · over ${v.bytes} canonical bytes (receipt minus post-issuance fields)`}<br>${esc(r.signature)}</span></div>`);
+  rows.push(`<div class="pr" id="p-ev"><span class="mk">${MK[v.ev]}</span><span class="nm">Evidence hash</span><span class="dt">sha512(canonical(evidence)) ${v.ev==="ok"?"=":"≠"} evidence_hash_sha512</span></div>`);
+  const prevLink=i>0?`<a data-sel="${i-1}">receipt #${i}</a>`:"";
+  rows.push(`<div class="pr" id="p-chain"><span class="mk">${MK[v.chain]}</span><span class="nm">Chain link</span><span class="dt">${v.chain==="genesis"?"genesis: no previous receipt":v.chain==="ok"?`previous_receipt_hash = sha256(${prevLink}) = ${h(r.previous_receipt_hash)}`:`${esc(v.chainWhy)} ${prevLink}`}<br>this receipt: sha256 ${h(v.hash)}</span></div>`);
+  if(!v.anchored)rows.push(`<div class="pr" id="p-inc"><span class="mk">${MK.fail}</span><span class="nm">Authority log</span><span class="dt">no inclusion proof</span></div>`);
+  else{
+    const L=V.live;const n=p.sth?.tree_size;const liveOk=L.state==="ok"?MK[L.per[n]?"ok":"fail"]:MK[L.state]||MK.na;
+    rows.push(`<div class="pr" id="p-inc"><span class="mk">${MK[v.proof]}</span><span class="nm">Inclusion in authority log</span><span class="dt">
+      log ${esc(p.log_id)} · leaf ${p.leaf_index} of ${p.tree_size}<br>
+      ${MK[v.leaf]} leaf = sha256(0x00‖payload) = ${h(v.leafCalc)}
+      <div class="path">${(v.steps||[]).map((s,k)=>`<div><span class="sd">${k+1} ${s.side==="left"?"L":"R"}</span><span>${h(s.sib)} → ${h(s.out)}</span></div>`).join("")||'<div><span class="sd">—</span><span>single-leaf tree</span></div>'}</div>
+      ${MK[v.path]} root ${h(v.root)} ${v.path==="ok"?"=":"≠"} STH root ${h(p.sth?.root_hash)}<br>
+      ${MK[v.sthSig]} STH signed by log key · ${esc(p.sth?.timestamp)}<br>
+      ${liveOk} STH ${n} ${L.state==="ok"?`consistent with live tree head ${L.liveSize} (${h(L.liveRoot)})`:esc(L.why||"")}
+    </span></div>`);
+  }
+  return rows.join("");
+}
+
+function discHTML(i){
+  const r=PKG.receipts[i];
+  let target=r.reasoning_hash?r:null;
+  if(!target&&String(r.action).startsWith("decide:")){const t=r.evidence?.turn,it=r.evidence?.iteration;
+    target=PKG.receipts.slice(0,i).reverse().find(x=>x.action==="model:iteration"&&x.reasoning_hash&&(t==null||x.evidence?.turn===t)&&(it==null||x.evidence?.iteration===it))||null}
+  if(!target)return"";
+  const ti=PKG.receipts.indexOf(target);const d=DISC[target.id];
+  const head=`<div class="kv"><span class="k">reasoning_hash</span><span>${esc(target.reasoning_hash)}</span><span class="k">commitment_alg</span><span>${esc(target.commitment_alg||"sha256")}</span>${ti!==i?`<span class="k">committed in</span><span><a data-sel="${ti}">${esc(rName(ti))}</a></span>`:""}</div>`;
+  if(!PRESENTER&&!PKG._disclose?.[target.id])return`<section class="sec" id="p-disc"><div class="label">Reasoning commitment</div>${head}</section>`;
+  let body=`<div style="margin-top:12px"><button data-disclose="${esc(target.id)}">Verify reasoning</button></div>`;
+  if(d&&d.err)body=`<div class="pr" style="margin-top:12px"><span class="mk">${MK.fail}</span><span class="nm">Disclosure</span><span class="dt">${esc(d.err)}</span></div>`;
+  else if(d)body=`<div class="pr" style="margin-top:12px"><span class="mk">${MK[d.ok?"ok":"fail"]}</span><span class="nm">sha256(salt:text)</span><span class="dt">${d.ok?"=":"≠"} reasoning_hash · salt ${esc(d.salt)}</span></div><div class="claim" style="margin-top:10px"><span class="ctext">${esc(d.text)}</span></div>`;
+  return`<section class="sec" id="p-disc"><div class="label">Reasoning commitment · disclosure</div>${head}${body}</section>`;
+}
+
+function renderRight(){
+  const i=SEL,r=PKG.receipts[i];if(!r){$("#right").innerHTML='<div class="empty">no receipts in this package</div>';return}
+  const v=V.per[i],rs=reasoningOf(r),R=rulesMap(PKG),x=rowInfo(r);
+  const H=[];
+  H.push(`<div class="label" style="margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap"><span>${esc(rName(i))}</span><span class="dim" style="text-transform:none">${esc(r.id)}</span><span class="dim">${mmss(r)}</span>${v.why.length||v.chain==="fail"?`<span class="bad">✗ ${esc([...v.why,v.chain==="fail"?"chain link":""].filter(Boolean).join(", "))}</span>`:""}</div>`);
+  if(rs){
+    const ql=questionLine(r,rs);
+    H.push(`<section class="sec" id="f-q"><div class="label">Question</div><div class="q">${rs.question!=null?txt(rs.question):'<span class="muted">—</span>'}</div>${ql?`<div class="quote"><a data-at="${esc(ql.at)}" class="mono" style="font-size:12px">${esc(ql.at)}</a> caller: “${esc(ql.text)}”</div>`:""}</section>`);
+    H.push(`<section class="sec"><div class="label">Claims · ${(rs.claims||[]).length}${r._stream_reasoning?' <span class="warn">from event stream, not in signed receipt</span>':""}</div>${(rs.claims||[]).map((c,k)=>`<div class="claim" id="claim-${k}" data-claim="${esc(c.id)}"><span class="cid">${esc(c.id)}</span><span class="ctext">${txt(c.text)}</span>${!(c.cites||[]).length?'<span class="nocite">no cite</span>':""}${(c.cites||[]).length?`<div class="cites">${c.cites.map(x=>citeHTML(x,rs)).join("")}</div>`:""}</div>`).join("")||'<div class="muted">no claims</div>'}</section>`);
+    H.push(`<section class="sec" id="f-dec"><div class="label">Decision</div><div class="decision"><span class="d">${esc(rs.decision)}</span><span class="r">${esc(rs.rule_id)}</span><span class="mono muted" style="font-size:12px">uncertainty: ${esc(rs.uncertainty??"—")}</span>${R[rs.rule_id]?`<span class="rt">${esc(R[rs.rule_id])}</span>`:""}</div></section>`);
+  }else{
+    const dr=r.evidence?.decision_record;
+    H.push(`<section class="sec" id="f-dec"><div class="label">${dr?"Decision":"Event"}</div><div class="decision"><span class="d">${esc(x.d)}</span>${x.rule?`<span class="r">${esc(x.rule)}</span>`:""}${dr&&R[dr.rule_id]?`<span class="rt">${esc(R[dr.rule_id])}</span>`:""}<span class="rt mono" style="font-size:12px">${esc(r.policy_reason||"")}</span></div></section>`);
+  }
+  H.push(discHTML(i));
+  H.push(`<section class="sec"><div class="label">Receipt</div><pre class="json" id="rjson">${jsonHTML(r,"",0)}</pre></section>`);
+  H.push(`<section class="sec"><div class="label">Proof</div><div class="proof">${proofHTML(i)}</div></section>`);
+  $("#right").innerHTML=H.join("");$("#right").scrollTop=0;
+}
+
+function select(i){if(!PKG||i<0||i>=PKG.receipts.length)return;SEL=i;
+  for(const el of document.querySelectorAll(".row"))el.classList.toggle("sel",+el.dataset.sel===i);
+  document.querySelector(`.row[data-sel="${i}"]`)?.scrollIntoView({block:"nearest"});
+  renderRight();try{history.replaceState(null,"",location.pathname+location.search+"#r"+(i+1))}catch{}}
+
+function flash(el){if(!el)return;el.scrollIntoView({behavior:"smooth",block:"center"});el.classList.add("flash");setTimeout(()=>el.classList.remove("flash"),1200)}
+function showTurn(at){const d=$("#trans");d.open=true;for(const el of document.querySelectorAll(".tline"))el.classList.toggle("hl",el.dataset.at===at);const t=document.querySelector(`.tline[data-at="${CSS.escape(at)}"]`);t?.scrollIntoView({behavior:"smooth",block:"center"})}
+
+async function disclose(id){
+  const r=PKG.receipts.find(x=>x.id===id);
+  try{let d=PKG._disclose?.[id];
+    if(!d){const res=await fetch(`${API}/disclose/${encodeURIComponent(id)}`,{headers:{authorization:`Bearer ${PRESENTER}`}});if(!res.ok)throw new Error(`disclose: HTTP ${res.status}`);d=await res.json()}
+    const calc=await sha256Hex(`${d.salt}:${d.text}`);DISC[id]={ok:calc===r.reasoning_hash,salt:d.salt,text:d.text}}
+  catch(e){DISC[id]={err:e.message}}
+  renderRight();flash($("#p-disc"));
+}
+
+// ─────────────────────────── wiring ───────────────────────────
+document.addEventListener("click",e=>{
+  const t=e.target.closest("[data-sel],[data-jump],[data-at],[data-disclose],[data-close]");if(!t)return;
+  if(t.dataset.close!==undefined){t.closest(".modal").classList.remove("on");return}
+  if(t.dataset.disclose){disclose(t.dataset.disclose);return}
+  if(t.dataset.sel!==undefined&&!t.classList.contains("tline")){select(+t.dataset.sel);return}
+  if(t.dataset.jump){const j=t.dataset.jump;if(j==="prev"){if(SEL>0)select(SEL-1)}else flash(document.querySelector(j));return}
+  if(t.dataset.at){showTurn(t.dataset.at)}
+});
+document.addEventListener("keydown",e=>{
+  if(e.target.closest("textarea,input"))return;
+  if(e.key==="ArrowDown"){e.preventDefault();select(SEL+1)}else if(e.key==="ArrowUp"){e.preventDefault();select(SEL-1)}
+  else if(e.key==="Escape")document.querySelectorAll(".modal.on").forEach(m=>m.classList.remove("on"));
+});
+$("#btnLoad").onclick=()=>{$("#err").textContent="";$("#mLoad").classList.add("on");$("#pasteTa").focus()};
+$("#btnDl").onclick=()=>{if(!PKG)return;const s=JSON.stringify(PKG,null,2);$("#dlTa").value=s;
+  const a=$("#dlLink");if(a.href)URL.revokeObjectURL(a.href);a.href=URL.createObjectURL(new Blob([s],{type:"application/json"}));a.download=`filet-package-${String(PKG.call_id).slice(0,8)}.json`;$("#mDl").classList.add("on")};
+$("#btnCopy").onclick=async()=>{try{await navigator.clipboard.writeText($("#dlTa").value);$("#btnCopy").textContent="Copied"}catch{$("#dlTa").select()}};
+async function useText(s,label){
+  try{const p=JSON.parse(s);if(!p||!Array.isArray(p.receipts))throw new Error("not a package: no receipts array");
+    $("#mLoad").classList.remove("on");await show(p,label)}catch(e){$("#err").textContent=e.message}}
+$("#btnVerify").onclick=()=>useText($("#pasteTa").value,"pasted");
+$("#file").onchange=async e=>{const f=e.target.files[0];if(f)useText(await f.text(),f.name)};
+const dz=$("#drop");
+for(const tgt of [dz,document.body]){
+  tgt.addEventListener("dragover",e=>{e.preventDefault();dz.classList.add("over")});
+  tgt.addEventListener("dragleave",()=>dz.classList.remove("over"));
+  tgt.addEventListener("drop",async e=>{e.preventDefault();dz.classList.remove("over");const f=e.dataTransfer.files[0];if(f){$("#mLoad").classList.add("on");useText(await f.text(),f.name)}});
+}
+
+async function show(pkg,label){
+  PKG=pkg;DISC={};setStatus("verifying…");delete document.body.dataset.ready;
+  $("#checks").innerHTML='<div class="check"><span class="mk dim">…</span><span class="t muted">verifying</span></div>';$("#list").innerHTML="";$("#right").innerHTML='<div class="empty">verifying…</div>';
+  $("#callid").textContent=`${pkg.call_id||""}${label?" · "+label:""}${pkg.source?" · "+pkg.source:""}`;
+  $("#rectag").hidden=!pkg.recorded;
+  V=await verifyPackage(pkg);
+  const h=/^#r(\d+)$/.exec(location.hash);
+  SEL=h?Math.min(+h[1]-1,pkg.receipts.length-1):Math.max(0,pkg.receipts.findIndex(r=>String(r.action).startsWith("decide:")));
+  renderChecks();renderList();renderRight();
+  setStatus(V.engine?`${V.engine} · ${pkg.receipts.length} receipts`:"");
+  document.body.dataset.ready="1";
+}
+
+(async()=>{
+  try{const id=Q.get("call");await show(id?await fetchPackage(id):await loadRecorded(),id?"":"")}
+  catch(e){setStatus("");$("#right").innerHTML=`<div class="empty bad">${esc(e.message)}</div>`;document.body.dataset.ready="err"}
+})();
+</script>
+</body>
+</html>

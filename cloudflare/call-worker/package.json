@@ -1,0 +1,14 @@
+{
+  "name": "filet-call",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p . && tsc -p signer",
+    "deploy": "wrangler deploy -c signer/wrangler.toml && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20241218.0",
+    "typescript": "7.0.2",
+    "wrangler": "3.99.0"
+  }
+}

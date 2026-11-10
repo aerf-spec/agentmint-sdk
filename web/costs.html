@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>filet · Costs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<style>
+:root {
+  --bg: #0B1120; --fg: #E2E8F0; --fg-2: #CBD5E1; --surface: #141E30; --border: #1E3A5F; --code-bg: #0D1117;
+  --blue: #3B82F6; --green: #10B981; --text-secondary: #94A3B8; --text-tertiary: #475569; --faint: #64748B;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--fg); font: 13px/1.6 var(--mono); -webkit-font-smoothing: antialiased; }
+a { color: var(--blue); text-decoration: none; }
+.top { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); }
+.brand { font: 700 15px var(--mono); } .brand span { color: var(--blue); }
+.sub { color: var(--text-secondary); font-size: 12px; }
+main { max-width: 720px; margin: 0 auto; padding: 20px 24px 60px; }
+.lbl { display: block; font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); margin: 18px 0 8px; }
+.call { border: 1px solid var(--border); border-radius: 10px; background: var(--code-bg); padding: 10px 14px; margin-bottom: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
+.usd { margin-left: auto; color: var(--fg); font-weight: 600; }
+.k { color: var(--faint); }
+.v { color: var(--fg-2); overflow-wrap: anywhere; }
+.sum { font-size: 15px; font-weight: 600; }
+.empty { color: var(--faint); }
+</style>
+</head>
+<body>
+<header class="top"><span class="brand">filet<span>.ai</span></span><span class="sub">Costs</span></header>
+<main>
+  <span class="lbl">Live calls</span>
+  <div id="list"><p class="empty">…</p></div>
+  <span class="lbl">Total</span>
+  <div class="sum" id="sum">–</div>
+</main>
+<script>
+"use strict";
+const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const usd = (v) => `$${Number(v || 0).toFixed(4)}`;
+let api = null;
+try { const a = JSON.parse(localStorage.getItem("filet.api") || "null"); api = a === "off" ? null : a; } catch {}
+api = api || "https://filet-call.anikethsubs.workers.dev";
+(async () => {
+  const list = document.getElementById("list");
+  try {
+    const r = await fetch(`${api}/calls/costs`);
+    if (!r.ok) throw new Error(String(r.status));
+    const d = await r.json();
+    const calls = Array.isArray(d) ? d : d.calls || [];
+    list.replaceChildren();
+    if (!calls.length) list.append(h("p", "empty", "no live calls"));
+    for (const c of calls) {
+      const el = h("div", "call"); const row = h("div", "row");
+      row.append(h("span", "v", String(c.started_at || c.date || "").replace("T", " ").slice(0, 16)), h("span", "k", `${c.turns ?? "?"} turns`), h("span", "usd", usd(c.usd ?? c.total_usd)));
+      el.append(row);
+      for (const [m, v] of Object.entries(c.by_model || {})) { const r2 = h("div", "row"); r2.append(h("span", "k", m), h("span", "v", usd(v))); el.append(r2); }
+      if (c.id) { const a = h("a", null, c.id); a.href = `api.html?call=${encodeURIComponent(c.id)}`; el.append(a); }
+      list.append(el);
+    }
+    const total = d.total_usd ?? calls.reduce((s, c) => s + (c.usd ?? c.total_usd ?? 0), 0);
+    document.getElementById("sum").textContent = `${usd(total)} · ${calls.length} calls`;
+  } catch { list.replaceChildren(h("p", "empty", "costs unavailable")); }
+})();
+</script>
+</body>
+</html>
