@@ -1,85 +1,26 @@
 {
-  "name": "@npmsai/agentmint",
-  "version": "0.3.0",
-  "description": "Cryptographic receipts and audit trails for agentic workflows",
+  "name": "filet-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Live demo: signed, hash-chained, log-anchored receipts for every decision of a voice AI agent",
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=18"
+    "node": ">=18.19"
   },
-  "keywords": [
-    "agent",
-    "receipt",
-    "audit",
-    "compliance",
-    "verification",
-    "SOC2",
-    "AIUC-1",
-    "agentmint"
-  ],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./notary": {
-      "types": "./dist/exports/notary.d.ts",
-      "import": "./dist/exports/notary.js",
-      "require": "./dist/exports/notary.cjs"
-    },
-    "./vercel": {
-      "types": "./dist/experimental/vercel/index.d.ts",
-      "import": "./dist/experimental/vercel/index.js",
-      "require": "./dist/experimental/vercel/index.cjs"
-    },
-    "./enforce": {
-      "types": "./dist/experimental/enforce.d.ts",
-      "import": "./dist/experimental/enforce.js",
-      "require": "./dist/experimental/enforce.cjs"
-    }
-  },
-  "bin": {
-    "agentmint": "dist/cli/entry.js"
-  },
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
   "scripts": {
-    "build": "npx tsup",
-    "test": "npx vitest run",
-    "test:integration": "npx tsx --test tests/integration.test.ts",
-    "typecheck": "npx tsc --noEmit",
-    "demo": "npx tsx src/cli/demo.ts",
-    "demo:rcm": "npx tsx examples/demos/rcm.ts",
-    "demo:tamper": "npx tsx examples/demos/tamper.ts",
-    "demo:silence": "npx tsx examples/demos/silence.ts",
-    "demo:trace": "npx tsx examples/demos/trace.ts",
-    "demo:learn": "npx tsx examples/demos/learn.ts",
-    "example:packet": "npx tsx examples/sample-evidence-packet/generate.ts",
-    "example:quickstart": "npx tsx examples/quickstart/quickstart.ts",
-    "example:gate": "npx tsx examples/spec-gate/spec-gate.ts",
-    "packet:sample": "npx tsx examples/sample-evidence-packet/generate.ts",
-    "benchmark:dry": "cd examples/lm-studio-benchmark && npx tsx run.ts --dry-run && npx tsx analysis/compare.ts --markdown",
-    "benchmark:full": "cd examples/lm-studio-benchmark && npm run full",
-    "example:trial": "npx tsx examples/trial-agent/trial.ts",
-    "site:build": "npx tsx scripts/build-receipt-viewer.ts"
+    "start": "tsx app/server.ts",
+    "dev": "tsx watch app/server.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "loadtest": "tsx app/loadtest.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.19.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "ai": "^7.0.17",
-    "openai": "^6.45.0",
-    "tsup": "^8.0.0",
-    "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.0",
-    "zod": "^4.4.3"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/aerf-spec/agentmint-app.git"
-  },
-  "homepage": "https://github.com/aerf-spec/agentmint-app#readme"
+    "vitest": "^3.2.0"
+  }
 }

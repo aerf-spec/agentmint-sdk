@@ -1,5 +1,5 @@
 // Signed plans: sign/verify, expiry, policy evaluation, scope intersection,
-// policy hash, and harden() binding.
+// and policy hash.
 import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -14,7 +14,6 @@ import {
   matchesPattern,
   type PlanReceipt,
 } from "./plan.js";
-import { harden } from "./experimental/harden.js";
 import {
   generateKeyPair,
   publicKeyToPem,
@@ -174,62 +173,5 @@ print(_compute_policy_hash(plan), end="")
     );
     expect(r.status, r.stderr).toBe(0);
     expect(computePolicyHash(plan)).toBe(r.stdout);
-  });
-});
-
-describe("harden() with config.plan", () => {
-  const keys = newKeys();
-  const tools = () => ({
-    "submit:claim:CLM-1": async () => "submitted",
-    "delete:database": async () => "deleted",
-  });
-
-  it("allows in-scope calls and blocks out-of-scope calls", async () => {
-    const plan = signPlan(planInit, keys.privateKeyPem);
-    const t = harden(tools(), { plan, agent: "claims-agent", silent: true });
-    await expect(t["submit:claim:CLM-1"]()).resolves.toBe("submitted");
-    const blocked = (await t["delete:database"]()) as unknown as { error: true; message: string };
-    expect(blocked.error).toBe(true);
-    expect(blocked.message).toContain("no scope pattern matched");
-  });
-
-  it("rejects every call under an expired plan", async () => {
-    const plan = signPlan({ ...planInit, ttlSeconds: 1, issuedAt: "2020-01-01T00:00:00+00:00" }, keys.privateKeyPem);
-    // Force expiry regardless of clamping: expires_at is in the past.
-    const expired: PlanReceipt = { ...plan, expires_at: "2020-01-01T00:00:01+00:00" };
-    const t = harden(tools(), { plan: expired, agent: "claims-agent", silent: true });
-    const res = (await t["submit:claim:CLM-1"]()) as unknown as { error: true; message: string };
-    expect(res.error).toBe(true);
-    expect(res.message).toContain("plan expired");
-  });
-
-  it("binds every signed receipt to the plan", async () => {
-    const plan = signPlan(planInit, keys.privateKeyPem);
-    const t = harden(tools(), {
-      plan,
-      agent: "claims-agent",
-      silent: true,
-      signing: { privateKeyPem: keys.privateKeyPem },
-    });
-    await t["submit:claim:CLM-1"]();
-    await t["delete:database"]();
-    const receipts = t.__receipts();
-    expect(receipts.length).toBe(2);
-    for (const r of receipts) {
-      expect(r.plan_id).toBe(plan.id);
-      expect(r.plan_signature).toBe(plan.signature);
-      expect(r.policy_hash).toBe(computePolicyHash(plan));
-    }
-    expect(receipts[0]!.in_policy).toBe(true);
-    expect(receipts[1]!.in_policy).toBe(false);
-    expect(t.__verifyReceipts().ok).toBe(true);
-  });
-
-  it("restricts by agent identity via delegates_to", async () => {
-    const plan = signPlan(planInit, keys.privateKeyPem);
-    const t = harden(tools(), { plan, agent: "some-other-agent", silent: true });
-    const res = (await t["submit:claim:CLM-1"]()) as unknown as { error: true; message: string };
-    expect(res.error).toBe(true);
-    expect(res.message).toContain("not in delegates_to");
   });
 });

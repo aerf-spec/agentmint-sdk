@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>filet demo events</title>
+<style>
+  :root { --bg: #fff; --fg: #111; --muted: #666; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #111; --fg: #eee; --muted: #999; } }
+  body { background: var(--bg); color: var(--fg); font: 13px/1.4 ui-monospace, monospace; margin: 16px; }
+  .ev { white-space: pre-wrap; word-break: break-all; border-bottom: 1px solid #8883; padding: 2px 0; }
+  .ev b { color: var(--muted); }
+</style>
+</head>
+<body>
+<p>Placeholder: raw SSE events from <code>/events</code>. Add <code>?speed=4&amp;fail=llm_timeout,tool_error,authority_down,signer_crash</code> to this page's URL to pass options through.</p>
+<div id="log"></div>
+<script>
+  const log = document.getElementById("log");
+  const es = new EventSource("/events" + location.search);
+  const names = ["start","turn","model_input","thinking","tool_call","tool_result","decision","span","signed","queued","batch",
+    "anchored","verified","consistency","failure","reconciled","done","error"];
+  for (const name of names) {
+    es.addEventListener(name, (e) => {
+      const div = document.createElement("div");
+      div.className = "ev";
+      div.innerHTML = "<b>" + e.lastEventId + " " + name + "</b> ";
+      div.append(e.data);
+      log.append(div);
+      if (name === "done") es.close();
+    });
+  }
+</script>
+</body>
+</html>

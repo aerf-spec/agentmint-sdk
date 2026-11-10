@@ -1,16 +1,13 @@
 // Chain verification: three distinct break types, per-plan isolation,
-// persistence round-trips, and shared-fixture agreement with the Python
+// and shared-fixture agreement with the Python
 // producer's verify_chain.
 import { describe, it, expect } from "vitest";
 import { spawnSync } from "node:child_process";
-import { existsSync, rmSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { Notary, FileReceiptSink } from "./notary.js";
+import { existsSync } from "node:fs";
 import { verifyAerfChain, legacyChainHash } from "./chain.js";
 import { buildAerfReceipt, aerfChainHash } from "./receipt-aerf.js";
-import { generateKeyPair, privateKeyToPem } from "./kernel/sign.js";
-import { readFileSync } from "node:fs";
+import { generateKeyPair, privateKeyToPem, publicKeyToPem } from "./kernel/sign.js";
+import { signPlan, evaluatePolicy, computePolicyHash, type PlanReceipt, type PlanInit } from "./plan.js";
 
 const planInit = {
   user: "admin@example.com",
@@ -18,12 +15,44 @@ const planInit = {
   scope: ["submit:*", "read:*"],
 };
 
-function chained(notary: Notary, planId: string): Record<string, unknown>[] {
-  return notary.receipts(planId) as unknown as Record<string, unknown>[];
+/** Minimal issuer: signed plan + per-plan seq/previous-hash chain. */
+class Issuer {
+  private readonly key = generateKeyPair();
+  readonly publicKeyPem = publicKeyToPem(this.key.publicKey);
+  private readonly chains = new Map<string, Record<string, unknown>[]>();
+  createPlan(init: PlanInit): PlanReceipt {
+    const plan = signPlan(init, this.key.privateKey);
+    this.chains.set(plan.id, []);
+    return plan;
+  }
+  notarise(i: { action: string; agent: string; plan: PlanReceipt; evidence: Record<string, unknown> }): void {
+    const list = this.chains.get(i.plan.id)!;
+    const prev = list[list.length - 1];
+    const ev = evaluatePolicy(i.action, i.agent, i.plan);
+    const r = buildAerfReceipt(
+      {
+        planId: i.plan.id, agent: i.agent, action: i.action, inPolicy: ev.inPolicy, policyReason: ev.reason,
+        evidence: i.evidence, seq: list.length + 1, previousReceiptHash: prev ? aerfChainHash(prev) : undefined,
+        planSignature: i.plan.signature, policyHash: computePolicyHash(i.plan),
+      },
+      { issuerPrivateKey: this.key.privateKey },
+    );
+    list.push(r as unknown as Record<string, unknown>);
+  }
+  receipts(planId: string): Record<string, unknown>[] {
+    return [...(this.chains.get(planId) ?? [])];
+  }
+  verifyChain(planId: string) {
+    return verifyAerfChain(this.receipts(planId), { issuerPublicKey: this.publicKeyPem });
+  }
+}
+
+function chained(notary: Issuer, planId: string): Record<string, unknown>[] {
+  return notary.receipts(planId);
 }
 
 describe("verifyAerfChain break types", () => {
-  const notary = new Notary();
+  const notary = new Issuer();
   const plan = notary.createPlan(planInit);
   for (let i = 0; i < 4; i++) {
     notary.notarise({ action: `submit:claim:${i}`, agent: "a", plan, evidence: { i } });
@@ -98,7 +127,7 @@ describe("verifyAerfChain break types", () => {
 
 describe("per-plan chain isolation", () => {
   it("interleaved plans keep independent chains and seqs", () => {
-    const notary = new Notary();
+    const notary = new Issuer();
     const a = notary.createPlan(planInit);
     const b = notary.createPlan({ ...planInit, action: "other" });
     notary.notarise({ action: "submit:1", agent: "x", plan: a, evidence: {} });
@@ -120,53 +149,6 @@ describe("per-plan chain isolation", () => {
     expect(chainB[1]!["previous_receipt_hash"]).toBe(aerfChainHash(chainB[0]!));
     expect(chainA[1]!["seq"]).toBe(2);
     expect(chainB[1]!["seq"]).toBe(2);
-  });
-});
-
-describe("persistence", () => {
-  it("chain state and key survive a process restart (same stateDir)", () => {
-    const dir = mkdtempSync(join(tmpdir(), "agentmint-notary-"));
-    try {
-      const first = new Notary({ stateDir: dir });
-      const plan = first.createPlan(planInit);
-      first.notarise({ action: "submit:1", agent: "x", plan, evidence: { n: 1 } });
-      const r1 = chained(first, plan.id)[0]!;
-
-      // "Restart": a new Notary over the same stateDir continues the chain.
-      const second = new Notary({ stateDir: dir });
-      expect(second.keyId).toBe(first.keyId);
-      const r2 = second.notarise({
-        action: "submit:2",
-        agent: "x",
-        plan,
-        evidence: { n: 2 },
-      }) as unknown as Record<string, unknown>;
-      expect(r2["previous_receipt_hash"]).toBe(aerfChainHash(r1));
-      expect(r2["seq"]).toBe(2);
-
-      // The recombined chain verifies end-to-end.
-      const res = verifyAerfChain([r1, r2], { issuerPublicKey: first.publicKeyPem });
-      expect(res.valid, res.reason).toBe(true);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
-  });
-
-  it("FileReceiptSink appends one JSONL line per receipt, per plan", () => {
-    const dir = mkdtempSync(join(tmpdir(), "agentmint-sink-"));
-    try {
-      const notary = new Notary({ sink: new FileReceiptSink(dir) });
-      const plan = notary.createPlan(planInit);
-      notary.notarise({ action: "submit:1", agent: "x", plan, evidence: {} });
-      notary.notarise({ action: "submit:2", agent: "x", plan, evidence: {} });
-      const lines = readFileSync(join(dir, `${plan.id}.jsonl`), "utf-8").trim().split("\n");
-      expect(lines.length).toBe(2);
-      const parsed = lines.map((l) => JSON.parse(l) as Record<string, unknown>);
-      const res = verifyAerfChain(parsed, { issuerPublicKey: notary.publicKeyPem });
-      expect(res.valid, res.reason).toBe(true);
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
-    }
   });
 });
 

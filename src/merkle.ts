@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
-import type { MerkleProof } from "./types.js";
+
+/** A Merkle inclusion proof with sibling positions, leaf→root. */
+export interface MerkleProof {
+  leaf: string;
+  index: number;
+  siblings: ReadonlyArray<{ hash: string; position: "left" | "right" }>;
+  root: string;
+}
 
 function sha256(data: string | Uint8Array): string {
   return createHash("sha256").update(data).digest("hex");
@@ -126,6 +133,19 @@ export class MerkleTree {
   /** Append a leaf; stores SHA-256(0x00 || data). Returns the leaf index. */
   addLeaf(data: string | Uint8Array): number {
     this.leaves.push(logLeafHash(data));
+    return this.leaves.length - 1;
+  }
+
+  /**
+   * Append a precomputed RFC 6962 leaf hash (SHA-256(0x00 || data), 64
+   * lowercase hex), e.g. one produced by {@link logLeafHash} elsewhere.
+   * Returns the leaf index. Throws TypeError on any other input.
+   */
+  addLeafHash(leafHashHex: string): number {
+    if (typeof leafHashHex !== "string" || !/^[0-9a-f]{64}$/.test(leafHashHex)) {
+      throw new TypeError("leaf hash must be 64 lowercase hex characters");
+    }
+    this.leaves.push(leafHashHex);
     return this.leaves.length - 1;
   }
 
