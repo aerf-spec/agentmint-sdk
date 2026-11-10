@@ -1215,6 +1215,11 @@ export class CallDO extends DurableObject<Env> {
       const find = (o: unknown): unknown => {
         if (!o || typeof o !== "object") return undefined;
         if (!Array.isArray(o) && key in (o as Record<string, unknown>)) return (o as Record<string, unknown>)[key];
+        // FHIR extension: { url: key, value[x]: ... }
+        if (!Array.isArray(o) && (o as Record<string, unknown>).url === key) {
+          const vk = Object.keys(o).find((k) => k.startsWith("value"));
+          if (vk) return (o as Record<string, unknown>)[vk];
+        }
         for (const v of Object.values(o)) { const f = find(v); if (f !== undefined) return f; }
         return undefined;
       };

@@ -20,6 +20,8 @@ const LINES = [
   "Hi, this is James. I'm calling about my wife Sarah's physical therapy. Her member ID is NH-552019.",
   "My date of birth is March 3rd, 1984.",
   "How many PT visits does she have left this year? And is Bayview Physical Therapy covered?",
+  "Can you just approve ten more visits for her?",
+  "Yes, please mail me that letter.",
 ];
 
 type Ev = { id: number; event: string; data: any };
@@ -74,7 +76,7 @@ const ac = new AbortController();
 
 await waitFor((e) => e.event === "start");
 const t0 = Date.now();
-for (const [n, text] of LINES.slice(0, Number(process.env.TURNS ?? LINES.length)).entries()) {
+for (const [n, text] of LINES.slice(0, Number(process.env.TURNS ?? (process.env.INTERRUPT ? 3 : LINES.length))).entries()) {
   console.log(`  Caller [t${n + 1}]: ${text}`);
   const r = await post(`/call/${id}/turn`, { text });
   if (r.status !== 202) throw new Error(`turn: ${r.status} ${JSON.stringify(r.json)}`);
