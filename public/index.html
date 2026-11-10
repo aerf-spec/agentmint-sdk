@@ -19,7 +19,7 @@
   const log = document.getElementById("log");
   const es = new EventSource("/events" + location.search);
   const names = ["start","turn","model_input","thinking","tool_call","tool_result","decision","span","signed","queued","batch",
-    "anchored","verified","consistency","failure","reconciled","done","error"];
+    "anchored","verified","consistency","failure","reconciled","api","done","error"];
   for (const name of names) {
     es.addEventListener(name, (e) => {
       const div = document.createElement("div");
