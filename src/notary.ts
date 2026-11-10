@@ -42,6 +42,21 @@ import {
 } from "./plan.js";
 import { verifyAerfChain, type ChainVerification } from "./chain.js";
 import { verifyStripped } from "./kernel/sign.js";
+import {
+  SALTED_COMMITMENT_ALG,
+  newSalt,
+  saltedCommitment,
+  saltedContextCommitment,
+  type CommitmentMode,
+  type Disclosure,
+  type DisclosureSink,
+} from "./commitments.js";
+import {
+  collectTraceLinks,
+  formatTraceparent,
+  type TraceContext,
+  type TraceLinkPlugin,
+} from "./trace-links.js";
 
 const CHAIN_STATE_FILE = "chain_state.json";
 const KEY_FILE = "notary_key.pem";
@@ -57,6 +72,19 @@ interface ChainState {
   previousHash?: string;
   /** Last seq issued (0 before genesis). */
   seq: number;
+  /** Set once a close receipt has been issued; the chain accepts no more receipts. */
+  closed?: boolean;
+}
+
+/** Action name of the final receipt issued by {@link Notary.close}. */
+export const CLOSE_ACTION = "close";
+/** `evidence.type` of a close receipt. */
+export const CLOSE_EVIDENCE_TYPE = "chain_close";
+
+export interface CloseOptions {
+  agent: string;
+  /** Non-negative integer tallies for the run, e.g. { actions: 12, blocked: 1 }. */
+  counts: Record<string, number>;
 }
 
 export interface NotaryOptions {
@@ -71,6 +99,17 @@ export interface NotaryOptions {
   sink?: ReceiptSink | ReceiptSink[];
   /** Enforcement mode recorded on receipts. Default "enforce". */
   mode?: AerfMode;
+  /**
+   * How reasoning and context are committed. "plain" (default): SHA-256 of
+   * the value. "salted": SHA-256 over a fresh per-field 32-byte salt, the
+   * receipt carries `commitment_alg: "sha256-salted-v1"`, and the salts are
+   * available only via {@link Notary.disclosure} / `disclosureSink`.
+   */
+  commitments?: CommitmentMode;
+  /** Receives each receipt's Disclosure in salted mode. Failures never block issuance. */
+  disclosureSink?: DisclosureSink;
+  /** Plugins that turn a receipt's trace context into evidence links. */
+  traceLinks?: TraceLinkPlugin[];
 }
 
 export interface NotariseInput {
@@ -90,6 +129,11 @@ export interface NotariseInput {
   context?: unknown;
   /** Independently-keyed Policy Decision Point key: signs the §17 tuple. */
   pdpPrivateKey?: string | KeyObject;
+  /**
+   * W3C trace context. Adds `traceparent` (and `links` from configured
+   * trace-link plugins) to the signed evidence.
+   */
+  trace?: TraceContext;
 }
 
 export class Notary {
@@ -106,10 +150,20 @@ export class Notary {
   private readonly plans = new Map<string, PlanReceipt>();
   private readonly childPlans = new Map<string, string[]>();
   private readonly trajectory: SessionTrajectoryEntry[] = [];
+  private readonly commitments: CommitmentMode;
+  private readonly disclosureSink?: DisclosureSink;
+  private readonly traceLinks: TraceLinkPlugin[];
+  private readonly disclosures = new Map<string, Disclosure>();
 
   constructor(opts: NotaryOptions = {}) {
     this.stateDir = opts.stateDir;
     this.mode = opts.mode ?? "enforce";
+    this.commitments = opts.commitments ?? "plain";
+    if (this.commitments !== "plain" && this.commitments !== "salted") {
+      throw new AerfReceiptError(`commitments must be "plain" or "salted", got ${String(opts.commitments)}`);
+    }
+    this.disclosureSink = opts.disclosureSink;
+    this.traceLinks = [...(opts.traceLinks ?? [])];
     this.sinks = opts.sink === undefined ? [] : Array.isArray(opts.sink) ? opts.sink : [opts.sink];
     this.key = this.loadOrCreateKey(opts.privateKeyPem);
     this.publicKey = createPublicKey(this.key);
@@ -135,10 +189,46 @@ export class Notary {
    * state is isolated per plan: receipts for plan A never link to plan B.
    */
   notarise(input: NotariseInput): AerfReceipt {
+    return this.issue(input);
+  }
+
+  /**
+   * Issue the final receipt of a plan's chain: `action: "close"`, evidence
+   * `{ type: "chain_close", counts, receipts_before_close }`. Its signed seq
+   * equals the chain length, so {@link verifyClose} detects a dropped tail.
+   * The plan accepts no further receipts afterwards.
+   */
+  close(plan: PlanReceipt, opts: CloseOptions): AerfReceipt {
+    const counts = requireCounts(opts.counts);
+    const chain = this.chains.get(plan.id) ?? { seq: 0 };
+    return this.issue(
+      {
+        action: CLOSE_ACTION,
+        agent: opts.agent,
+        plan,
+        evidence: { type: CLOSE_EVIDENCE_TYPE, counts, receipts_before_close: chain.seq },
+      },
+      { inPolicy: true, reason: "chain close" },
+    );
+  }
+
+  /**
+   * The salt openings for a receipt issued in salted mode, or undefined (plain
+   * mode, unknown id, or nothing committed). Held in memory for this Notary.
+   */
+  disclosure(receiptId: string): Disclosure | undefined {
+    const d = this.disclosures.get(receiptId);
+    return d && structuredClone(d);
+  }
+
+  private issue(input: NotariseInput, closeVerdict?: { inPolicy: boolean; reason: string }): AerfReceipt {
     const { plan } = input;
     const chain = this.chains.get(plan.id) ?? { seq: 0 };
+    if (chain.closed) {
+      throw new AerfReceiptError(`plan ${plan.id} is closed — no receipts may follow a close receipt`);
+    }
 
-    const evaluation = evaluatePolicy(input.action, input.agent, plan);
+    const evaluation = closeVerdict ?? evaluatePolicy(input.action, input.agent, plan);
 
     // Shadow/warn modes evaluate fully but never claim a block happened.
     let inPolicy = evaluation.inPolicy;
@@ -151,6 +241,22 @@ export class Notary {
     }
 
     const observedAt = isoNowUtc();
+    // Trace context is validated before any state changes.
+    let evidence = input.evidence;
+    if (input.trace !== undefined) {
+      const traceparent = formatTraceparent(input.trace);
+      const links = collectTraceLinks(this.traceLinks, {
+        trace_id: input.trace.trace_id,
+        span_id: input.trace.span_id,
+        ...(input.trace.request_id !== undefined ? { request_id: input.trace.request_id } : {}),
+        started_at: observedAt,
+      });
+      if (evidence && typeof evidence === "object" && ("traceparent" in evidence || (links.length > 0 && "links" in evidence))) {
+        throw new AerfReceiptError("evidence already has 'traceparent'/'links' — omit them when passing trace");
+      }
+      evidence = { ...evidence, traceparent, ...(links.length > 0 ? { links } : {}) };
+    }
+
     const trajectoryEntry: SessionTrajectoryEntry = {
       action: input.action,
       agent: input.agent,
@@ -161,7 +267,33 @@ export class Notary {
     const recent = this.trajectory.slice(-TRAJECTORY_WINDOW);
 
     const policyHash = computePolicyHash(plan);
-    const contextHash = input.context !== undefined ? contextHashSha256(input.context) : undefined;
+    const salted = this.commitments === "salted";
+    const receiptId = randomUUID();
+    const disclosure: Disclosure = { receipt_id: receiptId };
+
+    let contextHash: string | undefined;
+    if (input.context !== undefined) {
+      if (salted) {
+        const salt = newSalt();
+        const { hash, canonical } = saltedContextCommitment(salt, input.context);
+        contextHash = hash;
+        disclosure.context = { salt, canonical };
+      } else {
+        contextHash = contextHashSha256(input.context);
+      }
+    }
+    let reasoningHash: string | undefined;
+    if (input.reasoning !== undefined) {
+      if (salted) {
+        const salt = newSalt();
+        reasoningHash = saltedCommitment(salt, input.reasoning);
+        disclosure.reasoning = { salt, text: input.reasoning };
+      } else {
+        reasoningHash = sha256Hex(Buffer.from(input.reasoning, "utf-8"));
+      }
+    }
+    const hasDisclosure = disclosure.context !== undefined || disclosure.reasoning !== undefined;
+
 
     if (input.impactTags && input.impactTags.length > 0) {
       if (!input.pdpPrivateKey || input.context === undefined) {
@@ -187,22 +319,20 @@ export class Notary {
 
     const receipt = buildAerfReceipt(
       {
+        id: receiptId,
         planId: plan.id,
         agent: input.agent,
         action: input.action,
         inPolicy,
         policyReason: reason,
-        evidence: input.evidence,
+        evidence,
         observedAt,
         previousReceiptHash: chain.previousHash,
         seq: chain.seq + 1,
         planSignature: plan.signature,
         policyHash,
         outputHash: input.output ? sha256Hex(canonicalBytes(input.output)) : undefined,
-        reasoningHash:
-          input.reasoning !== undefined
-            ? sha256Hex(Buffer.from(input.reasoning, "utf-8"))
-            : undefined,
+        reasoningHash,
         sessionId: this.sessionId,
         sessionTrajectory: recent,
         mode: this.mode,
@@ -211,6 +341,7 @@ export class Notary {
         contextHashSha256: contextHash,
         pdpSignature,
         pdpKeyId: pdpSignature ? pdpKeyId : undefined,
+        commitmentAlg: salted && hasDisclosure ? SALTED_COMMITMENT_ALG : undefined,
       },
       { issuerPrivateKey: this.key, agentPrivateKey: input.agentPrivateKey },
     );
@@ -218,6 +349,7 @@ export class Notary {
     // Advance and persist the chain BEFORE emitting to sinks.
     chain.previousHash = aerfChainHash(receipt as unknown as Record<string, unknown>);
     chain.seq += 1;
+    if (closeVerdict) chain.closed = true;
     this.chains.set(plan.id, chain);
     this.saveChainState();
 
@@ -230,6 +362,14 @@ export class Notary {
         sink.emit(receipt);
       } catch {
         // One sink's failure never blocks issuance or the other sinks.
+      }
+    }
+    if (salted && hasDisclosure) {
+      this.disclosures.set(receiptId, disclosure);
+      try {
+        this.disclosureSink?.emit(structuredClone(disclosure));
+      } catch {
+        // A disclosure sink failure never blocks issuance.
       }
     }
     return receipt;
@@ -330,10 +470,11 @@ export class Notary {
       if (typeof data !== "object" || data === null) return;
       for (const [planId, state] of Object.entries(data as Record<string, unknown>)) {
         if (typeof state !== "object" || state === null) continue;
-        const s = state as { previousHash?: unknown; seq?: unknown };
+        const s = state as { previousHash?: unknown; seq?: unknown; closed?: unknown };
         this.chains.set(planId, {
           previousHash: typeof s.previousHash === "string" ? s.previousHash : undefined,
           seq: typeof s.seq === "number" && Number.isSafeInteger(s.seq) ? s.seq : 0,
+          ...(s.closed === true ? { closed: true } : {}),
         });
       }
     } catch {
@@ -344,12 +485,81 @@ export class Notary {
   private saveChainState(): void {
     if (!this.stateDir) return;
     mkdirSync(this.stateDir, { recursive: true });
-    const out: Record<string, { previousHash?: string; seq: number }> = {};
+    const out: Record<string, { previousHash?: string; seq: number; closed?: boolean }> = {};
     for (const [planId, state] of this.chains) {
-      out[planId] = { ...(state.previousHash ? { previousHash: state.previousHash } : {}), seq: state.seq };
+      out[planId] = {
+        ...(state.previousHash ? { previousHash: state.previousHash } : {}),
+        seq: state.seq,
+        ...(state.closed ? { closed: true } : {}),
+      };
     }
     atomicWrite(join(this.stateDir, CHAIN_STATE_FILE), JSON.stringify(out, null, 2), 0o600);
   }
+}
+
+function requireCounts(counts: unknown): Record<string, number> {
+  if (typeof counts !== "object" || counts === null || Array.isArray(counts)) {
+    throw new AerfReceiptError("close counts must be an object of non-negative integers");
+  }
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(counts)) {
+    if (typeof v !== "number" || !Number.isSafeInteger(v) || v < 0) {
+      throw new AerfReceiptError(`close count '${k}' must be a non-negative integer, got ${String(v)}`);
+    }
+    out[k] = v;
+  }
+  return out;
+}
+
+export interface CloseVerification {
+  ok: boolean;
+  /** Counts recorded on the close receipt, when one was found. */
+  counts?: Record<string, number>;
+  reason?: string;
+  /** Underlying chain verification (signatures when a key is given, links, seq). */
+  chain: ChainVerification;
+}
+
+/**
+ * Verify a plan's chain ends in a close receipt: the chain itself verifies
+ * (signatures too when `issuerPublicKey` is given), the LAST receipt is the
+ * only close receipt, and its signed `seq` equals the number of receipts. A
+ * dropped tail — or a chain that was never closed — fails.
+ */
+export function verifyClose(
+  receipts: readonly Record<string, unknown>[] | readonly AerfReceipt[],
+  opts: { issuerPublicKey?: string | KeyObject } = {},
+): CloseVerification {
+  const list = receipts as readonly Record<string, unknown>[];
+  const chain = verifyAerfChain(list, opts);
+  const fail = (reason: string): CloseVerification => ({ ok: false, reason, chain });
+  if (!chain.valid) return fail(`chain invalid: ${chain.reason ?? chain.breakType}`);
+  if (list.length === 0) return fail("no receipts — chain was never closed");
+  const isClose = (r: Record<string, unknown>): boolean => {
+    const ev = r["evidence"];
+    return (
+      r["action"] === CLOSE_ACTION &&
+      typeof ev === "object" && ev !== null &&
+      (ev as Record<string, unknown>)["type"] === CLOSE_EVIDENCE_TYPE
+    );
+  };
+  const last = list[list.length - 1]!;
+  if (!isClose(last)) return fail("last receipt is not a close receipt — chain unclosed or its tail was dropped");
+  const earlier = list.slice(0, -1).findIndex(isClose);
+  if (earlier !== -1) return fail(`receipt [${earlier}] is a close receipt but is not last`);
+  if (last["seq"] !== list.length) {
+    return fail(`close receipt seq ${String(last["seq"])} != chain length ${list.length}`);
+  }
+  const ev = last["evidence"] as Record<string, unknown>;
+  if (ev["receipts_before_close"] !== undefined && ev["receipts_before_close"] !== list.length - 1) {
+    return fail(`close receipt counts ${String(ev["receipts_before_close"])} prior receipts, chain has ${list.length - 1}`);
+  }
+  const counts = ev["counts"];
+  if (typeof counts !== "object" || counts === null || Array.isArray(counts) ||
+      !Object.values(counts).every((v) => typeof v === "number" && Number.isSafeInteger(v) && v >= 0)) {
+    return fail("close receipt counts are not non-negative integers");
+  }
+  return { ok: true, counts: { ...(counts as Record<string, number>) }, chain };
 }
 
 function atomicWrite(path: string, content: string, mode: number): void {

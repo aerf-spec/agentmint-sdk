@@ -129,6 +129,19 @@ export class MerkleTree {
     return this.leaves.length - 1;
   }
 
+  /**
+   * Append a precomputed RFC 6962 leaf hash (SHA-256(0x00 || data), 64
+   * lowercase hex), e.g. one produced by {@link logLeafHash} elsewhere.
+   * Returns the leaf index. Throws TypeError on any other input.
+   */
+  addLeafHash(leafHashHex: string): number {
+    if (typeof leafHashHex !== "string" || !/^[0-9a-f]{64}$/.test(leafHashHex)) {
+      throw new TypeError("leaf hash must be 64 lowercase hex characters");
+    }
+    this.leaves.push(leafHashHex);
+    return this.leaves.length - 1;
+  }
+
   /** Number of leaves appended so far. */
   get leafCount(): number {
     return this.leaves.length;

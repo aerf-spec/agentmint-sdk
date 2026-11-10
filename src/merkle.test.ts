@@ -197,3 +197,32 @@ print(json.dumps(out))
     },
   );
 });
+
+describe("MerkleTree.addLeafHash", () => {
+  it("a tree built from precomputed leaf hashes matches addLeaf (root and proofs)", () => {
+    for (const n of [1, 2, 3, 5, 7, 8]) {
+      const data = Array.from({ length: n }, (_, i) => `leaf-${i}`);
+      const a = new MerkleTree();
+      const b = new MerkleTree();
+      for (const d of data) {
+        a.addLeaf(d);
+        expect(b.addLeafHash(logLeafHash(d))).toBe(b.leafCount - 1);
+      }
+      expect(b.build()).toBe(a.build());
+      for (let i = 0; i < n; i++) {
+        expect(b.getProof(i)).toEqual(a.getProof(i));
+        expect(b.auditPath(i)).toEqual(a.auditPath(i));
+        expect(walkAuditPath(logLeafHash(data[i]!), b.auditPath(i), i, n)).toBe(a.build());
+      }
+    }
+  });
+
+  it("rejects anything but 64 lowercase hex", () => {
+    const t = new MerkleTree();
+    const good = logLeafHash("x");
+    for (const bad of [good.toUpperCase(), good.slice(1), good + "0", "", "z".repeat(64), 42 as unknown as string]) {
+      expect(() => t.addLeafHash(bad)).toThrow(TypeError);
+    }
+    expect(t.leafCount).toBe(0);
+  });
+});

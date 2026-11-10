@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- **New (`@npmsai/agentmint/notary`):** salted commitments —
+  `new Notary({ commitments: "salted", disclosureSink })` hashes reasoning and
+  context under a fresh per-field 32-byte salt and signs
+  `commitment_alg: "sha256-salted-v1"` on the receipt; salts stay off the
+  receipt and are available via `notary.disclosure(receiptId)`, checked with
+  `verifyDisclosure(receipt, disclosure)`. Default `"plain"` is unchanged (the
+  12 conformance vectors are untouched). PDP signatures cover the salted
+  `context_hash_sha256`.
+- **New (`@npmsai/agentmint/notary`):** close receipts — `notary.close(plan,
+  { agent, counts })` issues a final chained `action: "close"` receipt and
+  `verifyClose(receipts)` detects a dropped tail.
+- **New (`@npmsai/agentmint/notary`):** trace links — `NotariseInput.trace`
+  (W3C `trace_id`/`span_id`) adds a signed `traceparent` to evidence, plus
+  `links` from `NotaryOptions.traceLinks` plugins (`otelLinks({ urlTemplate })`).
+- **New:** `MerkleTree.addLeafHash(hex)` appends a precomputed RFC 6962 leaf hash.
 - **Breaking (minor, 0.x):** the plan-bound AERF layer moved off the package
   root to the `@npmsai/agentmint/notary` subpath, so the root exports only the
   wedge (harden → signed receipt → verify). `Notary`, `FileReceiptSink`,

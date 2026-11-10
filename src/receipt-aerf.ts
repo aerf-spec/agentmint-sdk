@@ -97,6 +97,11 @@ export interface AerfReceipt {
   context_hash_sha256?: string;
   pdp_signature?: string;
   pdp_key_id?: string;
+  /**
+   * Commitment scheme for reasoning_hash / context_hash_sha256 when they are
+   * salted ("sha256-salted-v1"). Omitted for plain SHA-256 commitments.
+   */
+  commitment_alg?: string;
   // issuer signature (post-issuance strip set starts here)
   signature: string;
   // post-issuance fields, excluded from every signature and chain hash
@@ -183,6 +188,8 @@ export interface AerfReceiptInit {
   contextHashSha256?: string;
   pdpSignature?: string;
   pdpKeyId?: string;
+  /** Signed commitment scheme marker, e.g. "sha256-salted-v1". Omitted when absent. */
+  commitmentAlg?: string;
   // deterministic overrides (tests, replay)
   id?: string;
   observedAt?: string;
@@ -252,6 +259,7 @@ export function buildAerfSignable(init: AerfReceiptInit, issuerKeyId: string, ag
     if (!init.pdpKeyId) throw new AerfReceiptError("pdp_key_id is required when pdp_signature is present (SPEC §4.6)");
     d.pdp_key_id = init.pdpKeyId;
   }
+  if (init.commitmentAlg) d.commitment_alg = init.commitmentAlg;
   return d;
 }
 
@@ -495,7 +503,15 @@ function checkLogInclusion(receipt: Record<string, unknown>, opts: AerfVerifyOpt
  * is encoded as a JSON string, sidestepping number-representation ambiguity.
  */
 export function contextHashSha256(context: unknown): string {
-  return sha256Hex(canonicalBytes(numbersAsStrings(context)));
+  return sha256Hex(Buffer.from(contextCanonical(context), "utf-8"));
+}
+
+/**
+ * The canonical JSON string of a context exactly as {@link contextHashSha256}
+ * hashes it (numbers encoded as strings, §5.1 rule 2).
+ */
+export function contextCanonical(context: unknown): string {
+  return canonicalBytes(numbersAsStrings(context)).toString("utf-8");
 }
 
 function numbersAsStrings(value: unknown): unknown {
