@@ -1,12 +1,13 @@
 // The scripted member-line call: James calls Northgate Health about his wife
-// Sarah's physical therapy. The model, tools and downstream services are
-// mocks; every receipt is real.
+// Sarah's physical therapy. Ten agent decisions, each with raw thinking, cited
+// claims, a tool call and downstream service calls. The model, tools and
+// services are mocks; every receipt is real.
 //
 // The agent (MemberLineAgent) is plain code. Instrumentation is applied once,
 // at construction, in buildAgent(); inside the agent the only tracing call is
 // decision(...).
 import { anthropicMap, decision, traceDownstream, traceLLM, traceTools, type Claim, type DecisionSpec } from "./trace.js";
-import { createMockProvider, MockService, type MockProvider, type MockResponse, type Wait } from "./mock.js";
+import { createMockProvider, MockService, type HttpResult, type MockProvider, type MockResponse, type Wait } from "./mock.js";
 
 export const AGENT = "ava-member-line";
 
@@ -14,9 +15,15 @@ export const AGENT = "ava-member-line";
 export const RULES: Record<string, string> = {
   "DISC-0": "Say you are an AI and that the call is recorded.",
   "ID-3": "Share PHI only with the member or an authorized representative on file.",
+  "ID-4": "Verify an authorized representative's date of birth before sharing PHI.",
   "BEN-2": "If usage counts conflict, give the confirmed number and flag the conflict. Never guess.",
   "BEN-5": "Always state in-network vs out-of-network cost.",
+  "NET-1": "When a provider is out of network, offer in-network alternatives.",
+  "COST-1": "Cost estimates must say they are estimates and separate covered from non-covered amounts.",
   "PA-0": "The agent cannot approve care. Offer to start a prior auth request.",
+  "APL-1": "When care may be denied, explain appeal rights and timelines.",
+  "TCPA-1": "Text the caller only with explicit consent given on this call.",
+  "DOC-1": "Log every call with disposition codes before ending it.",
 };
 
 // Private: never leaves the vendor. Receipts carry only salted hashes.
@@ -27,20 +34,50 @@ Escalation ladder: … (412 more lines of wording, examples and routing hints)`;
 
 const MEMBER = "NH-552019";
 
+export interface Downstream {
+  service: "claims-api" | "provider-directory" | "um-task-api" | "notify-api" | "crm-api";
+  method: "GET" | "POST";
+  path: string;
+  status: number;
+  body: Record<string, unknown>;
+}
+
 export interface Step {
   thinking: string;
   tool: { name: string; input: Record<string, unknown>; result: Record<string, unknown> };
+  downstream: Downstream[];
   decision: {
     point: string;
     decision: string;
     rule_id: string;
-    uncertainty: "none" | "conflicting_counts" | "out_of_scope";
+    uncertainty: "none" | "conflicting_counts" | "out_of_scope" | "estimate";
     evidence: { at: string; speaker: "caller" | "tool" }[];
   };
   claims: Claim[];
   say: string;
 }
 export type Line = { who: "caller"; text: string; at: string } | { who: "agent"; at: string; step?: Step; text?: string };
+
+const c = (id: string, text: string, ...cites: Claim["cites"]): Claim => ({ id, text, cites });
+const rule = (ref: string) => ({ kind: "rule" as const, ref });
+const tool = (ref: string) => ({ kind: "tool" as const, ref });
+const turn = (ref: string) => ({ kind: "turn" as const, ref });
+const claim = (ref: string) => ({ kind: "claim" as const, ref });
+const ev = (callerAt: string, toolAt: string) => [{ at: callerAt, speaker: "caller" as const }, { at: toolAt, speaker: "tool" as const }];
+
+const BENEFITS = {
+  annual_limit_visits: 20,
+  usage: [{ plan: "Silver PPO", through: "2026-06-30", visits: 12 }, { plan: "Gold PPO", from: "2026-07-01", visits: 6 }],
+  plan_note: "Calendar-year visit limits carry across plan changes.",
+};
+const ALTERNATIVES = {
+  providers: [
+    { name: "Riverside Rehab Partners", distance_tenths_mi: 12, in_network: true, copay_usd: 30, next_opening: "2026-11-13" },
+    { name: "Lakeview PT", distance_tenths_mi: 34, in_network: true, copay_usd: 30, next_opening: "2026-11-11" },
+  ],
+};
+const ESTIMATE = { covered_visits: 2, covered_copay_usd: 30, uncovered_visits: 8, est_allowed_usd_per_visit: 95, est_total_usd: 820, is_estimate: true };
+const APPEALS = { window_days: 180, standard_decision_days: 30, expedited_decision_hours: 72 };
 
 export const SCRIPT: Line[] = [
   { who: "agent", at: "00:02", text: "Hi, I'm Ava, an AI assistant for Northgate Health. This call is recorded. How can I help?" },
@@ -51,104 +88,202 @@ export const SCRIPT: Line[] = [
       thinking:
         "Caller says he is calling about his wife, so he is not the member. ID-3: I can't share anything until I know he is an authorized representative. " +
         "Check the member's authorized reps for a caller named James before saying anything about her plan.",
-      tool: {
-        name: "check_authorized_rep",
-        input: { member_id: MEMBER, caller_first_name: "James" },
-        result: { authorized: true, relationship: "spouse", on_file_since: "2025-03-14", verify_with: "caller_dob" },
-      },
-      decision: { point: "identity", decision: "authorized_rep_found_pending_dob", rule_id: "ID-3", uncertainty: "none", evidence: [{ at: "00:09", speaker: "caller" }, { at: "00:16", speaker: "tool" }] },
+      tool: { name: "check_authorized_rep", input: { member_id: MEMBER, caller_first_name: "James" }, result: { authorized: true, relationship: "spouse", on_file_since: "2025-03-14", verify_with: "caller_dob" } },
+      downstream: [{ service: "claims-api", method: "GET", path: `/members/${MEMBER}/authorized-reps?first_name=James`, status: 200, body: { reps: [{ first_name: "James", relationship: "spouse", on_file_since: "2025-03-14" }], verify_with: "caller_dob" } }],
+      decision: { point: "identity", decision: "authorized_rep_found_pending_dob", rule_id: "ID-3", uncertainty: "none", evidence: ev("00:09", "00:16") },
       claims: [
-        { id: "c1", text: "The caller is asking about his wife, so he is not the member.", cites: [{ kind: "turn", ref: "00:09" }] },
-        { id: "c2", text: "Nothing about her plan can be shared until he is confirmed as an authorized representative.", cites: [{ kind: "rule", ref: "ID-3" }, { kind: "claim", ref: "c1" }] },
-        { id: "c3", text: "James is on file as her authorized representative (spouse); date of birth still needs checking.", cites: [{ kind: "tool", ref: "check_authorized_rep.authorized" }, { kind: "tool", ref: "check_authorized_rep.verify_with" }, { kind: "claim", ref: "c2" }] },
+        c("c1", "The caller is asking about his wife, so he is not the member.", turn("00:09")),
+        c("c2", "Nothing about her plan can be shared until he is confirmed as an authorized representative.", rule("ID-3"), claim("c1")),
+        c("c3", "James is on file as her authorized representative (spouse); date of birth still needs checking.", tool("check_authorized_rep.authorized"), tool("check_authorized_rep.verify_with"), claim("c2")),
       ],
       say: "Thanks, James. You're listed as Sarah's authorized representative. Can you confirm your date of birth?",
     },
   },
   { who: "caller", at: "00:24", text: "March 3rd, 1984." },
-  { who: "caller", at: "00:30", text: "How many PT visits does she have left this year? And is Bayview Physical Therapy covered?" },
   {
-    who: "agent", at: "00:36",
+    who: "agent", at: "00:28",
     step: {
       thinking:
-        "DOB matches the rep record, so identity is done. Two questions: visits left, and Bayview's network status. " +
+        "He gave a date of birth. ID-4 says verify it against the rep record before any PHI. Send it to the verification endpoint rather than comparing it myself; " +
+        "only a match unlocks benefits details.",
+      tool: { name: "verify_rep_dob", input: { member_id: MEMBER, rep_first_name: "James", dob: "1984-03-03" }, result: { match: true, method: "rep_record" } },
+      downstream: [{ service: "claims-api", method: "POST", path: `/members/${MEMBER}/authorized-reps/verify`, status: 200, body: { match: true, method: "rep_record" } }],
+      decision: { point: "dob_verification", decision: "rep_verified", rule_id: "ID-4", uncertainty: "none", evidence: ev("00:24", "00:28") },
+      claims: [
+        c("c1", "The caller supplied a date of birth for verification.", turn("00:24")),
+        c("c2", "The date of birth matches the representative record.", tool("verify_rep_dob.match"), claim("c1")),
+        c("c3", "Identity is verified, so benefits details may now be shared with him.", rule("ID-4"), rule("ID-3"), claim("c2")),
+      ],
+      say: "Thank you, that matches. What can I help you with for Sarah's physical therapy?",
+    },
+  },
+  { who: "caller", at: "00:34", text: "How many PT visits does she have left this year? And is Bayview Physical Therapy covered?" },
+  {
+    who: "agent", at: "00:40",
+    step: {
+      thinking:
+        "Two questions: visits left, and Bayview's network status. " +
         "Benefits lookup returns two usage counts: 12 visits on Silver PPO through June, 6 on Gold PPO since July. Limit is 20 per calendar year. " +
         "Do the counts reset on a plan change? Plan document says calendar-year limits carry across plan changes, so used = 18, remaining = 2. " +
         "But the system shows two separate numbers, which is exactly the BEN-2 case: give the confirmed number and flag the conflict, don't present it as certain.",
-      tool: {
-        name: "lookup_benefits",
-        input: { member_id: MEMBER, benefit: "physical_therapy", year: 2026 },
-        result: {
-          annual_limit_visits: 20,
-          usage: [{ plan: "Silver PPO", through: "2026-06-30", visits: 12 }, { plan: "Gold PPO", from: "2026-07-01", visits: 6 }],
-          plan_note: "Calendar-year visit limits carry across plan changes.",
-        },
-      },
-      decision: { point: "visits_remaining", decision: "remaining_2_flagged", rule_id: "BEN-2", uncertainty: "conflicting_counts", evidence: [{ at: "00:30", speaker: "caller" }, { at: "00:36", speaker: "tool" }] },
+      tool: { name: "lookup_benefits", input: { member_id: MEMBER, benefit: "physical_therapy", year: 2026 }, result: BENEFITS },
+      downstream: [{ service: "claims-api", method: "GET", path: `/members/${MEMBER}/benefits?type=physical_therapy&year=2026`, status: 200, body: BENEFITS }],
+      decision: { point: "visits_remaining", decision: "remaining_2_flagged", rule_id: "BEN-2", uncertainty: "conflicting_counts", evidence: ev("00:34", "00:40") },
       claims: [
-        { id: "c1", text: "The date of birth matches the representative record, so identity is verified.", cites: [{ kind: "turn", ref: "00:24" }, { kind: "tool", ref: "check_authorized_rep.verify_with" }] },
-        { id: "c2", text: "12 visits were used on Silver PPO through June.", cites: [{ kind: "tool", ref: "lookup_benefits.usage[0].visits" }] },
-        { id: "c3", text: "6 visits were used on Gold PPO since July.", cites: [{ kind: "tool", ref: "lookup_benefits.usage[1].visits" }] },
-        { id: "c4", text: "Limits carry across plan changes, so 18 of 20 are used and 2 remain.", cites: [{ kind: "tool", ref: "lookup_benefits.plan_note" }, { kind: "tool", ref: "lookup_benefits.annual_limit_visits" }, { kind: "claim", ref: "c2" }, { kind: "claim", ref: "c3" }] },
-        { id: "c5", text: "Two separate counts means stating the confirmed number and flagging the conflict.", cites: [{ kind: "rule", ref: "BEN-2" }, { kind: "claim", ref: "c4" }] },
+        c("c1", "12 visits were used on Silver PPO through June.", tool("lookup_benefits.usage[0].visits")),
+        c("c2", "6 visits were used on Gold PPO since July.", tool("lookup_benefits.usage[1].visits")),
+        c("c3", "Limits carry across plan changes, so 18 of 20 are used and 2 remain.", tool("lookup_benefits.plan_note"), tool("lookup_benefits.annual_limit_visits"), claim("c1"), claim("c2")),
+        c("c4", "Two separate counts means stating the confirmed number and flagging the conflict.", rule("BEN-2"), claim("c3")),
       ],
       say: "She has 2 visits left this year. Her usage shows up across two plans, so I've flagged it for our team to double-check.",
     },
   },
   {
-    who: "agent", at: "00:48",
+    who: "agent", at: "00:52",
     step: {
       thinking:
-        "Second question: Bayview. BEN-5 says always state in-network vs out-of-network cost, so check network status rather than just saying covered or not.",
-      tool: {
-        name: "check_network",
-        input: { member_id: MEMBER, provider: "Bayview Physical Therapy" },
-        result: { in_network: false, member_cost_out_of_network: "40% coinsurance", member_cost_in_network: "$30 copay" },
-      },
-      decision: { point: "network_cost", decision: "out_of_network_costs_stated", rule_id: "BEN-5", uncertainty: "none", evidence: [{ at: "00:30", speaker: "caller" }, { at: "00:48", speaker: "tool" }] },
+        "Second question: Bayview. BEN-5 says always state in-network vs out-of-network cost, so check network status and both cost shares rather than just saying covered or not.",
+      tool: { name: "check_network", input: { member_id: MEMBER, provider: "Bayview Physical Therapy" }, result: { in_network: false, member_cost_out_of_network: "40% coinsurance", member_cost_in_network: "$30 copay" } },
+      downstream: [
+        { service: "provider-directory", method: "GET", path: "/providers?name=Bayview%20Physical%20Therapy", status: 200, body: { name: "Bayview Physical Therapy", in_network: false } },
+        { service: "claims-api", method: "GET", path: `/members/${MEMBER}/cost-share?benefit=physical_therapy`, status: 200, body: { in_network: "$30 copay", out_of_network: "40% coinsurance" } },
+      ],
+      decision: { point: "network_status", decision: "out_of_network_costs_stated", rule_id: "BEN-5", uncertainty: "none", evidence: ev("00:34", "00:52") },
       claims: [
-        { id: "c1", text: "Cost has to be stated for both in-network and out-of-network, not just coverage.", cites: [{ kind: "rule", ref: "BEN-5" }, { kind: "turn", ref: "00:30" }] },
-        { id: "c2", text: "Bayview is out of network.", cites: [{ kind: "tool", ref: "check_network.in_network" }] },
-        { id: "c3", text: "Out of network is 40% coinsurance versus a $30 copay in network.", cites: [{ kind: "tool", ref: "check_network.member_cost_out_of_network" }, { kind: "tool", ref: "check_network.member_cost_in_network" }, { kind: "claim", ref: "c1" }, { kind: "claim", ref: "c2" }] },
+        c("c1", "Cost has to be stated for both in-network and out-of-network, not just coverage.", rule("BEN-5"), turn("00:34")),
+        c("c2", "Bayview is out of network.", tool("check_network.in_network")),
+        c("c3", "Out of network is 40% coinsurance versus a $30 copay in network.", tool("check_network.member_cost_out_of_network"), tool("check_network.member_cost_in_network"), claim("c1"), claim("c2")),
       ],
       say: "Bayview is out of network, so she'd pay 40% coinsurance there, versus a $30 copay at an in-network clinic.",
     },
   },
-  { who: "caller", at: "01:02", text: "Can you just approve ten more visits for her?" },
+  { who: "caller", at: "01:04", text: "Oh. Is there anything in network near us? We're in Riverside." },
   {
-    who: "agent", at: "01:07",
+    who: "agent", at: "01:10",
+    step: {
+      thinking:
+        "NET-1: Bayview is out of network, so offer in-network alternatives. Search the directory for physical therapy near Riverside on her Gold PPO network. " +
+        "Give at most two options, with distance, so it stays easy to follow on the phone.",
+      tool: { name: "find_in_network_providers", input: { member_id: MEMBER, specialty: "physical_therapy", near: "Riverside", limit: 2 }, result: ALTERNATIVES },
+      downstream: [{ service: "provider-directory", method: "GET", path: "/providers?specialty=physical_therapy&near=Riverside&network=gold-ppo&limit=2", status: 200, body: ALTERNATIVES }],
+      decision: { point: "in_network_alternatives", decision: "two_alternatives_offered", rule_id: "NET-1", uncertainty: "none", evidence: ev("01:04", "01:10") },
+      claims: [
+        c("c1", "The caller wants an in-network option near Riverside.", turn("01:04")),
+        c("c2", "Out-of-network status triggers offering alternatives.", rule("NET-1"), claim("c1")),
+        c("c3", "Riverside Rehab Partners is in network, 1.2 miles away.", tool("find_in_network_providers.providers[0].in_network"), tool("find_in_network_providers.providers[0].distance_tenths_mi")),
+        c("c4", "Lakeview PT is in network, 3.4 miles away.", tool("find_in_network_providers.providers[1].in_network"), tool("find_in_network_providers.providers[1].distance_tenths_mi")),
+      ],
+      say: "Two in-network clinics are close to Riverside: Riverside Rehab Partners, about a mile away, and Lakeview PT, about three miles. Both are a $30 copay.",
+    },
+  },
+  { who: "caller", at: "01:22", text: "She'll probably need about ten more visits. What would that cost?" },
+  {
+    who: "agent", at: "01:28",
+    step: {
+      thinking:
+        "Ten visits, but only 2 remain under the limit. COST-1: separate covered from non-covered and say it's an estimate. Ask claims for an estimate at an in-network clinic: " +
+        "2 covered at the $30 copay, 8 beyond the limit not covered unless prior auth is approved, estimated allowed amount around $95 each.",
+      tool: { name: "estimate_cost", input: { member_id: MEMBER, service: "pt_visit", visits: 10, network: "in" }, result: ESTIMATE },
+      downstream: [{ service: "claims-api", method: "GET", path: `/members/${MEMBER}/cost-estimate?service=pt_visit&visits=10&network=in`, status: 200, body: ESTIMATE }],
+      decision: { point: "cost_estimate", decision: "estimate_split_covered_uncovered", rule_id: "COST-1", uncertainty: "estimate", evidence: ev("01:22", "01:28") },
+      claims: [
+        c("c1", "Two of the ten visits fall within the remaining limit at a $30 copay.", tool("estimate_cost.covered_visits"), tool("estimate_cost.covered_copay_usd")),
+        c("c2", "Eight visits are beyond the limit and not covered without prior authorization.", tool("estimate_cost.uncovered_visits")),
+        c("c3", "The uncovered visits are estimated at $95 each, $760 in total, so $820 overall.", tool("estimate_cost.est_allowed_usd_per_visit"), tool("estimate_cost.est_total_usd"), claim("c1"), claim("c2")),
+        c("c4", "The figure must be presented as an estimate with covered and uncovered parts separated.", rule("COST-1"), claim("c3")),
+      ],
+      say: "At an in-network clinic, her 2 remaining visits are $30 each. The other 8 aren't covered unless a prior authorization is approved; those are estimated at about $95 each. That's an estimate, not a guarantee.",
+    },
+  },
+  { who: "caller", at: "01:44", text: "Can you just approve ten more visits for her?" },
+  {
+    who: "agent", at: "01:49",
     step: {
       thinking:
         "Request to approve more visits. PA-0: I can't approve care. Don't hint that it will be approved. " +
         "Offer to start a prior auth request so her provider can submit notes.",
-      tool: {
-        name: "create_pa_request_task",
-        input: { member_id: MEMBER, benefit: "physical_therapy", requested_visits: 10 },
-        result: { task_id: "TASK-88412", routed_to: "utilization_management", provider_notified: true },
-      },
-      decision: { point: "approval_request", decision: "declined_pa_request_started", rule_id: "PA-0", uncertainty: "out_of_scope", evidence: [{ at: "01:02", speaker: "caller" }, { at: "01:07", speaker: "tool" }] },
+      tool: { name: "create_pa_request_task", input: { member_id: MEMBER, benefit: "physical_therapy", requested_visits: 10 }, result: { task_id: "TASK-88412", routed_to: "utilization_management", provider_notified: true } },
+      downstream: [{ service: "um-task-api", method: "POST", path: "/tasks", status: 201, body: { task_id: "TASK-88412", routed_to: "utilization_management", provider_notified: true } }],
+      decision: { point: "approval_request", decision: "declined_pa_request_started", rule_id: "PA-0", uncertainty: "out_of_scope", evidence: ev("01:44", "01:49") },
       claims: [
-        { id: "c1", text: "The caller asks for ten more visits to be approved.", cites: [{ kind: "turn", ref: "01:02" }] },
-        { id: "c2", text: "The agent cannot approve care.", cites: [{ kind: "rule", ref: "PA-0" }, { kind: "claim", ref: "c1" }] },
-        { id: "c3", text: "A prior authorization request was opened and routed to utilization management.", cites: [{ kind: "tool", ref: "create_pa_request_task.task_id" }, { kind: "tool", ref: "create_pa_request_task.routed_to" }, { kind: "claim", ref: "c2" }] },
+        c("c1", "The caller asks for ten more visits to be approved.", turn("01:44")),
+        c("c2", "The agent cannot approve care.", rule("PA-0"), claim("c1")),
+        c("c3", "A prior authorization request was opened and routed to utilization management.", tool("create_pa_request_task.task_id"), tool("create_pa_request_task.routed_to"), claim("c2")),
       ],
       say: "I can't approve visits myself, but I've started a prior authorization request. Her therapist's office will get a notice to send her notes.",
     },
   },
-  { who: "caller", at: "01:20", text: "OK, thanks." },
-  { who: "agent", at: "01:22", text: "You're welcome, James. Take care." },
+  { who: "caller", at: "02:02", text: "And if they say no?" },
+  {
+    who: "agent", at: "02:06",
+    step: {
+      thinking:
+        "He's asking about a denial. APL-1: explain appeal rights and timelines. Pull the plan's appeal policy instead of quoting from memory: " +
+        "filing window and decision times for standard and expedited appeals.",
+      tool: { name: "get_appeal_policy", input: { member_id: MEMBER, plan: "gold-ppo" }, result: APPEALS },
+      downstream: [{ service: "um-task-api", method: "GET", path: "/policies/appeals?plan=gold-ppo", status: 200, body: APPEALS }],
+      decision: { point: "appeal_rights", decision: "appeal_rights_and_timelines_given", rule_id: "APL-1", uncertainty: "none", evidence: ev("02:02", "02:06") },
+      claims: [
+        c("c1", "The caller asks what happens if the request is denied.", turn("02:02")),
+        c("c2", "Appeals can be filed within 180 days of a denial.", tool("get_appeal_policy.window_days")),
+        c("c3", "Standard appeals are decided within 30 days and expedited ones within 72 hours.", tool("get_appeal_policy.standard_decision_days"), tool("get_appeal_policy.expedited_decision_hours")),
+        c("c4", "Possible denial triggers explaining appeal rights and timelines.", rule("APL-1"), claim("c1"), claim("c2"), claim("c3")),
+      ],
+      say: "If it's denied, you can appeal within 180 days. Standard appeals are decided within 30 days, and urgent ones within 72 hours.",
+    },
+  },
+  { who: "caller", at: "02:20", text: "Can you text me a summary of all this?" },
+  {
+    who: "agent", at: "02:24",
+    step: {
+      thinking:
+        "He asked for a text. TCPA-1: only with explicit consent on this call. His request is explicit consent for a one-time summary. " +
+        "Record the consent with the call reference, then send the summary to the mobile number on file.",
+      tool: { name: "send_sms_summary", input: { member_id: MEMBER, recipient: "rep:james", consent: "explicit_on_call", template: "pt_benefits_summary" }, result: { consent_id: "CNS-30117", message_id: "SMS-771902", to_last4: "4471", status: "queued" } },
+      downstream: [
+        { service: "crm-api", method: "POST", path: `/members/${MEMBER}/consents`, status: 201, body: { consent_id: "CNS-30117", channel: "sms", scope: "one_time_summary" } },
+        { service: "notify-api", method: "POST", path: "/messages", status: 202, body: { message_id: "SMS-771902", to_last4: "4471", status: "queued" } },
+      ],
+      decision: { point: "consent_to_text", decision: "consent_recorded_summary_sent", rule_id: "TCPA-1", uncertainty: "none", evidence: ev("02:20", "02:24") },
+      claims: [
+        c("c1", "The caller explicitly asked for a text summary on this call.", turn("02:20")),
+        c("c2", "Texting requires explicit consent given on this call, which his request provides.", rule("TCPA-1"), claim("c1")),
+        c("c3", "Consent was recorded and the summary was queued to the number ending 4471.", tool("send_sms_summary.consent_id"), tool("send_sms_summary.to_last4"), claim("c2")),
+      ],
+      say: "Done. I've texted a summary to the number ending in 4471.",
+    },
+  },
+  { who: "caller", at: "02:36", text: "OK, thanks. That's everything." },
+  {
+    who: "agent", at: "02:39",
+    step: {
+      thinking:
+        "Caller is done. DOC-1: log the call with disposition codes before ending: benefits inquiry answered, PA request opened, SMS summary sent. Then close warmly.",
+      tool: { name: "log_interaction", input: { member_id: MEMBER, dispositions: ["benefits_inquiry", "pa_request_opened", "sms_summary_sent"], pa_task_id: "TASK-88412" }, result: { interaction_id: "INT-5520194", status: "logged" } },
+      downstream: [{ service: "crm-api", method: "POST", path: "/interactions", status: 201, body: { interaction_id: "INT-5520194", status: "logged" } }],
+      decision: { point: "close", decision: "call_logged_and_closed", rule_id: "DOC-1", uncertainty: "none", evidence: ev("02:36", "02:39") },
+      claims: [
+        c("c1", "The caller has no further questions.", turn("02:36")),
+        c("c2", "The call was logged with its disposition codes before closing.", tool("log_interaction.interaction_id"), rule("DOC-1"), claim("c1")),
+      ],
+      say: "You're welcome, James. Take care.",
+    },
+  },
 ];
 
 export const STEPS: Step[] = SCRIPT.flatMap((l) => (l.who === "agent" && l.step ? [l.step] : []));
+
+/** Which step each injectable failure hits. */
+export const FAULT_STEPS = { llm_timeout: 2, tool_error: 3, signer_crash: 6 } as const;
 
 /** Decision record schema: enums / identifiers only. member_id is committed, not shown. */
 export const DECISION_SPEC: DecisionSpec = {
   schema: "decision-record/v0",
   fields: {
-    point: ["identity", "visits_remaining", "network_cost", "approval_request"],
-    decision: ["authorized_rep_found_pending_dob", "remaining_2_flagged", "out_of_network_costs_stated", "declined_pa_request_started"],
+    point: STEPS.map((s) => s.decision.point),
+    decision: STEPS.map((s) => s.decision.decision),
     rule_id: Object.keys(RULES),
-    uncertainty: ["none", "conflicting_counts", "out_of_scope"],
+    uncertainty: ["none", "conflicting_counts", "out_of_scope", "estimate"],
     evidence: { list: { at: "id", speaker: ["caller", "tool"] } },
     prompt_version: [PROMPT_VERSION],
     member_id: "id",
@@ -173,6 +308,8 @@ async function retry<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
   }
 }
 
+export const TOOL_NAMES = [...new Set(STEPS.map((s) => s.tool.name))];
+
 export class MemberLineAgent {
   constructor(
     private readonly llm: LlmClient,
@@ -187,7 +324,7 @@ export class MemberLineAgent {
         system: PROMPT,
         metadata: { prompt_version: PROMPT_VERSION, rules: Object.keys(RULES) },
         messages: history.map((t) => ({ role: t.who === "caller" ? "user" : "assistant", content: t.text })),
-        tools: TOOL_SCHEMAS,
+        tools: [...TOOL_NAMES, "record_decision"].map((name) => ({ name, input_schema: { type: "object" } })),
       }),
     );
     const blocks = res.content as Block[];
@@ -205,72 +342,55 @@ export class MemberLineAgent {
   }
 }
 
-const TOOL_SCHEMAS = [
-  { name: "check_authorized_rep", input_schema: { type: "object" } },
-  { name: "lookup_benefits", input_schema: { type: "object" } },
-  { name: "check_network", input_schema: { type: "object" } },
-  { name: "create_pa_request_task", input_schema: { type: "object" } },
-  { name: "record_decision", input_schema: { type: "object" } },
-];
-
 // ── Tools over downstream services ──────────────────────────────────
 
-type Http = { get(path: string): Promise<{ status: number; body: Record<string, unknown> }>; post(path: string, body: unknown, opts?: { idempotencyKey?: string }): Promise<{ status: number; body: Record<string, unknown> }> };
+type Http = {
+  get(path: string): Promise<HttpResult>;
+  post(path: string, body: unknown, opts?: { idempotencyKey?: string }): Promise<HttpResult>;
+};
+type Clients = Record<Downstream["service"], Http>;
 
 /** Failure injection for the mocks (not part of agent code). */
 export interface Faults {
   toolErrorOnce?: string;
 }
 
-function ok(r: { status: number; body: Record<string, unknown> }, what: string): Record<string, unknown> {
-  if (r.status >= 400) throw new Error(`${what} returned ${r.status}`);
-  return r.body;
+/**
+ * Each tool makes its step's downstream calls through the (wrapped) service
+ * clients and returns the tool result. Tool code knows nothing about tracing.
+ */
+export function makeTools(clients: Clients, faults: Faults = {}): Tools {
+  const tools: Tools = {};
+  for (const s of STEPS) {
+    tools[s.tool.name] = async (input) => {
+      if (faults.toolErrorOnce === s.tool.name) {
+        faults.toolErrorOnce = undefined;
+        throw Object.assign(new Error(`${s.tool.name}: upstream schema mismatch`), { kind: "tool_error" });
+      }
+      for (const d of s.downstream) {
+        const client = clients[d.service];
+        const r = d.method === "GET" ? await client.get(d.path) : await client.post(d.path, input, { idempotencyKey: `${s.tool.name}:${input.member_id}` });
+        if (r.status >= 400) throw new Error(`${d.service} returned ${r.status}`);
+      }
+      return s.tool.result;
+    };
+  }
+  return tools;
 }
 
-export function makeTools(ds: { claims: Http; providers: Http; um: Http }, faults: Faults = {}): Tools {
-  const maybeFail = (name: string) => {
-    if (faults.toolErrorOnce === name) {
-      faults.toolErrorOnce = undefined;
-      throw Object.assign(new Error(`${name}: upstream schema mismatch`), { kind: "tool_error" });
-    }
-  };
-  return {
-    async check_authorized_rep(i) {
-      maybeFail("check_authorized_rep");
-      return ok(await ds.claims.get(`/members/${i.member_id}/authorized-reps?first_name=${i.caller_first_name}`), "claims-api");
-    },
-    async lookup_benefits(i) {
-      maybeFail("lookup_benefits");
-      return ok(await ds.claims.get(`/members/${i.member_id}/benefits?type=${i.benefit}&year=${i.year}`), "claims-api");
-    },
-    async check_network(i) {
-      maybeFail("check_network");
-      const p = ok(await ds.providers.get(`/providers?name=${encodeURIComponent(String(i.provider))}`), "provider-directory");
-      const c = ok(await ds.claims.get(`/members/${i.member_id}/cost-share?benefit=physical_therapy`), "claims-api");
-      return { in_network: p.in_network, member_cost_out_of_network: c.out_of_network, member_cost_in_network: c.in_network };
-    },
-    async create_pa_request_task(i) {
-      maybeFail("create_pa_request_task");
-      const key = `pa-${i.member_id}-${i.benefit}-${i.requested_visits}`;
-      return ok(await ds.um.post("/tasks", { type: "prior_auth", ...i }, { idempotencyKey: key }), "um-task-api");
-    },
-  };
+function routesFor(service: Downstream["service"]) {
+  const table = new Map<string, HttpResult>();
+  for (const s of STEPS) for (const d of s.downstream) if (d.service === service) table.set(`${d.method} ${d.path}`, { status: d.status, body: d.body });
+  return (method: string, path: string) => table.get(`${method} ${path}`);
 }
 
-function downstreamRoutes() {
-  const [, benefits, network, pa] = STEPS.map((s) => s.tool.result);
-  const claims = (m: string, path: string) => {
-    if (m !== "GET") return undefined;
-    if (path.includes("/authorized-reps")) return { status: 200, body: STEPS[0]!.tool.result };
-    if (path.includes("/benefits")) return { status: 200, body: benefits! };
-    if (path.includes("/cost-share")) return { status: 200, body: { in_network: network!.member_cost_in_network, out_of_network: network!.member_cost_out_of_network } };
-    return undefined;
-  };
-  const providers = (m: string, path: string) =>
-    m === "GET" && path.startsWith("/providers") ? { status: 200, body: { name: "Bayview Physical Therapy", in_network: network!.in_network } } : undefined;
-  const um = (m: string, path: string) => (m === "POST" && path === "/tasks" ? { status: 201, body: pa! } : undefined);
-  return { claims, providers, um };
-}
+const LATENCY: Record<Downstream["service"], number> = {
+  "claims-api": 180,
+  "provider-directory": 120,
+  "um-task-api": 220,
+  "notify-api": 140,
+  "crm-api": 90,
+};
 
 /** Wrap once at construction: model client, tools, downstream clients. */
 export function buildAgent(opts: { wait: Wait; onGenerate?: (chunk: string) => void; faults?: Faults }): {
@@ -284,15 +404,13 @@ export function buildAgent(opts: { wait: Wait; onGenerate?: (chunk: string) => v
     decision: { ...s.decision, prompt_version: PROMPT_VERSION, member_id: MEMBER },
   }));
   const provider = createMockProvider({ responses, wait: opts.wait, onGenerate: opts.onGenerate });
-  const routes = downstreamRoutes();
-  const downstream = {
-    claims: traceDownstream("claims-api", new MockService(routes.claims, opts.wait, 180)),
-    providers: traceDownstream("provider-directory", new MockService(routes.providers, opts.wait, 120)),
-    um: traceDownstream("um-task-api", new MockService(routes.um, opts.wait, 220)),
-  };
+  const clients = {} as Clients;
+  for (const service of Object.keys(LATENCY) as Downstream["service"][]) {
+    clients[service] = traceDownstream(service, new MockService(routesFor(service), opts.wait, LATENCY[service]));
+  }
   const agent = new MemberLineAgent(
     traceLLM(provider.client, { method: "messages.create", map: anthropicMap }),
-    traceTools(makeTools(downstream, opts.faults)),
+    traceTools(makeTools(clients, opts.faults)),
   );
   return { agent, provider };
 }

@@ -9,7 +9,7 @@ import { verifyAerfChain } from "../src/chain.js";
 import { newSalt, saltedCommitment, saltedContextCommitment, SALTED_COMMITMENT_ALG, type Disclosure } from "../src/commitments.js";
 import { collectTraceLinks, formatTraceparent, type TraceLinkPlugin } from "./links.js";
 import { traceCall, traceTurn, type CallHooks, type Failure, type ReceiptRequest } from "./trace.js";
-import { AGENT, PROMPT_VERSION, RULES, SCRIPT, STEPS, buildAgent, type Faults, type Turn } from "./scenario.js";
+import { AGENT, PROMPT_VERSION, RULES, FAULT_STEPS, SCRIPT, STEPS, buildAgent, type Faults, type Turn } from "./scenario.js";
 import { checkIntegrity, reconcile, type Integrity, type Reconciliation } from "./integrity.js";
 import { auditPathSides, verifyConsistency } from "./log.js";
 import { authorityBase, type Sth } from "./authority.js";
@@ -120,7 +120,7 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
       context_hash: extra.context_hash,
       commitment_alg: extra.reasoning_hash || extra.context_hash ? SALTED_COMMITMENT_ALG : undefined,
     });
-    if (crashBeforeSign && step === 3 && action.startsWith("decide:")) {
+    if (crashBeforeSign && step === FAULT_STEPS.signer_crash && action.startsWith("decide:")) {
       // Injected: the signer dies with this request in flight. The client
       // respawns it and re-sends; the WAL keeps seq and chain continuous.
       crashBeforeSign = false;
@@ -370,8 +370,8 @@ export async function runCall(o: CallOptions): Promise<CallResult> {
           const step = stepNo++;
           currentStep = step;
           currentAt = line.at;
-          if (step === 1 && failures.has("llm_timeout")) provider.failNext = "timeout";
-          if (step === 2 && failures.has("tool_error")) faults.toolErrorOnce = line.step.tool.name;
+          if (step === FAULT_STEPS.llm_timeout && failures.has("llm_timeout")) provider.failNext = "timeout";
+          if (step === FAULT_STEPS.tool_error && failures.has("tool_error")) faults.toolErrorOnce = line.step.tool.name;
           let say: string;
           try {
             say = await traceTurn({ step, at: line.at }, () => agent.respond(history));
