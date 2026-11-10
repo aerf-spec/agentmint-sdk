@@ -82,3 +82,19 @@ The OpenAI and LangSmith shapes may be wrong for your setup. Override them with 
 
 An idle round trip over the unix socket costs about 350 µs (p50) on this VM. That wake-up jitter is
 most of the p99. The signer's own work is about 0.25 ms.
+
+Inside the demo server the hot path also covers the agent side's own work: building the evidence,
+the salted commitments, the leak scan and the stack snapshot. The server is busy streaming SSE at
+the same time. At `speed=10` the measured hot path is p50 about 1.3 ms, max about 2 ms per call.
+The `done` event reports these numbers for every call.
+
+## Authority protocol notes
+
+The production authority needs two things the original contract did not have:
+
+- **Bearer token:** `POST /v1/issuers` requires `AUTHORITY_TOKEN`.
+- **Timestamped batches:** each batch carries `batch_ts`, an ISO-8601 UTC time within ±5 min of the
+  authority's clock. The issuer signs `sha256(concat(leaf hashes) || utf8(batch_ts))`.
+
+The signer always sends `batch_ts`, re-signing on every retry. The local authority accepts batches
+with or without it.
