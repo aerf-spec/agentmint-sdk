@@ -14,7 +14,7 @@ import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, s
 import { join } from "node:path";
 import http from "node:http";
 import https from "node:https";
-import { canonicalBytes, sha256Hex } from "../src/kernel/canonical.js";
+import { canonicalBytes, canonicalize, rawNumber, sha256Hex } from "../src/kernel/canonical.js";
 import { generateKeyPair, keyId, privateKeyFromPem, privateKeyToPem, publicKeyToPem } from "../src/kernel/sign.js";
 import { buildAerfSignable, isoNowUtc, type LogInclusionProof } from "../src/receipt-aerf.js";
 import { computePolicyHash, evaluatePolicy, signPlan, type PlanInit, type PlanReceipt } from "../src/plan.js";
@@ -87,7 +87,9 @@ function replay(): void {
     } else if (e.t === "c") {
       chains.set(e.plan_id as string, { seq: e.seq as number, prev: e.h as string | undefined });
     } else if (e.t === "r") {
-      const r = e.r as Record<string, unknown>;
+      // Signed payload + signature; evidence is omitted from replies (the agent re-attaches it).
+      const { evidence: _e, ...head } = e.p as Record<string, unknown>;
+      const r: Record<string, unknown> = { ...head, signature: e.s as string };
       chains.set(r.plan_id as string, { seq: r.seq as number, prev: e.h as string });
       remember(e.k as string, { receipt: r, chain_hash: e.h as string, leaf_hash: e.l as string });
       unanchored.set(e.l as string, {
@@ -102,12 +104,6 @@ function replay(): void {
     }
   }
   resumed.unanchored = unanchored.size;
-}
-
-/** The response omits `evidence`: the agent sent it and re-attaches it (less IPC on the hot path). */
-function slim(s: Signed): Signed {
-  const { evidence: _e, ...head } = s.receipt;
-  return { ...s, receipt: head };
 }
 
 function remember(k: string, s: Signed): void {
@@ -156,12 +152,15 @@ interface SignReq {
 
 function signOne(m: SignReq): Signed & { sign_us: number; queue_depth: number; replay?: boolean } {
   const prior = done.get(m.k);
-  if (prior) return { ...slim(prior), sign_us: 0, queue_depth: queue.length, replay: true };
+  if (prior) return { ...prior, sign_us: 0, queue_depth: queue.length, replay: true };
   const t0 = process.hrtime.bigint();
   const p = plans.get(m.plan_id);
   if (!p) throw new Error(`unknown plan ${m.plan_id}`);
   const chain = chains.get(m.plan_id)!;
   const ev = evaluatePolicy(m.action, m.agent, p.plan);
+  // Canonicalize the evidence ONCE and splice it in verbatim: the size check,
+  // evidence_hash_sha512 and the signed payload all reuse these bytes.
+  const evidenceJson = canonicalize(m.evidence);
   const signable = buildAerfSignable(
     {
       planId: p.plan.id,
@@ -169,7 +168,7 @@ function signOne(m: SignReq): Signed & { sign_us: number; queue_depth: number; r
       action: m.action,
       inPolicy: ev.inPolicy,
       policyReason: ev.reason,
-      evidence: m.evidence,
+      evidence: rawNumber(evidenceJson) as unknown as Record<string, unknown>,
       previousReceiptHash: chain.prev,
       seq: chain.seq + 1,
       planSignature: p.plan.signature,
@@ -180,19 +179,22 @@ function signOne(m: SignReq): Signed & { sign_us: number; queue_depth: number; r
     },
     KEY_ID,
   );
-  // Canonicalize once: the same bytes are signed, chain-hashed and log-leafed.
-  const payload = canonicalBytes(signable);
-  const receipt: Record<string, unknown> = { ...signable, signature: edSign(null, payload, key).toString("hex") };
+  // The same payload bytes are signed, chain-hashed and log-leafed.
+  const payloadJson = canonicalize(signable);
+  const payload = Buffer.from(payloadJson, "utf8");
+  const signature = edSign(null, payload, key).toString("hex");
   const chain_hash = sha256Hex(payload);
   const leaf_hash = logLeafHash(payload);
   chain.prev = chain_hash;
   chain.seq += 1;
-  walLine({ t: "r", k: m.k, h: chain_hash, l: leaf_hash, r: receipt });
-  const s: Signed = { receipt, chain_hash, leaf_hash };
+  // WAL line embeds the canonical payload verbatim (no re-stringify of the receipt).
+  writeSync(wal, `{"t":"r","k":${JSON.stringify(m.k)},"h":"${chain_hash}","l":"${leaf_hash}","s":"${signature}","p":${payloadJson}}\n`);
+  const { evidence: _spliced, ...head } = signable;
+  const s: Signed = { receipt: { ...head, signature }, chain_hash, leaf_hash };
   remember(m.k, s);
   const sign_us = Number((process.hrtime.bigint() - t0) / 1000n);
-  enqueue({ leaf: leaf_hash, receipt_id: receipt.id as string, plan_id: p.plan.id, seq: chain.seq, queued_ns: process.hrtime.bigint().toString() });
-  return { ...slim(s), sign_us, queue_depth: queue.length };
+  enqueue({ leaf: leaf_hash, receipt_id: head.id as string, plan_id: p.plan.id, seq: chain.seq, queued_ns: process.hrtime.bigint().toString() });
+  return { ...s, sign_us, queue_depth: queue.length };
 }
 
 // ── Cold path: batching to the authority ────────────────────────────
