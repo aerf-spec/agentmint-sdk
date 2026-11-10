@@ -229,7 +229,7 @@ function summarizeRequest(path: string, body: unknown): string {
   if (path === "/v1/issuers") return "{ public_key_pem: <Ed25519 SPKI> }";
   if (path === "/v1/batches") {
     const n = Array.isArray(b?.leaf_hashes) ? b!.leaf_hashes.length : 0;
-    return `{ key_id: ${String(b?.key_id)}, leaf_hashes: [${n} × sha256], batch_signature: ${short(b?.batch_signature)} }`;
+    return `{ key_id: ${String(b?.key_id)}, leaf_hashes: [${n} × sha256], batch_ts: ${String(b?.batch_ts)}, batch_signature: ${short(b?.batch_signature)} }`;
   }
   return "";
 }
@@ -357,17 +357,22 @@ async function flush(): Promise<void> {
   const items = queue.splice(0, MAX_BATCH);
   const sealed_ns = process.hrtime.bigint().toString();
   const leaf_hashes = items.map((i) => i.leaf);
-  const batch_signature = edSign(null, batchDigest(leaf_hashes), key).toString("hex");
   const ctx: ApiCtx = { plans: [...new Set(items.map((i) => i.plan_id))], receipt_ids: items.map((i) => i.receipt_id) };
+  // One issuer signature per batch over sha256(leaves || batch_ts); re-signed per attempt
+  // so a retried batch carries a fresh timestamp inside the authority's window.
+  const signedBatch = () => {
+    const batch_ts = isoNowUtc();
+    return { key_id: KEY_ID, leaf_hashes, batch_ts, batch_signature: edSign(null, batchDigest(leaf_hashes, batch_ts), key).toString("hex") };
+  };
   let sent_ns = sealed_ns;
   try {
     await ensureRegistered(ctx);
     sent_ns = process.hrtime.bigint().toString();
-    let res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature }, ctx);
-    if (res.status === 403) {
+    let res = await request("POST", "/v1/batches", signedBatch(), ctx);
+    if (res.status === 403 || res.status === 401) {
       registered = false; // authority restarted and forgot us
       await ensureRegistered(ctx);
-      res = await request("POST", "/v1/batches", { key_id: KEY_ID, leaf_hashes, batch_signature }, ctx);
+      res = await request("POST", "/v1/batches", signedBatch(), ctx);
     }
     if (res.status !== 200) throw Object.assign(new Error(`POST /v1/batches -> ${res.status}`), { status: res.status });
     const done_ns = process.hrtime.bigint().toString();

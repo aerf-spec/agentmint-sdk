@@ -81,6 +81,20 @@ describe("Authority", () => {
     expect(auth.log.size).toBe(0);
   });
 
+  it("batch_ts: the signature covers the timestamp, which must be within ±5 min", () => {
+    const auth = new Authority();
+    const key = issuer();
+    const kid = auth.registerIssuer(key.pem);
+    const leaf_hashes = receipts(key, 2).map((r) => logLeafHash(signedPayloadBytes(r)));
+    const now = new Date().toISOString().replace(/\.(\d{3})Z$/, ".$1000+00:00");
+    const sig = (ts: string) => edSign(null, batchDigest(leaf_hashes, ts), key.privateKey).toString("hex");
+    expect(() => auth.appendBatch({ key_id: kid, leaf_hashes, batch_ts: now, batch_signature: sig("2026-01-01T00:00:00+00:00") })).toThrow(/batch_signature/);
+    const old = "2020-01-01T00:00:00.000000+00:00";
+    expect(() => auth.appendBatch({ key_id: kid, leaf_hashes, batch_ts: old, batch_signature: sig(old) })).toThrow(/window/);
+    expect(() => auth.appendBatch({ key_id: kid, leaf_hashes: [leaf_hashes[0]!, leaf_hashes[0]!], batch_ts: now, batch_signature: sig(now) })).toThrow(/duplicate/);
+    expect(auth.appendBatch({ key_id: kid, leaf_hashes, batch_ts: now, batch_signature: sig(now) }).sth.tree_size).toBe(2);
+  });
+
   it("serves the CONTRACT HTTP API; consistency proofs verify between two STHs", async () => {
     const auth = new Authority();
     const server = createServer((req, res) => {

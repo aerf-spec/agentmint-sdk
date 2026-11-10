@@ -25,12 +25,21 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const MAX_LEAVES = 4096;
 const MAX_BODY = 1 << 20;
 
-/** The digest an issuer signs for a batch: sha256 over the concatenated 32-byte leaf hashes. */
-export function batchDigest(leafHashes: readonly string[]): Buffer {
+/**
+ * The digest an issuer signs for a batch: sha256(concat(32-byte leaf hashes) || utf8(batch_ts)).
+ * batch_ts (ISO-8601 UTC, within ±5 min of the authority clock) binds the
+ * signature to a time window, as the production authority requires.
+ * Without batch_ts: sha256 over the leaves alone (original contract).
+ */
+export function batchDigest(leafHashes: readonly string[], batchTs?: string): Buffer {
   const h = createHash("sha256");
   for (const l of leafHashes) h.update(Buffer.from(l, "hex"));
+  if (batchTs !== undefined) h.update(Buffer.from(batchTs, "utf8"));
   return h.digest();
 }
+
+const TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/;
+const TS_SKEW_MS = 5 * 60_000;
 
 export class Authority {
   readonly log = new IncrementalLog();
@@ -57,7 +66,7 @@ export class Authority {
     return id;
   }
 
-  appendBatch(body: { key_id?: unknown; leaf_hashes?: unknown; batch_signature?: unknown }): BatchResponse {
+  appendBatch(body: { key_id?: unknown; leaf_hashes?: unknown; batch_signature?: unknown; batch_ts?: unknown }): BatchResponse {
     const pub = typeof body.key_id === "string" ? this.issuers.get(body.key_id) : undefined;
     if (!pub) throw new HttpError(403, "unknown issuer key_id");
     const leaves = body.leaf_hashes;
@@ -65,9 +74,17 @@ export class Authority {
       throw new HttpError(400, `leaf_hashes must hold 1..${MAX_LEAVES} entries`);
     }
     if (!leaves.every((l) => typeof l === "string" && HEX64.test(l))) throw new HttpError(400, "leaf hash malformed");
+    if (new Set(leaves).size !== leaves.length) throw new HttpError(400, "duplicate leaf in batch");
+    const ts = body.batch_ts;
+    if (ts !== undefined) {
+      if (typeof ts !== "string" || !TS_RE.test(ts)) throw new HttpError(400, "batch_ts must be an ISO-8601 UTC timestamp");
+      if (!(Math.abs(Date.parse(ts.replace("+00:00", "Z")) - Date.now()) <= TS_SKEW_MS)) {
+        throw new HttpError(400, "batch_ts outside the ±5 min window");
+      }
+    }
     const sig = body.batch_signature;
     if (typeof sig !== "string" || !/^[0-9a-f]{128}$/.test(sig) ||
-        !edVerify(null, batchDigest(leaves as string[]), pub, Buffer.from(sig, "hex"))) {
+        !edVerify(null, batchDigest(leaves as string[], ts as string | undefined), pub, Buffer.from(sig, "hex"))) {
       throw new HttpError(403, "batch_signature invalid");
     }
     const before = this.log.size;
