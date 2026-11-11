@@ -347,7 +347,7 @@ function renderChecks(){
 }
 function renderList(){
   $("#list").innerHTML=PKG.receipts.map((r,i)=>{const x=rowInfo(r);const st=rStatus(V.per[i]);
-    return`<div class="row ${x.minor?"minor":""} ${i===SEL?"sel":""}" data-sel="${i}" data-receipt="${esc(r.id)}"><span class="tm">${mmss(r)}</span><span><span class="dc">${esc(x.d)}</span><br><span class="rl">${esc(x.rule)}</span></span><span class="st">${MK[st]||""}</span></div>`}).join("")||'<div class="empty" style="padding:20px">no receipts</div>';
+    return`<div class="row ${x.minor?"minor":""} ${i===SEL?"sel":""}" data-sel="${i}" data-receipt="${esc(r.id)}"><span class="tm">${mmss(r)}</span><span><span class="dc">${esc(x.minor?x.d:plainWords(x.d))}</span><br><span class="rl">${esc(x.rule)}</span></span><span class="st">${MK[st]||""}</span></div>`}).join("")||'<div class="empty" style="padding:20px">no receipts</div>';
   $("#tlines").innerHTML=(PKG.transcript||[]).map((t,i)=>`<div class="tline" data-at="${esc(t.at)}" data-ti="${i}"><span class="at">${esc(t.at)}</span><span><span class="who">${t.who==="caller"?"caller":"ava"}</span>${esc(t.text)}</span></div>`).join("");
 }
 
