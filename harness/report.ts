@@ -1,4 +1,4 @@
-// Renders a harness run as plain Markdown and as a plain, large-type HTML page.
+// Renders a harness run as plain Markdown and as a large-type HTML page in the agentmint style.
 import type { Scenario } from "./run.js";
 
 export interface Cite { kind: string; ref: string; value: unknown; resolved: boolean }
@@ -90,6 +90,7 @@ export function renderHtml(r: Report): string {
     const d = r.decisions[s.n - 1]!;
     const claims = d.claims.map((c) => `<li>${esc(c.text)}${c.cites.length ? `<div class="ev">${c.cites.map((x) => `<span class="${x.resolved ? "" : "bad"}">${esc(citeText(x))}</span>`).join("")}</div>` : ""}</li>`).join("");
     return `<section class="step decision" data-i="${i}">
+  <p class="kick">Decision ${d.n}</p>
   <h3>${esc(words(d.decision))}</h3>
   <p class="q">${esc(d.question)}</p>
   <p><b>Rule ${esc(d.rule_id)}.</b> ${esc(d.rule_text)}</p>
@@ -98,36 +99,60 @@ export function renderHtml(r: Report): string {
   <ol>${claims}</ol>
   ${d.uncertainty !== "none" ? `<p class="caveat"><b>Caveat:</b> ${esc(words(d.uncertainty))}</p>` : ""}
   ${d.thinking ? `<details><summary>Model's thinking</summary><p>${esc(d.thinking)}</p></details>` : ""}
-  <p class="receipt ${d.own_verified ? "ok" : "bad"}">${d.own_verified ? "✓ Receipt signed and logged" : "✗ Receipt not verified"}${d.receipt_id ? ` <code>${esc(d.receipt_id.split("-").pop())}</code>` : ""}</p>
+  <p class="receipt"><span class="status ${d.own_verified ? "ok" : "bad"}">${d.own_verified ? "✓ Receipt signed and logged" : "✗ Receipt not verified"}</span>${d.receipt_id ? `<code>${esc(d.receipt_id.split("-").pop())}</code>` : ""}</p>
 </section>`;
   });
-  const checks = r.checks.map((c) => `<li class="${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"} ${esc(c.label)}${c.ok ? "" : ` (${esc(c.detail)})`}</li>`).join("");
+  const checks = r.checks.map((c) => `<li><span class="${c.ok ? "ok" : "bad"}">${c.ok ? "✓" : "✗"}</span> ${esc(c.label)}${c.ok ? "" : ` <span class="bad">(${esc(c.detail)})</span>`}</li>`).join("");
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(r.scenario.title)}</title>
 <style>
-:root { --bg:#fffdf8; --fg:#1a1a1a; --mute:#555; --line:#ddd6c8; --card:#fff; --ok:#1d6b2f; --bad:#a3221b; --hl:#f3ecdc; }
-@media (prefers-color-scheme: dark) { :root { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --ok:#7fd18f; --bad:#ff8a80; --hl:#2a2822; } }
+:root { --bg:#fcfcfb; --ink:#1c2530; --ink-2:#3c4654; --muted:#6b7280; --faint:#9aa1ab; --line:#e6e8eb; --code-bg:#f3f4f6; --card:#fff; --allow:#1a7350; --block:#b0392f;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg:#14171b; --ink:#e6e9ed; --ink-2:#c3c9d1; --muted:#9aa3ae; --faint:#7b838e; --line:#2b3138; --code-bg:#1d2228; --card:#181c21; --allow:#5cc597; --block:#f08a80; color-scheme: dark; } }
 * { box-sizing: border-box; }
-body { margin:0; background:var(--bg); color:var(--fg); font: 21px/1.6 Georgia, "Times New Roman", serif; }
-main { max-width: 760px; margin: 0 auto; padding: 32px 16px 96px; }
-h1 { font-size: 34px; line-height:1.2; margin: 0 0 8px; } h2 { font-size: 26px; margin: 40px 0 12px; } h3 { font-size: 24px; margin: 0 0 8px; text-transform: capitalize; }
-p { margin: 8px 0; } .lead { color: var(--mute); }
-.result { font-size: 28px; font-weight: bold; } .ok { color: var(--ok); } .bad { color: var(--bad); }
-ul.checks { list-style: none; padding: 0; } ul.checks li { padding: 4px 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin:0; background:var(--bg); color:var(--ink); font: 20px/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-wrap: anywhere; }
+main { max-width: 46rem; margin: 0 auto; padding: clamp(40px, 8vw, 72px) 16px 96px; }
+.note { font-size: 16px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); margin: 0 0 14px; }
+h1 { font-size: clamp(30px, 5vw, 36px); line-height:1.2; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 10px; }
+h2 { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin: 48px 0 12px; }
+h3 { font-size: 24px; line-height: 1.3; font-weight: 600; margin: 4px 0 12px; }
+h3::first-letter { text-transform: uppercase; }
+p { margin: 8px 0; } .lead { color: var(--muted); font-size: 21px; line-height: 1.5; }
+b { font-weight: 600; }
+.status, .result { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.result { display: inline-block; margin: 20px 0 4px; padding: 4px 12px; border: 1px solid currentColor; border-radius: 999px; }
+.ok { color: var(--allow); } .bad { color: var(--block); }
+ul.checks { list-style: none; padding: 0; margin: 8px 0 0; border: 1px solid var(--line); border-radius: 8px; background: var(--card); }
+ul.checks li { padding: 10px 16px; border-top: 1px solid var(--line); font-size: 18px; }
+ul.checks li:first-child { border-top: 0; }
 .scrub { position: sticky; top: 0; background: var(--bg); padding: 12px 0; border-bottom: 1px solid var(--line); display:flex; gap:12px; align-items:center; z-index:1; }
-.scrub input { flex: 1; height: 32px; } .scrub button { font: inherit; padding: 4px 14px; border:1px solid var(--line); background:var(--card); color:var(--fg); border-radius:6px; cursor:pointer; }
-.step { margin: 16px 0; } .step.hidden { display: none; } .step.current { outline: 3px solid var(--fg); outline-offset: 6px; border-radius: 4px; }
-.say b { display:inline-block; min-width: 88px; } .say.agent { color: var(--fg); } .say.caller { color: var(--mute); }
-.decision { background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--fg); border-radius: 8px; padding: 20px 24px; }
-.q { font-style: italic; } .maps { color: var(--mute); }
-ol { padding-left: 28px; } ol li { margin: 10px 0; }
-.ev span { display: block; color: var(--mute); padding-left: 16px; border-left: 3px solid var(--line); margin-top: 4px; }
-.ev span.bad { color: var(--bad); }
-details { margin: 12px 0; } summary { cursor: pointer; } details p { background: var(--hl); padding: 12px 16px; border-radius: 6px; }
-.receipt { font-weight: bold; margin-top: 16px; } code { font: inherit; font-weight: normal; color: var(--mute); }
-footer { margin-top: 48px; color: var(--mute); border-top: 1px solid var(--line); padding-top: 16px; }
+.scrub input { flex: 1; min-width: 0; height: 32px; font-size: 16px; accent-color: var(--ink); }
+.scrub button { font: inherit; font-size: 18px; padding: 6px 14px; border:1px solid var(--line); background:var(--card); color:var(--ink); border-radius:8px; cursor:pointer; }
+.scrub button:hover { border-color: var(--muted); }
+#n { font: 16px var(--mono); color: var(--muted); }
+.step { margin: 16px 0; } .step.hidden { display: none; } .step.current { outline: 2px solid var(--muted); outline-offset: 6px; border-radius: 8px; }
+.say b { display:inline-block; min-width: 88px; font-size: 16px; letter-spacing: 0.04em; color: var(--faint); }
+.say.agent { color: var(--ink-2); } .say.caller { color: var(--ink); }
+.decision { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 20px 24px; margin: 20px 0; }
+.kick { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin: 0; }
+.q { color: var(--ink-2); } .maps { color: var(--ink-2); }
+ol { list-style: none; counter-reset: why; padding: 0; margin: 8px 0; }
+ol li { counter-increment: why; position: relative; padding-left: 38px; margin: 12px 0; }
+ol li::before { content: counter(why); position: absolute; left: 0; top: 2px; width: 26px; height: 26px; border: 1px solid var(--line); border-radius: 50%; display: flex; align-items: center; justify-content: center; font: 16px/1 var(--mono); color: var(--muted); }
+.ev span { display: block; color: var(--muted); font-size: 18px; padding-left: 14px; border-left: 2px solid var(--line); margin-top: 4px; }
+.ev span.bad { color: var(--block); }
+.caveat { padding: 10px 14px; background: var(--code-bg); border-radius: 8px; }
+details { margin: 12px 0; } summary { cursor: pointer; color: var(--muted); font-size: 17px; } summary:hover { color: var(--ink); }
+details p { background: var(--code-bg); color: var(--ink-2); padding: 12px 16px; border-radius: 8px; font-size: 18px; white-space: pre-wrap; }
+.receipt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+code { font: 16px var(--mono); font-weight: normal; letter-spacing: 0; text-transform: none; color: var(--ink-2); background: var(--code-bg); padding: 2px 8px; border-radius: 4px; }
+footer { margin-top: 56px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted); font-size: 17px; }
+footer .id { font: 16px var(--mono); color: var(--ink-2); }
+@media (max-width: 600px) { body { font-size: 19px; } .decision { padding: 16px; } h3 { font-size: 22px; } ol li { padding-left: 34px; } }
 </style></head><body><main>
+<p class="note">Harness run</p>
 <h1>${esc(r.scenario.title)}</h1>
 <p class="lead">${esc(r.scenario.purpose)}</p>
 <p class="result ${r.passed ? "ok" : "bad"}">${r.passed ? "✓ Pass" : "✗ Fail"}</p>
@@ -135,7 +160,7 @@ footer { margin-top: 48px; color: var(--mute); border-top: 1px solid var(--line)
 <h2>The call</h2>
 <div class="scrub"><button id="prev" aria-label="Previous step">◀</button><input id="s" type="range" min="1" max="${steps.length}" value="${steps.length}" aria-label="Step"><button id="next" aria-label="Next step">▶</button><span id="n">${steps.length}/${steps.length}</span></div>
 ${steps.join("\n")}
-<footer>Call ${esc(r.call_id)}<br>${esc(r.model)} · prompt ${esc(r.prompt_version)} · ${r.totals.receipts} receipts${r.totals.usd == null ? "" : ` · $${r.totals.usd.toFixed(3)}`}<br>${esc(r.ran_at)}</footer>
+<footer>Call <span class="id">${esc(r.call_id)}</span><br>${esc(r.model)} · prompt ${esc(r.prompt_version)} · ${r.totals.receipts} receipts${r.totals.usd == null ? "" : ` · $${r.totals.usd.toFixed(3)}`}<br>${esc(r.ran_at)}</footer>
 </main>
 <script>
 const s = document.getElementById("s"), n = document.getElementById("n"), all = [...document.querySelectorAll(".step")];

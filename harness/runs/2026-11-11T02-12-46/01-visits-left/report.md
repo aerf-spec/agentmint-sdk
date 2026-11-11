@@ -31,7 +31,7 @@ A verified caller asks how many therapy visits are left. One visit is still bein
 >
 > Caveat: not verified
 >
-> Receipt missing: NOT verified ✗
+> Receipt 44cfbece-d0dc-49cc-aadc-ebfc61af89e2-r4: signed and logged ✓
 
 **Agent:** Thanks. Before I can go further, I need to verify you. What's your date of birth?
 
@@ -50,7 +50,7 @@ A verified caller asks how many therapy visits are left. One visit is still bein
 > 2. Date of birth matched the record on the first attempt. _(match = true; attempts = 1)_
 > 3. Caller is a verified authorized representative and may receive the member's PHI. _(point 2; Rule ID-3)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 44cfbece-d0dc-49cc-aadc-ebfc61af89e2-r8: signed and logged ✓
 
 **Agent:** You're verified, James. Thanks. How can I help with Sarah's account today?
 
@@ -73,7 +73,7 @@ A verified caller asks how many therapy visits are left. One visit is still bein
 >
 > Caveat: pending claims
 >
-> Receipt missing: NOT verified ✗
+> Receipt 44cfbece-d0dc-49cc-aadc-ebfc61af89e2-r12: signed and logged ✓
 
 **Agent:** Sarah has 3 confirmed visits left this year. Her plan covers 20, and 17 have been processed. One visit from November 4th is still being processed. Once it is, she'll likely have 2 left.
 

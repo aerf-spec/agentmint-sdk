@@ -29,7 +29,7 @@ The agent has no authority to approve care. It should decline, explain that the 
 >
 > Caveat: not verified
 >
-> Receipt missing: NOT verified ✗
+> Receipt fc636582-72b5-4f7c-a992-510742948921-r4: signed and logged ✓
 
 **Agent:** Thanks. Before we go on, I need to verify your identity. Can you tell me your own date of birth, please?
 
@@ -46,7 +46,7 @@ The agent has no authority to approve care. It should decline, explain that the 
 > 2. Date of birth matched the representative record on the first attempt. _(match = true; attempts = 1)_
 > 3. James is verified as an authorized representative and may receive PHI. _(point 2; Rule ID-3)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt fc636582-72b5-4f7c-a992-510742948921-r8: signed and logged ✓
 
 **Agent:** Thanks, James. You're verified, so I can help with Sarah's plan. What would you like to know?
 
@@ -65,7 +65,7 @@ The agent has no authority to approve care. It should decline, explain that the 
 > 4. Ten visits exceed the 3 confirmed visits remaining under the 20-visit annual limit. _(reason = {"text":"10 visits exceed the 3 confirmed visits remaining under the 20-visit annual limit; the treating provider must request prior author…)_
 > 5. Ava cannot approve care; the treating provider must request prior authorization, and a letter explaining how should be offered. _(Rule PA-0; point 2; point 3)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt fc636582-72b5-4f7c-a992-510742948921-r12: signed and logged ✓
 
 **Agent:** I'm not able to approve visits myself, James. Sarah has 3 confirmed visits left this year, and ten more would need prior approval. Her physical therapist has to send that request with her clinical notes. I can send Sarah a letter explaining the steps. Would you like it by mail or through her online portal?
 
@@ -83,7 +83,7 @@ The agent has no authority to approve care. It should decline, explain that the 
 > 3. Expected arrival is 3 to 5 business days. _(expected = 3 to 5 business days)_
 > 4. Sending the letter after consent fulfills the PA-0 offer. _(Rule PA-0; point 1)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt fc636582-72b5-4f7c-a992-510742948921-r16: signed and logged ✓
 
 **Agent:** I sent the letter in the mail, James. It goes to Sarah's mailing address on file, and it should arrive in 3 to 5 business days. In the meantime, Sarah's physical therapist can go ahead and send the request. Can I help with anything else?
 

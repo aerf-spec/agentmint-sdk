@@ -32,7 +32,7 @@ A made-up caller and member ID. In test mode there are no credential blockers, s
 >
 > Caveat: not verified
 >
-> Receipt missing: NOT verified ✗
+> Receipt 2a9ad8b5-c729-4f08-8d2f-1eee0fa5d523-r4: signed and logged ✓
 
 **Agent:** Thanks. Before I can go further, I need to check who I'm speaking with. What's your date of birth, please?
 
@@ -51,7 +51,7 @@ A made-up caller and member ID. In test mode there are no credential blockers, s
 > 2. Date of birth matched the record on the first attempt. _(match = true; attempts = 1)_
 > 3. Daniel is a verified authorized representative and may receive the member's PHI. _(point 2; Rule ID-3)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 2a9ad8b5-c729-4f08-8d2f-1eee0fa5d523-r8: signed and logged ✓
 
 **Agent:** You're verified, Daniel. Thanks. How can I help with your mother's plan today?
 
@@ -72,7 +72,7 @@ A made-up caller and member ID. In test mode there are no credential blockers, s
 > 4. 23 confirmed visits remain; no conflicting usage count reported. _(point 2; point 3; Rule BEN-2)_
 > 5. Chiropractic visits require prior authorization. _(authorizationRequired = true)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 2a9ad8b5-c729-4f08-8d2f-1eee0fa5d523-r12: signed and logged ✓
 
 > **Decision 4: in network cost stated**
 >
@@ -89,7 +89,7 @@ A made-up caller and member ID. In test mode there are no credential blockers, s
 > 4. Cost is an estimate based on the Gold PPO 2026 schedule. _(estimate_basis = Gold PPO 2026 schedule; Rule COST-1)_
 > 5. Out-of-network cost does not apply since the provider is in network; no alternatives needed. _(point 2; Rule NET-1)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 2a9ad8b5-c729-4f08-8d2f-1eee0fa5d523-r13: signed and logged ✓
 
 **Agent:** Your mother has 23 chiropractic visits left this year. She's used 7 of her 30. Her plan also needs approval ahead of time for chiropractic visits. And yes, Harbor Physical Therapy is in network. Her estimated cost there is a 30 dollar copay per visit, based on her 2026 Gold PPO plan.
 

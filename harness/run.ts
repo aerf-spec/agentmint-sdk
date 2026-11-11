@@ -176,6 +176,15 @@ export function buildReport(sc: Scenario, callId: string, events: Ev[], pkg: any
 
   const receiptByToolUse = new Map<string, string>();
   for (const r of of("tool_result")) if (r.name === "record_decision" && r.result?.receipt_id) receiptByToolUse.set(r.tool_use_id, r.result.receipt_id);
+  // The live backend streams no tool_result for record_decision, so match each decision to the
+  // next unused decide:<point> receipt signed in the same model step.
+  const usedSigned = new Set<string>();
+  const signedEvents = of("signed");
+  const matchSigned = (d: any): string | undefined => {
+    const hit = signedEvents.find((s) => !usedSigned.has(s.receipt_id) && s.step === d.step && s.receipt?.action === `decide:${d.decision_record.point}`);
+    if (hit) usedSigned.add(hit.receipt_id);
+    return hit?.receipt_id;
+  };
   const verifiedById = new Map(of("verified").map((v) => [v.receipt_id, v]));
 
   // Verify every receipt in the evidence package with the SDK, independently of the backend.
@@ -188,7 +197,7 @@ export function buildReport(sc: Scenario, callId: string, events: Ev[], pkg: any
   const chain = verifyAerfChain(receipts, { issuerPublicKey: pkg.issuer_public_key_pem });
 
   const decisions = of("decision").map((d, i) => {
-    const receiptId = receiptByToolUse.get(d.tool_use_id) ?? null;
+    const receiptId = receiptByToolUse.get(d.tool_use_id) ?? matchSigned(d) ?? null;
     const claims = (d.reasoning?.claims ?? d.claims ?? []).map((c: any) => ({
       id: c.id,
       text: typeof c.text === "string" ? c.text : "(withheld by leak scan)",
@@ -302,4 +311,4 @@ async function main() {
   if (reports.some((r) => !r.passed)) process.exitCode = 1;
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) await main();
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) main().catch((e) => { console.error(e); process.exit(1); });

@@ -31,7 +31,7 @@ The caller asks if a clinic is covered. It is out of network, so the agent shoul
 >
 > Caveat: not verified
 >
-> Receipt missing: NOT verified ✗
+> Receipt 4d843462-0586-43e9-8241-7b1f518ed33c-r4: signed and logged ✓
 
 **Agent:** Thanks. To protect the account, I need to check one more thing first. What's your date of birth, please?
 
@@ -50,7 +50,7 @@ The caller asks if a clinic is covered. It is out of network, so the agent shoul
 > 2. The date of birth matched the record on the first attempt. _(match = true; attempts = 1)_
 > 3. James is a verified authorized representative, so health information may be shared with him. _(Rule ID-3; point 2)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 4d843462-0586-43e9-8241-7b1f518ed33c-r8: signed and logged ✓
 
 **Agent:** Thanks, James. You're verified, so I can help with Sarah's plan. What would you like to know?
 
@@ -72,7 +72,7 @@ The caller asks if a clinic is covered. It is out of network, so the agent shoul
 > 5. Costs are estimates based on the Gold PPO 2026 schedule. _(estimate_basis = Gold PPO 2026 schedule; Rule COST-1)_
 > 6. Harbor Physical Therapy, 2 miles away, is a nearby in-network alternative. _(in_network_alternatives = [{"name":"Harbor Physical Therapy","distance_mi":2},{"name":"Eastside Rehab Partners","distance_mi":4}]; Rule NET-1; point 2)_
 >
-> Receipt missing: NOT verified ✗
+> Receipt 4d843462-0586-43e9-8241-7b1f518ed33c-r12: signed and logged ✓
 
 **Agent:** Bayview is out of network, so Sarah would pay 40 percent of the cost after her deductible. At an in-network clinic, she'd pay a 30 dollar copay per visit. Harbor Physical Therapy is 2 miles away and in network. These are estimates based on her 2026 Gold PPO plan.
 

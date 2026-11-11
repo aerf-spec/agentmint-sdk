@@ -5,38 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Network Log</title>
 <style>
-:root { --bg:#fffdf8; --fg:#1a1a1a; --mute:#555; --line:#ddd6c8; --card:#fff; --hl:#f3ecdc; --ok:#1d6b2f; --bad:#a3221b; --warn:#7a5200;
-  --serif: Georgia, "Times New Roman", serif; --mono: Menlo, Consolas, "Liberation Mono", monospace; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; } }
-:root[data-theme="dark"] { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; }
+:root { --bg:#fcfcfb; --ink:#1c2530; --ink-2:#3c4654; --muted:#6b7280; --faint:#9aa1ab; --line:#e6e8eb; --code-bg:#f3f4f6; --card:#fff; --allow:#1a7350; --block:#b0392f; --warn:#8a5a00;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#14171b; --ink:#e6e9ed; --ink-2:#c3c9d1; --muted:#9aa3ae; --faint:#7b838e; --line:#2b3138; --code-bg:#1d2228; --card:#181c21; --allow:#5cc597; --block:#f08a80; --warn:#e0b25c; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg:#14171b; --ink:#e6e9ed; --ink-2:#c3c9d1; --muted:#9aa3ae; --faint:#7b838e; --line:#2b3138; --code-bg:#1d2228; --card:#181c21; --allow:#5cc597; --block:#f08a80; --warn:#e0b25c; color-scheme: dark; }
 * { box-sizing: border-box; margin: 0; }
-body { background: var(--bg); color: var(--fg); font: 21px/1.6 var(--serif); overflow-wrap: anywhere; }
-a { color: inherit; }
-.app { max-width: 1100px; margin: 0 auto; padding: 28px 16px 64px; }
-header { display: flex; align-items: baseline; gap: 8px 24px; flex-wrap: wrap; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-.brand { font-size: 32px; font-weight: bold; }
-.stat { color: var(--mute); } .stat b { color: var(--fg); }
+body { background: var(--bg); color: var(--ink); font: 20px/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-wrap: anywhere; }
+a { color: var(--ink-2); text-underline-offset: 3px; }
+.app { max-width: 1100px; margin: 0 auto; padding: clamp(32px, 6vw, 56px) 16px 64px; }
+header { display: flex; align-items: baseline; gap: 8px 24px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.brand { font-size: clamp(30px, 5vw, 36px); font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+.stat { color: var(--muted); font-size: 18px; } .stat b { color: var(--ink); font-family: var(--mono); font-weight: 600; }
 .sp { flex: 1; }
-button { font: inherit; font-size: 19px; padding: 8px 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--fg); cursor: pointer; }
-button:hover { border-color: var(--fg); }
+button { font: inherit; font-size: 18px; font-weight: 500; padding: 9px 16px; border-radius: 8px; border: 1px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+button:hover { border-color: var(--muted); }
 .log { padding-top: 8px; }
-.e { padding: 18px 0; border-bottom: 1px solid var(--line); scroll-margin: 24px; }
-.e.target { background: var(--hl); }
+.e { padding: 20px 0; border-bottom: 1px solid var(--line); scroll-margin: 24px; }
+.e.target { background: var(--code-bg); border-radius: 8px; padding-left: 12px; padding-right: 12px; }
 .line { display: flex; align-items: baseline; gap: 4px 14px; flex-wrap: wrap; }
-.t { color: var(--mute); }
-.m { font-weight: bold; }
-.o { color: var(--mute); } .p { font-family: var(--mono); font-size: 18px; overflow-wrap: anywhere; }
-.s.ok { color: var(--ok); } .s.bad { color: var(--bad); }
-.ms { color: var(--mute); }
-.tag { font-size: 18px; color: var(--mute); }
-.tag.live { color: var(--ok); }
+.t { color: var(--faint); font-family: var(--mono); font-size: 17px; }
+.m { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.o { color: var(--muted); } .p { font-family: var(--mono); font-size: 17px; color: var(--ink); overflow-wrap: anywhere; }
+.s { font-family: var(--mono); font-size: 17px; font-weight: 700; } .s.ok { color: var(--allow); } .s.bad { color: var(--block); }
+.ms { color: var(--muted); font-size: 17px; }
+.tag { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+.tag.live { color: var(--allow); }
 .bodies { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; margin-top: 10px; }
-.b { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; min-width: 0; }
-.b h4 { font-size: 18px; color: var(--mute); margin-bottom: 6px; }
-pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 17px/1.5 var(--mono); }
-.k { color: var(--mute); }
-.empty { color: var(--mute); padding: 24px 0; }
+.b { background: var(--code-bg); border-radius: 8px; padding: 12px 16px; min-width: 0; }
+.b h4 { font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; font: 16px/1.55 var(--mono); color: var(--ink-2); }
+.k { color: var(--muted); }
+.str { color: var(--allow); } .num, .bool { color: var(--ink); }
+.empty { color: var(--muted); padding: 24px 0; }
 @media (max-width: 800px) { .bodies { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { body { font-size: 19px; } }
 </style>
 </head>
 <body>
