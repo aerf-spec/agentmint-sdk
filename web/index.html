@@ -57,8 +57,11 @@ a { color: inherit; }
 .menu select, .menu input { width: 100%; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
 .menu .row { display: flex; gap: 6px; }
 .menu .row input { flex: 1; min-width: 0; }
-.saved { display: grid; gap: 2px; }
-.saved button { text-align: left; background: none; border: 0; color: var(--blue); cursor: pointer; padding: 2px 0; }
+.saved { display: grid; gap: 2px; max-height: 46vh; overflow-y: auto; }
+.saved button { display: grid; text-align: left; background: none; border: 0; color: var(--fg); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.saved button:hover { background: var(--hl-soft); }
+.saved button.cur { background: var(--hl); }
+.saved .st-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .err { font: 600 11px var(--mono); color: var(--red); white-space: nowrap; }
 .scrub { position: relative; flex: 1; min-width: 80px; height: 22px; cursor: pointer; touch-action: none; }
 .scrub .track { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--border); border-radius: 1px; }
@@ -132,6 +135,10 @@ a { color: inherit; }
 .composer:focus-within { border-color: var(--blue); }
 .composer textarea { display: block; width: 100%; resize: none; border: 0; outline: none; background: transparent; color: var(--fg); font: 15px/1.5 var(--serif); height: 3em; min-height: 3em; max-height: 12em; overflow-y: auto; }
 .composer textarea::placeholder { color: var(--faint); }
+.composer .count { display: block; margin-top: 4px; font: 500 10.5px var(--mono); color: var(--faint); }
+.composer .count.warn { color: var(--yellow); }
+.say.ro { display: flex; justify-content: center; padding-bottom: 12px; }
+.say[hidden] { display: none !important; }
 .composer .note { display: block; margin-top: 4px; font: 500 11px var(--mono); color: var(--yellow); }
 .send { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border-radius: 8px; border: 0; background: var(--blue); color: #fff; font: 700 15px var(--mono); cursor: pointer; }
 .send[data-stop="1"] { background: var(--surface); border: 1px solid var(--border); color: var(--fg); font-size: 12px; }
@@ -216,6 +223,40 @@ a { color: inherit; }
 .tl .go { color: var(--faint); text-decoration: none; margin-left: 6px; }
 .tl .go:hover { color: var(--blue); }
 
+/* simple view: details hidden unless toggled */
+body:not(.details-on) .d-only { display: none !important; }
+body:not(.details-on) .jp { display: none !important; }
+body:not(.details-on) .claim .cid { display: none; }
+body:not(.details-on) .iter-empty { display: none; }
+.think .part { text-decoration: none !important; }
+.caller-line { display: block; font: 14.5px/1.55 var(--serif); color: var(--fg); padding: 2px 6px; margin: 0 -6px 4px; }
+.caller-line::before { content: "“"; color: var(--faint); } .caller-line::after { content: "”"; color: var(--faint); }
+.tool-plain { color: var(--green); }
+.res-sum { color: var(--fg-2); }
+.answer { display: block; font: 14.5px/1.55 var(--serif); color: var(--fg); }
+.claim + .cites { display: none; }
+.claim.open + .cites, body.details-on .claim + .cites { display: block; }
+.claim { cursor: pointer; }
+/* receipt cards */
+.rc { margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); scroll-margin: 24px; }
+.rc.minor { display: none; } body.all-rcpt .rc.minor { display: block; }
+.rc-sum { display: block; cursor: pointer; padding: 0; margin: 0; }
+.rc-dec { font: 600 13px var(--mono); color: var(--fg); }
+.rc-dec.err { color: var(--yellow); } .rc-dec.rec { color: var(--green); }
+.rc-rule { font: 12px/1.5 var(--mono); color: var(--text-secondary); margin-top: 2px; }
+.rc-rule b { color: var(--blue); font-weight: 600; margin-right: 6px; }
+.rc-claims { list-style: none; margin: 6px 0 0; display: grid; gap: 1px; }
+.rc-claims li { font: 13.5px/1.5 var(--serif); color: var(--fg-2); padding-left: 12px; position: relative; }
+.rc-claims li::before { content: "·"; position: absolute; left: 2px; color: var(--faint); }
+.rc-st { margin-top: 6px; font: 500 11.5px var(--mono); color: var(--faint); }
+.rc-st .ok { color: var(--green); } .rc-st .wait { color: var(--yellow); }
+.rc .rcpt { margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--border); }
+.ameta { margin-top: 3px; font: 10.5px/1.5 var(--mono); color: var(--faint); overflow-wrap: anywhere; }
+.ameta b { color: var(--text-secondary); font-weight: 500; }
+.tgl { border: 0; background: none; color: var(--faint); font: 500 11px var(--mono); cursor: pointer; padding: 0; margin-left: auto; }
+.tgl[aria-pressed="true"] { color: var(--blue); }
+.btn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
+
 /* thread modal */
 .modal { position: fixed; inset: 0; z-index: 40; background: rgba(5, 9, 18, 0.72); display: flex; align-items: center; justify-content: center; padding: 24px; }
 .mbox { width: min(720px, 100%); max-height: min(86vh, 900px); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
@@ -248,6 +289,8 @@ a { color: inherit; }
       <button class="btn rec-only" id="prev" type="button" aria-label="Previous step">←</button>
       <button class="btn btn--play rec-only" id="play" type="button">Play</button>
       <button class="btn rec-only" id="next" type="button" aria-label="Next step">→</button>
+      <button class="btn" id="details" type="button" aria-pressed="false">Details</button>
+      <button class="btn" id="newsess" type="button">New session</button>
       <button class="btn" id="endcall" type="button" hidden>End call</button>
       <a class="btn" id="apilink" href="api.html" target="_blank" rel="noopener">API</a>
       <a class="btn" id="pkglink" href="package.html" target="_blank" rel="noopener" hidden>Package</a>
@@ -263,10 +306,9 @@ a { color: inherit; }
               <option value="signer_crash">recorded · signer_crash</option>
             </select>
           </label>
-          <button class="btn" id="newcall" type="button">New call</button>
           <label><span class="lbl">Speed</span><select id="speed"><option value="1">normal</option><option value="3">fast</option></select></label>
           <label><span class="lbl">API</span><span class="row"><input id="api" type="url" placeholder="https://…" spellcheck="false"><button class="btn" id="api-save" type="button">Save</button></span></label>
-          <div><span class="lbl">Saved calls</span><div class="saved" id="saved"></div></div>
+          <div><span class="lbl">Sessions</span><div class="saved" id="saved"></div></div>
         </div>
       </details>
     </div>
@@ -282,13 +324,14 @@ a { color: inherit; }
     <section class="center" data-pane="call" aria-label="Conversation">
       <p data-copy="col-call"></p>
       <div class="pane"><div class="feed chat" id="call"><p data-copy="empty-call"></p></div></div>
-      <form class="say" id="say" autocomplete="off"><div class="composer"><textarea id="say-in" rows="2" placeholder="Speak as the caller…" aria-label="Speak as the caller"></textarea><span class="note" id="say-note" hidden>connect live to reply</span><button class="send" id="say-go" type="submit" aria-label="Send">↑</button></div></form>
+      <form class="say" id="say" autocomplete="off"><div class="composer"><textarea id="say-in" rows="2" placeholder="Speak as the caller…" aria-label="Speak as the caller"></textarea><span class="note" id="say-note" hidden></span><span class="count" id="say-count" hidden></span><button class="send" id="say-go" type="submit" aria-label="Send">↑</button></div></form>
+      <div class="say ro" id="say-ro" hidden><button class="btn btn--play" id="ro-new" type="button">New session</button></div>
     </section>
     <div class="gutter" role="separator" aria-orientation="vertical" aria-label="Resize filet panel" tabindex="0" data-g="r"></div>
     <section class="side" id="side-r" data-pane="filet" aria-label="filet">
       <button class="rail" type="button" data-toggle="r" aria-expanded="true" title="filet ( ] )"><span>filet</span><span class="chev">›</span></button>
       <p data-copy="col-filet"></p>
-      <div class="am-top"><div class="aline" id="aline"></div><p data-copy="authority"></p></div>
+      <div class="am-top"><div class="aline" id="aline"></div><div class="ameta" id="ameta" hidden></div><p data-copy="authority"></p></div>
       <div class="pane"><div class="feed" id="am"><p data-copy="empty-filet"></p></div></div>
       <details class="termd" id="termd"><summary id="termsum">terminal</summary>
         <div class="hgut" id="hgut" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" tabindex="0"></div>
@@ -364,6 +407,22 @@ function valNode(v) {
   return h("span", "v", typeof v === "object" ? JSON.stringify(v) : String(v));
 }
 
+const human = (x) => String(x ?? "").replace(/^(decide|disclose|error):/, "").replace(/[_-]+/g, " ").trim();
+const VERB = { lookup: "looked up", check: "checked", find: "found", create: "created", estimate: "estimated", verify: "verified", send: "sent", get: "got", log: "logged", search: "searched", fetch: "fetched", update: "updated" };
+function toolPlain(name) { const w = String(name || "").split("_"); return VERB[w[0]] ? [VERB[w[0]], ...w.slice(1)].join(" ") : w.join(" "); }
+function summarize(v, max = 110) {
+  if (v == null) return "";
+  if (typeof v !== "object") return String(v);
+  const bits = [];
+  for (const [k, x] of Object.entries(v)) {
+    if (x == null || polOf(x)) continue;
+    bits.push(typeof x === "object" ? `${k.replace(/_/g, " ")} (${Array.isArray(x) ? x.length : Object.keys(x).length})` : `${k.replace(/_/g, " ")} ${x}`);
+    if (bits.join("; ").length > max) break;
+  }
+  const t = bits.join("; "); return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
+function dOnly(el) { el.classList.add("d-only"); return el; }
+
 // ── view state ──
 let S;
 const cols = { model: $("#model"), call: $("#call"), am: $("#am") };
@@ -416,10 +475,15 @@ const LIGHTS = [["salted", "salted"], ["key_isolated", "key isolated"], ["anchor
 function buildStrip() {}
 function light(k, s) {
   if (k === "no_gaps" && s !== "off") { setTok("tk-c", s === "ok" ? "valid" : "broken", ["chain"]); $("#tk-c").classList.toggle("warn", s !== "ok"); }
+  if (k === "anchored" && s === "ok") { const e = $("#tk-c"); if (e && e.hidden && !S.gap) setTok("tk-c", "valid", ["chain"]); }
 }
 function anchCount() {
   const tot = S.rec.size, ok = [...S.rec.values()].filter((r) => S.ver.get(r.seq)?.log === "passed").length;
-  if (tot) { setTok("tk-a", `${ok}/${tot}`, [...S.rec.values()].map((r) => `anc:${r.seq}`)); $("#tk-a").classList.toggle("warn", S.delayedAny && ok < tot); }
+  if (tot) {
+    setTok("tk-n", `${tot} receipt${tot === 1 ? "" : "s"}`, [...S.rec.values()].map((r) => `r:${r.seq}`));
+    setTok("tk-a", ok >= tot ? "all anchored" : `anchoring ${ok}/${tot}`, [...S.rec.values()].map((r) => `anc:${r.seq}`)); $("#tk-a").classList.toggle("warn", ok < tot);
+    if (ok >= tot && [...S.ver.values()].every((v) => v.chain_ok) && !S.gap) setTok("tk-c", "valid", ["chain"]);
+  }
 }
 
 // ── authority line ──
@@ -428,7 +492,10 @@ function buildAline() {
   const a = $("#aline"); a.replaceChildren(); a.classList.remove("live");
   const arr = (id) => { const e = h("span", "arr", "→"); e.id = id; e.hidden = true; return e; };
   const tick = h("span", "tick"); tick.hidden = true;
-  a.append(tick, tok("tk-a", "anchored", []), tok("tk-q", "queue", ["queue"]), tok("tk-b", "batch", []), tok("tk-s", "tree", []), tok("tk-c", "chain", ["chain"]));
+  a.append(tick, tok("tk-n", "", []), tok("tk-a", "", []), tok("tk-q", "queue", ["queue"]), tok("tk-c", "chain", ["chain"]));
+  const all = h("button", "tgl", "all receipts"); all.type = "button"; all.id = "allrc"; all.setAttribute("aria-pressed", String(document.body.classList.contains("all-rcpt")));
+  all.addEventListener("click", () => { const on = !document.body.classList.contains("all-rcpt"); document.body.classList.toggle("all-rcpt", on); all.setAttribute("aria-pressed", String(on)); store.set("allReceipts", on); });
+  a.append(all); $("#ameta").hidden = true;
 }
 function setTok(id, text, keys) {
   const e = $("#" + id); if (!e) return;
@@ -458,7 +525,7 @@ function ensureStep(n, t) {
   clearEmpty(cols.model);
   const mc = enter(h("article", "card"));
   st.mHead = part("div", "hd", null, { keys: [`step:${n}`], id: `s-${n}`, step: n });
-  st.mHead.append(h("b", null, live() ? `TURN ${n}` : `STEP ${n + 1}`), st.mPoint = h("span", "pt"));
+  st.mHead.append(h("b", null, live() ? `TURN ${n}` : `DECISION ${n + 1}`), st.mPoint = h("span", "pt"));
   st.kids = h("div", "kids");
   st.mInput = h("div"); st.mLoop = h("div"); st.mFail = h("div"); st.mStack = h("div");
   st.kids.append(st.mInput, st.mLoop, st.mFail, st.mStack);
@@ -469,10 +536,10 @@ function ensureStep(n, t) {
 }
 function iter(st, i) {
   if (st.iters[i]) return st.iters[i];
-  const box = enter(h("div"));
+  const box = enter(h("div", "iter-empty"));
   const hd = part("div", "node ih", null, { keys: [`it:${st.n}:${i}`, i === 1 ? `mi:${st.n}` : null, "llmreq"], id: `s-${st.n}-i${i}`, step: st.n });
-  hd.append(h("span", "in", `#${i} `), h("span", "il", "model call"));
-  const kids = h("div", "kids"); const stat = h("div", "node pending", "running"); kids.append(stat);
+  hd.append(h("span", "in", `Step ${i} `), dOnly(h("span", "il", "model call")));
+  const kids = h("div", "kids"); const stat = dOnly(h("div", "node pending", "running")); kids.append(stat);
   box.append(hd, kids); st.mLoop.append(box);
   const it = { i, box, hd, kids, stat, done: false, text: "", sent: 0 };
   st.iters[i] = it; st.cur = i;
@@ -482,10 +549,11 @@ const lastIter = (st) => st.iters[st.cur] || iter(st, 1);
 const openIter = (st) => { const it = lastIter(st); return it.done ? iter(st, st.cur + 1) : it; };
 function renderThinking(st, it, final) {
   if (!it.thinkEl) {
-    const lab = h("div", "lbl", "Thinking"); lab.append(h("span", "tag", S.thinkingKind || (live() ? "summary" : "scripted")));
+    const lab = h("div", "lbl", "thinking"); lab.append(h("span", "tag", S.thinkingKind || (live() ? "summary" : "scripted")));
     it.thinkEl = part("div", "think", null, { keys: [`think:${st.n}`], id: st.thinkId ? null : `s-${st.n}-think`, step: st.n });
     st.thinkId = st.thinkId || `s-${st.n}-think`;
     it.tail = h("span"); it.caret = h("span", "caret");
+    it.box.classList.remove("iter-empty");
     it.thinkEl.append(it.tail, it.caret); it.thinkSec = h("div"); it.thinkSec.append(lab, it.thinkEl); it.kids.append(it.thinkSec);
   }
   const parts = it.text.split(/(?<=[.?!])\s+/);
@@ -519,7 +587,7 @@ function renderClaims(st, claims) {
     const el = part("div", `node claim ${cites.length ? "" : "unsup"} ${final ? "final" : ""}`, null,
       { keys: [`claim:${n}:${c.id}`, ...cites.map((x) => citeKey(n, x)), final ? `dec:${n}` : null], id: `s-${n}-c-${c.id}`, step: n });
     el.append(h("span", "cid", c.id), h("span", "ct", c.text));
-    const kids = h("div", "kids");
+    const kids = h("div", "kids cites");
     for (const x of cites) {
       const e = part("div", "cite", null, { keys: [citeKey(n, x)], step: n, to: citeTo(n, x) });
       e.dataset.kind = x.kind; e.prepend(h("span", "ck", `${x.kind} `), h("span", "cv", x.ref)); kids.append(e);
@@ -536,7 +604,7 @@ const SPAN_KEYS = { turn: (n) => [`step:${n}`], "llm.request": (n) => [`mi:${n}`
 function renderStack(st) {
   const spans = [...st.spans.values()], kids = new Map();
   for (const s of spans) { const p = s.parent_id && st.spans.has(s.parent_id) ? s.parent_id : null; if (!kids.has(p)) kids.set(p, []); kids.get(p).push(s); }
-  const box = h("div"); box.append(h("div", "lbl", "Spans"));
+  const box = dOnly(h("div")); box.append(h("div", "lbl", "Spans"));
   const walk = (pid, parent) => {
     for (const s of (kids.get(pid) || []).sort((a, b) => a.start_us - b.start_us)) {
       const f = st.failBySpan.get(s.span_id);
@@ -592,15 +660,33 @@ function obj(l, rows, last) { // nested object under a key
 }
 function blockFor(step) {
   clearEmpty(cols.am);
-  const el = enter(h("div", "rcpt")); const body = h("div");
+  const wrap = enter(h("div", "rc"));
+  const sum = part("div", "rc-sum", null, { keys: step != null ? [`step:${step}`] : [], step: step ?? undefined });
+  const dec = h("div", "rc-dec"), rule = h("div", "rc-rule"), cl = h("ol", "rc-claims"), stt = h("div", "rc-st");
+  rule.hidden = true; cl.hidden = true; stt.append(h("span", "wait", "○ signing"));
+  sum.append(dec, rule, cl, stt);
+  const el = h("div", "rcpt"); el.hidden = true; const body = h("div");
   el.append(h("span", "br", "{"), body, h("span", "br", "}"));
+  wrap.append(sum, el);
   const L = {};
   for (const k of ["seq", "decision", "rule", "evidence", "question", "claims", "reasoning", "prev", "signed_by", "anchored_by"]) L[k] = jl(body, k);
-  cols.am.append(el);
-  return { el, L, step };
+  cols.am.append(wrap);
+  return { el, wrap, sum, dec, rule, cl, stt, L, step };
+}
+function cardSummary(blk, n, dr, claims) {
+  if (dr?.decision) blk.dec.textContent = human(dr.decision);
+  if (dr?.rule_id) { blk.rule.hidden = false; blk.rule.replaceChildren(h("b", null, dr.rule_id), S.rules[dr.rule_id] || ""); }
+  const cs = (claims || []).slice(0, 3);
+  if (cs.length) { blk.cl.hidden = false; blk.cl.replaceChildren(...cs.map((c) => h("li", null, c.text))); }
+}
+function cardStatus(blk, rec) {
+  const a = rec?.anch;
+  blk.stt.replaceChildren(h("span", rec ? "ok" : "wait", rec ? "✓ signed" : "○ signing"), " · ",
+    a ? h("span", a.delayed ? "wait" : "ok", a.delayed ? "✓ anchored · delayed" : "✓ anchored") : h("span", "wait", "○ anchoring"));
 }
 function fillDecision(blk, n, dr) {
   const st = S.steps.get(n); const lastClaim = st?.claims?.at(-1)?.id;
+  cardSummary(blk, n, dr, st?.claims);
   blk.L.seq.hidden = true; blk.L.prev.hidden = true; blk.L.reasoning.hidden = true;
   if (dr.decision) setJ(blk.L.decision, [V(q(dr.decision), [`dec:${n}`], "", { step: n, to: lastClaim ? `s-${n}-c-${lastClaim}` : S.steps.has(n) ? `s-${n}` : null })]); else blk.L.decision.remove();
   if (dr.rule_id) setJ(blk.L.rule, [V(q(dr.rule_id), [`rule:${dr.rule_id}`], "", { step: n, to: `rule-${dr.rule_id}` })]); else blk.L.rule.remove();
@@ -653,7 +739,14 @@ function fillReasoning(blk, n, reasoning) {
 }
 function fillSigned(blk, d, rec) {
   const r = d.receipt || {}, ev = r.evidence || {}, dr = ev.decision_record || {}, n = d.step, seq = d.seq;
-  blk.el.id = `r-${d.receipt_id}`;
+  blk.wrap.id = `r-${d.receipt_id}`;
+  if (["model", "other", "close"].includes(rec.kind) || /interrupt/.test(r.action || "")) blk.wrap.classList.add("minor");
+  addKey(blk.sum, `r:${seq}`);
+  if (rec.kind === "model") blk.dec.textContent = `model call${ev.iteration != null ? ` ${ev.iteration}` : ""}`;
+  else if (rec.kind !== "decide") { blk.dec.textContent = human(r.action) || r.action; if (rec.kind === "err") blk.dec.classList.add("err"); }
+  if (rec.kind === "decide") cardSummary(blk, n, dr, ev.reasoning?.claims || S.steps.get(n)?.claims);
+  cardStatus(blk, rec);
+  ameta(d);
   const X = { seq, step: n ?? undefined };
   if (rec.kind === "decide" && !blk.filled) fillDecision(blk, n, dr);
   for (const k of ["seq", "prev", "reasoning"]) blk.L[k].hidden = false;
@@ -681,8 +774,6 @@ function fillSigned(blk, d, rec) {
   const prevSeq = prev ? S.byHash.get(prev) : null; const prevRec = prevSeq != null ? S.rec.get(prevSeq) : null;
   setJ(blk.L.prev, [V(prev ? q(short(prev)) : "null", [prev ? `r:${prevSeq ?? "?"}` : null], "", { ...X, to: prevRec ? `r-${prevRec.rid}` : null })]);
   obj(blk.L.signed_by, [
-    ...(d.key_id || r.key_id ? [["issuer", [V(q(d.key_id || r.key_id), ["issuer"], "", { ...X, to: `api.html#${S.startId}-2` })]]] : []),
-    ["signer", [V(q("filet signer"), ["issuer"], "", X)]],
     ["sig", [V(q(short(d.signature || r.signature)), [`sig:${seq}`], "", X)]],
   ]);
   setJ(blk.L.anchored_by, [V(q("pending"), [`anc:${seq}`], "pend", X)], true);
@@ -694,6 +785,12 @@ function markErr(rec) {
   rec.decEl.firstChild.textContent = q(`${rec.data.receipt.action}${recovered ? " · recovered" : ""}`);
   rec.decEl.classList.toggle("bad", !recovered); rec.decEl.classList.toggle("rec", !!recovered);
   if (st) { addKey(rec.decEl, `fail:${st.id}`); if (!rec.decEl.querySelector(".jp")) jump(rec.decEl, `f-${st.id}`); }
+}
+
+function ameta(d) {
+  const m = $("#ameta"); const key = d?.key_id || d?.receipt?.key_id || S.start?.issuer_key_id;
+  m.hidden = false;
+  m.replaceChildren(h("b", null, "authority "), AUTH_HOST, ...(S.start?.log_id ? [" · ", h("b", null, "log "), short(S.start.log_id)] : []), ...(key ? [" · ", h("b", null, "issuer "), short(key)] : []));
 }
 
 // ── cost ──
@@ -709,7 +806,7 @@ const H = {
     S.thinkingKind = d.thinking_kind; S.claimsSource = d.claims_source;
     if (d.key_isolated === true) light("key_isolated", "ok");
     clearEmpty(cols.model);
-    const box = h("div", "rules"); box.id = "rules"; box.append(h("div", "lbl", "Rules"));
+    const box = dOnly(h("div", "rules")); box.id = "rules"; box.append(h("div", "lbl", "Rules"));
     const kids = h("div", "kids");
     for (const [id, text] of Object.entries(S.rules)) { const e = part("div", "node", null, { keys: [`rule:${id}`], id: `rule-${id}` }); e.append(h("span", "cv", `${id} `), h("span", "v", text)); kids.append(e); }
     box.append(kids); cols.model.append(box);
@@ -726,6 +823,7 @@ const H = {
     e.dataset.who = d.who;
     const who = h("span", "who", `${d.who === "agent" ? "Ava" : "Caller"} · ${d.at}`); const jpEl = e.querySelector(".jp"); if (jpEl) who.append(jpEl);
     const tx = h("span", "tx", d.text); e.prepend(who, tx);
+    if (d.who === "agent" && step != null && S.steps.has(step)) { const st2 = S.steps.get(step); st2.answerEl?.remove(); st2.answerEl = part("div", "node", null, { keys: [`at:${d.at}`, `step:${step}`], step, to: id }); st2.answerEl.prepend(h("span", "k", "answer "), h("span", "answer", d.text)); st2.mLoop.after(st2.answerEl); }
     cols.call.append(e);
     if (d.who === "agent" && !S.instant && !RM.matches) {
       const words = d.text.split(/(\s+)/); let i = 0; tx.textContent = "";
@@ -738,10 +836,12 @@ const H = {
     const st = ensureStep(n, d.t_us); st.at = d.at; st.turn = d.turn;
     if (!st.inputDone) {
       st.inputDone = true; st.re = S.lastCallerAt;
-      if (S.lastCallerAt) st.mInput.append(line("replying to", S.lastCallerAt, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") }));
-      st.mInput.append(line("prompt", `${d.prompt_version} · ${short(d.prompt_sha256)}`, { keys: ["prompt", `ctx:${n}`, `mi:${n}`], step: n }));
-      st.mInput.append(line("rules", `${(d.rules_in_context || []).length} in context`, { keys: (d.rules_in_context || []).map((r) => `rule:${r}`), step: n, to: "rules" }));
-      if (d.transcript_turns != null) st.mInput.append(line("turns", String(d.transcript_turns), { keys: [`ctx:${n}`], step: n }));
+      const ct = S.lastCallerAt ? S.turns.get(turnId(S.lastCallerAt, "caller")) : null;
+      if (ct) st.mInput.append(part("div", "caller-line", ct.text, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") }));
+      if (S.lastCallerAt) st.mInput.append(dOnly(line("replying to", S.lastCallerAt, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") })));
+      st.mInput.append(dOnly(line("prompt", `${d.prompt_version} · ${short(d.prompt_sha256)}`, { keys: ["prompt", `ctx:${n}`, `mi:${n}`], step: n })));
+      st.mInput.append(dOnly(line("rules", `${(d.rules_in_context || []).length} in context`, { keys: (d.rules_in_context || []).map((r) => `rule:${r}`), step: n, to: "rules" })));
+      if (d.transcript_turns != null) st.mInput.append(dOnly(line("turns", String(d.transcript_turns), { keys: [`ctx:${n}`], step: n })));
     }
     iter(st, d.iteration || 1);
   },
@@ -754,10 +854,10 @@ const H = {
     const bits = [`${(d.input_tokens ?? 0).toLocaleString("en-US")}→${(d.output_tokens ?? 0).toLocaleString("en-US")} tok`];
     if (d.cache_read_tokens) bits.push(`cache ${d.cache_read_tokens.toLocaleString("en-US")}`);
     if (live() && d.ms != null) bits.push(`${d.ms} ms`);
-    it.stat.className = "node"; it.stat.textContent = bits.join(" · ");
-    const sr = h("span", "sr", ` ${d.stop_reason}`); sr.dataset.s = d.stop_reason; it.hd.append(sr);
+    it.stat.className = "node d-only"; it.stat.textContent = bits.join(" · ");
+    const sr = dOnly(h("span", "sr", ` ${d.stop_reason}`)); sr.dataset.s = d.stop_reason; it.hd.append(sr);
     if (d.request_id) {
-      const rq = line("request_id", d.request_id, { keys: [`req:${d.request_id}`, "llmreq"], step: st.n, to: `api.html#${S.curId}` });
+      const rq = dOnly(line("request_id", d.request_id, { keys: [`req:${d.request_id}`, "llmreq"], step: st.n, to: `api.html#${S.curId}` }));
       it.stat.after(rq);
     }
   },
@@ -767,11 +867,11 @@ const H = {
     const st = ensureStep(n, d.t_us); finishThinking(st);
     const it = live() && d.iteration ? iter(st, d.iteration) : lastIter(st), sec = enter(h("div"));
     const tu = part("div", "node", null, { keys: [`tool:${n}`], id: `s-${n}-tool${x}`, step: n, to: `s-${n}-res${x}` });
-    tu.prepend(h("span", "k", "tool_use "), h("span", "tn", d.name));
-    const kids = h("div", "kids");
+    tu.prepend(h("span", "tool-plain", toolPlain(d.name)), dOnly(h("span", "k", " · tool_use ")), dOnly(h("span", "tn", d.name)));
+    const kids = dOnly(h("div", "kids"));
     for (const [k, v] of Object.entries(d.input || {})) { const e = part("div", "node", null, { keys: [`ti:${n}:${k}`], step: n }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
     st.resBox = h("div"); st.resBox.append(h("div", "node pending", "tool_result · running"));
-    sec.append(tu, kids, st.resBox); it.kids.append(sec);
+    sec.append(tu, kids, st.resBox); it.kids.append(sec); it.box.classList.remove("iter-empty");
     st.tool = { name: d.name, input: d.input };
   },
   tool_result(d) {
@@ -779,8 +879,8 @@ const H = {
     const st = ensureStep(n, d.t_us);
     const box = st.resBox || lastIter(st).kids; box.replaceChildren();
     const tr = part("div", "node", null, { keys: [`toolres:${n}`, `tool:${n}`], id: `s-${n}-res${x}`, step: n, to: `s-${n}-tool${x}` });
-    tr.prepend(h("span", "k", "tool_result "), h("span", "tn", d.name));
-    const kids = h("div", "kids");
+    tr.prepend(h("span", "res-sum", summarize(d.result) || "done"), dOnly(h("span", "k", " · tool_result ")), dOnly(h("span", "tn", d.name)));
+    const kids = dOnly(h("div", "kids"));
     for (const [k, v] of Object.entries(d.result || {})) { const e = part("div", "node", null, { keys: [`tr:${n}:${k}`], step: n }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
     box.append(tr, kids);
     st.result = d.result;
@@ -789,7 +889,7 @@ const H = {
   cost(d) {
     const st = ensureStep(ck(d), d.t_us);
     const it = d.iteration ? iter(st, d.iteration) : lastIter(st);
-    if (d.usd != null) { const old = it.hd.querySelector(".usd"); if (old) old.textContent = usd(d.usd); else it.hd.append(h("span", "usd", usd(d.usd))); }
+    if (d.usd != null) { const old = it.hd.querySelector(".usd"); if (old) old.textContent = usd(d.usd); else it.hd.append(dOnly(h("span", "usd", usd(d.usd)))); }
     if (!S.costFinal) { S.usd += d.usd || 0; S.tok += (d.input_tokens || 0) + (d.output_tokens || 0) + (d.cache_read_tokens || 0); showCost(); }
   },
   interrupted(d) {
@@ -831,7 +931,7 @@ const H = {
     const n = ck(d);
     const st = ensureStep(n, d.t_us); finishThinking(st);
     const r = d.decision_record || {}; st.decision = r;
-    st.mPoint.textContent = r.point || "";
+    st.mPoint.textContent = human(r.point);
     if (Array.isArray(d.claims) && d.claims.length) renderClaims(st, d.claims);
     st.blk = blockFor(n); fillDecision(st.blk, n, r); st.blk.filled = true;
   },
@@ -865,7 +965,7 @@ const H = {
     for (const rec of S.rec.values()) if (rec.batch) addKey(rec.blk.L.seq.querySelector(".js"), `sth:${B}`);
     S.queue = S.queue.filter((x) => !(d.seqs || []).includes(x));
     setTok("tk-q", S.queue.length, ["queue", ...S.queue.map((x) => `r:${x}`)]);
-    setTok("tk-b", `#${n}`, [`batch:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)]); $("#tk-b").classList.toggle("warn", !!d.delayed);
+    setTok("tk-b", `#${n}`, [`batch:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)]); $("#tk-b")?.classList.toggle("warn", !!d.delayed);
     setTok("tk-s", d.tree_size_after, [`batch:${B}`]);
     S.lastB = B;
     const ms = live() && d.authority_ms != null ? `,"authority_ms":${d.authority_ms}` : "";
@@ -881,14 +981,13 @@ const H = {
     rec.anch = d; if (d.delayed) S.delayedAny = true;
     const B = d.batch_id, bt = S.batches.get(B), X = { seq: rec.seq, step: rec.step ?? undefined };
     const rows = [
-      ["authority", [V(q(AUTH_HOST), [`batch:${B}`], "", { ...X, to: `api.html#${bt?.id ?? S.curId}` })]],
-      ...(S.start?.log_id ? [["log_id", [V(q(short(S.start.log_id)), ["log"], "", X)]]] : []),
       ["leaf", [V(String(d.leaf_index), [`r:${rec.seq}`, `anc:${rec.seq}`], "", { ...X, to: `b-${B}` })]],
       ["tree_size", [V(String(d.tree_size), [`batch:${B}`], "", X)]],
       ["root", [V(q(short(d.root_hash)), [`batch:${B}`, `sth:${B}`], "", { ...X, to: `b-${B}` })]],
     ];
     if (d.delayed) rows.push(["delayed", [V("true", ["failk:authority_down"], "warn", { ...X, to: S.stories.has("f-auth") ? "f-f-auth" : null })]]);
     obj(rec.blk.L.anchored_by, rows, true);
+    cardStatus(rec.blk, rec);
   },
   verified(d) {
     const rec = recOf(d); if (!rec) return;
@@ -938,7 +1037,7 @@ function visibleIn(e) {
   return r;
 }
 function tether(el, hold) {
-  clearTimeout(tetherTimer);
+  if (hold !== null) clearTimeout(tetherTimer);
   relEls.forEach((e) => e.classList.remove("rel")); relEls = [];
   svg.replaceChildren(); svg.classList.remove("fade");
   tetherFor = el; if (!el) return;
@@ -956,20 +1055,23 @@ function tether(el, hold) {
   if (hold) tetherTimer = setTimeout(fadeTether, 1500);
 }
 function fadeTether() { svg.classList.add("fade"); relEls.forEach((e) => e.classList.remove("rel")); relEls = []; tetherFor = null; setTimeout(() => { if (!tetherFor) svg.replaceChildren(); }, 450); }
-document.addEventListener("pointerover", (e) => {
+if (false) document.addEventListener("pointerover", (e) => {
   if (e.pointerType === "touch") return;
   const p = e.target.closest?.(".part"); if (p && p !== tetherFor) tether(p, false);
 });
 document.addEventListener("pointerout", (e) => {
   const p = e.target.closest?.(".part"); if (p && p === tetherFor && !p.contains(e.relatedTarget)) { clearTimeout(tetherTimer); tetherTimer = setTimeout(fadeTether, 250); }
 });
-for (const c of PANES) c.addEventListener("scroll", () => { if (tetherFor) tether(tetherFor, true); }, { passive: true });
+for (const c of PANES) c.addEventListener("scroll", () => { if (tetherFor) tether(tetherFor, null); }, { passive: true });
 document.addEventListener("click", (e) => {
   if (e.target.closest("button, input, select, summary, .menu, .scrub")) return;
   const a = e.target.closest("a.jp");
   if (a && a.getAttribute("href").startsWith("#")) { e.preventDefault(); const id = a.getAttribute("href").slice(1); history.pushState({ id }, "", `#${id}`); goTo(id); return; }
   if (e.target.closest("a")) return;
-  const p = e.target.closest(".part"); if (p) tether(p, true);
+  const p = e.target.closest(".part"); if (!p) return;
+  if (p.classList.contains("claim")) p.classList.toggle("open");
+  const rc = p.closest(".rc-sum"); if (rc) { const pre = rc.parentElement.querySelector(".rcpt"); pre.hidden = !pre.hidden; }
+  tether(p, true);
 });
 function goTo(id) {
   const t = id && document.getElementById(id); if (!t) return;
@@ -1109,7 +1211,7 @@ let applyN = 0;
 function afterApply() {
   $("#clock").textContent = fmtT(S.maxT);
   for (const c of PANES) { if (c.follow) toBottom(c); else c.pill.hidden = false; }
-  if (tetherFor && tetherFor.isConnected) tether(tetherFor, true);
+  if (tetherFor && tetherFor.isConnected) tether(tetherFor, null);
   drawHead();
   if (++applyN % 25 === 0) savePos();
   if (P.src?.kind === "live" && applyN % 10 === 0) store.set("livecur", P.ev);
@@ -1261,15 +1363,19 @@ hg.addEventListener("pointerdown", (e) => {
 hg.addEventListener("dblclick", () => setTH(200));
 hg.addEventListener("keydown", (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setTH(TH + (e.key === "ArrowUp" ? 24 : -24)); } });
 
-// ── sources: recorded (default), saved, live API ──
-function endLive() {
-  setLiveStored(null); $("#run").disabled = false;
-  if (!LV.id) return;
-  try { fetch(`${window.FILET_API}/call/${LV.id}/end`, { method: "POST", keepalive: true }); } catch {}
-  LV.es?.close(); LV.es = null; LV.id = null; setResponding(false); $("#apilink").href = "api.html"; $("#endcall").hidden = true;
+// ── sources: recorded replay (default) and live sessions ──
+const MAXLEN = 2000;
+const LV = { id: null, es: null, api: null, ended: false };
+function closeStream() { LV.es?.close(); LV.es = null; }
+function setUrl(id) {
+  try { const u = new URL(location.href); if (id) u.searchParams.set("s", id); else u.searchParams.delete("s"); history.replaceState(history.state, "", u); } catch {}
 }
+function setLiveStored(v) { store.set("liveCall", v); window.__filetLive = !!v; }
 async function playRecorded(fail, startAt) {
-  endLive();
+  closeStream(); LV.id = null; LV.ended = false; setResponding(false);
+  setLiveStored(null); setUrl(null);
+  $("#run").disabled = false; $("#endcall").hidden = true; $("#pkglink").hidden = true; $("#apilink").href = "api.html";
+  composerMode(); restoreDraft();
   try { await loadBundle(); } catch { $("#err").hidden = false; $("#err").textContent = "recording unavailable"; return; }
   const run = BUNDLE.runs[fail] ?? BUNDLE.runs[""];
   runSel.value = BUNDLE.runs[fail] ? fail : "";
@@ -1279,106 +1385,191 @@ async function playRecorded(fail, startAt) {
   if (want && (at >= 0 || sAt >= 0)) { loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", (at >= 0 ? at : sAt) + 1, false); requestAnimationFrame(() => goTo(`r-${want}`)); return; }
   loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", startAt, true);
 }
-const savedCalls = () => store.get("calls", []);
-function drawSaved() {
-  const box = $("#saved"); box.replaceChildren();
-  const list = savedCalls();
+
+// sessions: local list merged with the server's recent calls
+const sessions = () => store.get("sessions", []);
+function upsertSession(id, patch) {
+  const l = sessions(); const i = l.findIndex((x) => x.id === id);
+  const next = { ...(i >= 0 ? l[i] : { id, title: "", startedAt: new Date().toISOString(), lastEventId: 0 }), ...patch };
+  if (i >= 0) l[i] = next; else l.unshift(next);
+  l.sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
+  store.set("sessions", l.slice(0, 100));
+  return next;
+}
+let serverCalls = [];
+async function fetchServerCalls() {
+  if (!window.FILET_API) return;
+  try { const r = await fetch(`${window.FILET_API}/calls/costs`); if (r.ok) { const d = await r.json(); serverCalls = Array.isArray(d) ? d : d.calls || []; } } catch {}
+}
+function mergedSessions() {
+  const m = new Map();
+  for (const s of sessions()) m.set(s.id, { ...s });
+  for (const c of serverCalls) {
+    const cur = m.get(c.id) || { id: c.id, title: "", startedAt: c.started_at, lastEventId: 0 };
+    cur.ended = !!(cur.endedAt || c.ended); cur.turns = c.turns; m.set(c.id, cur);
+  }
+  for (const s of m.values()) s.ended = s.ended || !!s.endedAt;
+  return [...m.values()].sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
+}
+const fmtWhen = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); };
+async function drawSaved() {
+  const box = $("#saved");
+  if (!box.childElementCount) box.append(h("span", "t", "loading"));
+  await fetchServerCalls();
+  box.replaceChildren();
+  const list = mergedSessions();
   if (!list.length) { box.append(h("span", "t", "none")); return; }
-  for (const c of list) {
-    const b = h("button", null, `${c.at.slice(5, 16).replace("T", " ")} · ${c.turns} turns`); b.type = "button";
-    b.addEventListener("click", () => { loadEvents({ kind: "saved", id: c.id }, c.ev, "recorded", 0, true); $("#more").open = false; });
+  for (const s of list) {
+    const b = h("button", s.id === LV.id ? "cur" : null); b.type = "button";
+    b.append(h("span", "st-title", s.title || `call · ${fmtWhen(s.startedAt)}`), h("span", "t", `${fmtWhen(s.startedAt)}${s.ended ? " · ended" : ""}`));
+    b.addEventListener("click", () => { $("#more").open = false; openSession(s.id); });
     box.append(b);
   }
 }
-const LV = { id: null, es: null };
-function setupSay() { $("#say-in").placeholder = "Speak as the caller…"; }
+
+// one session: replay everything (instant), then continue live
+let liveSaveT = 0;
+function openSession(id, api = window.FILET_API) {
+  if (!api || !id) return;
+  closeStream();
+  saveDraftNow();
+  LV.id = id; LV.api = api; LV.ended = false; LV.ending = false; LV.sawCaller = false; setResponding(false);
+  const s = upsertSession(id, {});
+  setLiveStored({ id, api, startedAt: s.startedAt, lastEventId: s.lastEventId || 0 });
+  setUrl(id);
+  $("#apilink").href = `api.html?call=${encodeURIComponent(id)}`;
+  const pk = $("#pkglink"); pk.href = `package.html?call=${encodeURIComponent(id)}`; pk.hidden = false;
+  $("#endcall").hidden = false; $("#endcall").disabled = false; $("#endcall").textContent = "End call"; $("#run").disabled = true;
+  loadEvents({ kind: "live", id, api }, [], "live", 0, true);
+  composerMode(); restoreDraft();
+  const seen = new Set();
+  const es = new EventSource(`${api}/call/${encodeURIComponent(id)}/events?last_event_id=0`); // the server replays the whole call, then continues live
+  LV.es = es;
+  let got = 0;
+  es.addEventListener("error", (e) => {
+    if (e.data) { $("#err").hidden = false; try { $("#err").textContent = JSON.parse(e.data).message; } catch {} return; }
+    if (!got && es.readyState === EventSource.CLOSED && LV.es === es) { $("#err").hidden = false; $("#err").textContent = "session unavailable"; setLiveStored(null); }
+  });
+  for (const name of EVENTS) es.addEventListener(name, (e) => {
+    if (LV.es !== es) return;
+    if (e.lastEventId && seen.has(e.lastEventId)) return; seen.add(e.lastEventId);
+    let data; try { data = JSON.parse(e.data); } catch { return; }
+    got++;
+    const eid = Number(e.lastEventId) || P.ev.length + 1;
+    ingest({ id: eid, event: name, data });
+    if (!P.playing && P.pos >= P.ev.length - 1) setPlaying(true);
+    clearTimeout(liveSaveT);
+    liveSaveT = setTimeout(() => { if (LV.id !== id) return; upsertSession(id, { lastEventId: eid }); const lc = store.get("liveCall", null); if (lc?.id === id) store.set("liveCall", { ...lc, lastEventId: eid }); }, 400);
+    if (name === "turn" && data.who === "caller") {
+      LV.sawCaller = true;
+      if (!sessions().find((x) => x.id === id)?.title) upsertSession(id, { title: String(data.text || "").trim().replace(/\s+/g, " ").slice(0, 40) });
+    }
+    if (name === "turn" && data.who === "agent" && LV.sawCaller) { LV.sawCaller = false; setResponding(false); }
+    if (name === "done") { setResponding(false); finishLive(id); }
+  });
+}
+function finishLive(id) {
+  closeStream(); P.open = false; $("#endcall").hidden = true;
+  LV.ended = true;
+  upsertSession(id, { endedAt: sessions().find((x) => x.id === id)?.endedAt || new Date().toISOString() });
+  if (store.get("liveCall", null)?.id === id) setLiveStored(null); // ended sessions stay reachable via ?s= and the list
+  store.set("livecur", P.ev);
+  composerMode();
+}
+// "New session" is the only way a new call starts
+async function newSession() {
+  if (!window.FILET_API) { showNote("connect live to reply"); return; }
+  if (LV.creating) return LV.creating;
+  LV.creating = (async () => {
+    const r = await fetch(`${window.FILET_API}/call`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
+    if (!r.ok) throw new Error(`call ${r.status}`);
+    return (await r.json()).id;
+  })();
+  try {
+    const id = await LV.creating;
+    upsertSession(id, { startedAt: new Date().toISOString() });
+    openSession(id); sayIn.focus();
+  } catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); }
+  finally { LV.creating = null; }
+}
+
+// composer
+function setupSay() { sayIn.placeholder = "Speak as the caller…"; sayIn.maxLength = MAXLEN; }
 const sayIn = $("#say-in"), sayGo = $("#say-go");
 function growSay() { sayIn.style.height = "auto"; const lh = parseFloat(getComputedStyle(sayIn).lineHeight) || 22; sayIn.style.height = `${Math.min(Math.max(sayIn.scrollHeight, lh * 2), lh * 8)}px`; }
-sayIn.addEventListener("input", () => { growSay(); $("#say-note").hidden = true; syncSend(); });
-function noteLive() { const nt = $("#say-note"); nt.textContent = "connect live to reply"; nt.hidden = false; }
-sayIn.addEventListener("focus", () => { if (P.playing) setPlaying(false); }); // focusing interrupts the replay at the current step
+function showNote(t) { const nt = $("#say-note"); nt.textContent = t; nt.hidden = false; }
+function noteLive() { showNote("connect live to reply"); }
+function composerMode() {
+  const ended = !!LV.id && LV.ended;
+  $("#say").hidden = ended; $("#say-ro").hidden = !ended;
+}
+function syncCount() {
+  const n = sayIn.value.length, c = $("#say-count");
+  c.hidden = n < MAXLEN * 0.8; c.textContent = `${n.toLocaleString("en-US")} / ${MAXLEN.toLocaleString("en-US")}`; c.classList.toggle("warn", n >= MAXLEN);
+}
+const draftKey = () => `draft.${LV.id || "recorded"}`;
+let draftT = 0;
+function saveDraftNow() { clearTimeout(draftT); const v = sayIn.value; store.set(draftKey(), v ? v : null); }
+function restoreDraft() { sayIn.value = store.get(draftKey(), "") || ""; growSay(); syncCount(); syncSend(); $("#say-note").hidden = true; }
+sayIn.addEventListener("input", () => {
+  growSay(); $("#say-note").hidden = true; syncSend(); syncCount();
+  clearTimeout(draftT); const key = draftKey(); draftT = setTimeout(() => store.set(key, sayIn.value || null), 300);
+});
+sayIn.addEventListener("focus", () => { if (P.playing && !LV.id) setPlaying(false); }); // focusing pauses the replay at the current step
 sayIn.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#say").requestSubmit(); } });
 function setResponding(on) { LV.responding = on; syncSend(); }
 function syncSend() { const stop = LV.responding && !sayIn.value.trim(); sayGo.dataset.stop = stop ? "1" : ""; sayGo.textContent = stop ? "■" : "↑"; sayGo.setAttribute("aria-label", stop ? "Stop" : "Send"); }
 async function interrupt() {
-  if (!LV.id || !window.FILET_API) return;
-  try { await fetch(`${window.FILET_API}/call/${LV.id}/interrupt`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
+  if (!LV.id || !LV.api) return;
+  try { await fetch(`${LV.api}/call/${LV.id}/interrupt`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
   setResponding(false);
 }
-function setLiveStored(v) { store.set("liveCall", v); window.__filetLive = !!v; }
-let liveSaveT = 0;
-function openLive(id, api, startedAt) {
-  LV.id = id; LV.api = api; LV.ending = false;
-  setLiveStored({ id, api, startedAt: startedAt || new Date().toISOString(), lastEventId: 0 });
-  $("#apilink").href = `api.html?call=${encodeURIComponent(id)}`;
-  const pk = $("#pkglink"); pk.href = `package.html?call=${encodeURIComponent(id)}`; pk.hidden = false;
-  $("#endcall").hidden = false; $("#endcall").disabled = false; $("#run").disabled = true;
-  loadEvents({ kind: "live", id, api }, [], "live", 0, true);
-  const seen = new Set();
-  LV.es?.close();
-  LV.es = new EventSource(`${api}/call/${encodeURIComponent(id)}/events?last_event_id=0`); // the server replays the whole call, then continues live
-  for (const name of [...EVENTS, "error"]) LV.es.addEventListener(name, (e) => {
-    if (name === "error") { if (e.data) { $("#err").hidden = false; try { $("#err").textContent = JSON.parse(e.data).message; } catch {} } return; }
-    if (e.lastEventId && seen.has(e.lastEventId)) return; seen.add(e.lastEventId);
-    let data; try { data = JSON.parse(e.data); } catch { return; }
-    const eid = Number(e.lastEventId) || P.ev.length + 1;
-    ingest({ id: eid, event: name, data });
-    if (!P.playing && P.pos >= P.ev.length - 1) setPlaying(true);
-    const lc = store.get("liveCall", null);
-    if (lc && lc.id === id) { lc.lastEventId = Math.max(lc.lastEventId || 0, eid); clearTimeout(liveSaveT); liveSaveT = setTimeout(() => store.get("liveCall", null)?.id === id && store.set("liveCall", lc), 300); }
-    if (name === "turn" && data.who === "caller") LV.sawCaller = true;
-    if (name === "turn" && data.who === "agent" && LV.sawCaller) { LV.sawCaller = false; setResponding(false); }
-    if (name === "done") { setResponding(false); finishLive(); }
-  });
-}
 async function sendCaller(text) {
-  const api = window.FILET_API;
-  try {
-    if (!LV.id && LV.creating) await LV.creating; // two quick lines never create two calls
-    if (!LV.id) {
-      LV.creating = (async () => {
-        const r = await fetch(`${api}/call`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-        if (!r.ok) throw new Error(`call ${r.status}`);
-        return (await r.json()).id;
-      })();
-      let id; try { id = await LV.creating; } finally { LV.creating = null; }
-      openLive(id, api);
-    }
-    setResponding(true);
-    const r = await fetch(`${LV.api || api}/call/${LV.id}/turn`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
-    if (r.status === 409) { const nt = $("#say-note"); nt.textContent = "agent is answering"; nt.hidden = false; sayIn.value = text; growSay(); return; }
-    if (!r.ok) throw new Error(`turn ${r.status}`);
-  } catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); }
-}
-function finishLive() {
-  LV.es?.close(); LV.es = null; P.open = false; $("#endcall").hidden = true;
-  if (LV.ending) { setLiveStored(null); $("#run").disabled = false; } // only End call / New call clear the stored call
-  const calls = savedCalls().filter((c) => c.id !== LV.id);
-  calls.unshift({ id: LV.id, at: new Date().toISOString(), turns: P.ev.filter((e) => e.event === "turn" && e.data.who === "caller").length, ev: P.ev });
-  while (calls.length && !store.set("calls", calls.slice(0, 3))) calls.pop();
-  store.set("livecur", P.ev);
-  if (LV.ending) LV.id = null;
-  drawSaved();
+  if (text.length > MAXLEN) { showNote("Too long: 2,000 characters max"); return; }
+  const id = LV.id;
+  setResponding(true);
+  let r;
+  try { r = await fetch(`${LV.api}/call/${id}/turn`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) }); }
+  catch { setResponding(false); showNote("Couldn't send, retry"); return; }
+  if (r.ok) { // 202: only now is the draft gone
+    if (LV.id === id && sayIn.value.trim() === text) { sayIn.value = ""; growSay(); syncCount(); }
+    store.set(`draft.${id}`, null); syncSend(); return;
+  }
+  setResponding(false);
+  if (r.status === 413) showNote("Too long: 2,000 characters max");
+  else if (r.status === 429) { const ra = Number(r.headers.get("retry-after")); showNote(`Too many messages, try again in ${ra > 0 ? `${ra}s` : "a moment"}`); }
+  else if (r.status === 409) showNote("agent is answering");
+  else showNote("Couldn't send, retry");
 }
 $("#say").addEventListener("submit", (e) => {
   e.preventDefault();
   const t = sayIn.value.trim();
   if (!t) { if (LV.responding) interrupt(); return; } // a typed line barges in; ■ only stops
-  if (P.playing) setPlaying(false);
+  if (P.playing && !LV.id) setPlaying(false);
   if (!window.FILET_API) { noteLive(); return; }
-  sayIn.value = ""; growSay(); sendCaller(t);
+  if (!LV.id || LV.ended) { showNote("Start a new session to talk live"); return; }
+  if (t.length > MAXLEN) { showNote("Too long: 2,000 characters max"); return; }
+  sendCaller(t);
 });
-$("#more").addEventListener("toggle", drawSaved);
-$("#newcall").addEventListener("click", () => { endLive(); $("#more").open = false; playRecorded("", 0); });
+$("#more").addEventListener("toggle", () => { if ($("#more").open) drawSaved(); });
+$("#newsess").addEventListener("click", newSession);
+$("#ro-new").addEventListener("click", newSession);
 $("#endcall").addEventListener("click", async () => {
-  if (!LV.id || !window.FILET_API) return;
+  if (!LV.id || !LV.api) return;
   const b = $("#endcall"); b.disabled = true; b.textContent = "Ending…"; LV.ending = true;
-  try { await fetch(`${window.FILET_API}/call/${LV.id}/end`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); }
-  catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); b.disabled = false; }
-  b.textContent = "End call"; // stream stays open for reconciled, close receipt and done
+  try { await fetch(`${LV.api}/call/${LV.id}/end`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); }
+  catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); b.disabled = false; b.textContent = "End call"; }
+  // the stream stays open for reconciled, the close receipt and done; then the session turns read-only
 });
+addEventListener("beforeunload", saveDraftNow);
 
-// boot: auto-play the recorded call, resuming the last position
+const detBtn = $("#details");
+function setDetails(on) { document.body.classList.toggle("details-on", on); detBtn.setAttribute("aria-pressed", String(on)); store.set("details", on); }
+detBtn.addEventListener("click", () => setDetails(!document.body.classList.contains("details-on")));
+setDetails(!!store.get("details", false));
+document.body.classList.toggle("all-rcpt", !!store.get("allReceipts", false));
+
+// boot: ?s=<id> opens that session; else resume the active session; else replay the recording
 window.__filetBusy = false; window.__filetLive = !!store.get("liveCall", null);
 S = fresh("recorded");
 setupSay();
@@ -1386,11 +1577,12 @@ requestAnimationFrame((t) => { P.last = t; frame(t); });
 {
   const saved = store.get("pos", null), src = store.get("src", null);
   const same = (a, b) => a && b && a.kind === b.kind && (a.fail || "") === (b.fail || "") && a.id === b.id;
-  const lc = store.get("liveCall", null);
-  if (lc?.id && (lc.api || window.FILET_API)) openLive(lc.id, lc.api || window.FILET_API, lc.startedAt);
-  else if (src?.kind === "saved") { const c = savedCalls().find((x) => x.id === src.id); if (c) loadEvents(src, c.ev, "recorded", same(saved?.src, src) ? saved.pos : 0, true); else playRecorded("", 0); }
+  const lc = store.get("liveCall", null), sParam = qs.get("s");
+  if (sParam && window.FILET_API) openSession(sParam);
+  else if (lc?.id && (lc.api || window.FILET_API)) openSession(lc.id, lc.api || window.FILET_API);
   else { const fail = src?.kind === "recorded" ? src.fail || "" : ""; const at = same(saved?.src, { kind: "recorded", fail }) ? saved.pos : 0; playRecorded(fail, at); }
 }
 </script>
+
 </body>
 </html>
