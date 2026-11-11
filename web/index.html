@@ -1,368 +1,197 @@
 <!doctype html>
-<!-- copy slots (data-copy): subtitle, col-model, col-call, col-filet, authority, empty-model, empty-call, empty-filet -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>filet</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%233B82F6%22/%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap">
+<title>Member Line Call</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%231a1a1a%22/%3E%3C/svg%3E">
 <style>
-/* agentmint.run palette: dark only, by design */
 :root {
-  --bg: #0B1120; --fg: #E2E8F0; --fg-2: #CBD5E1; --surface: #141E30; --border: #1E3A5F; --code-bg: #0D1117;
-  --blue: #3B82F6; --green: #10B981; --red: #EF4444; --yellow: #FBBF24;
-  --text-secondary: #94A3B8; --text-tertiary: #475569; --faint: #64748B; --off: #26354B;
-  --hl: rgba(59, 130, 246, 0.26); --hl-soft: rgba(59, 130, 246, 0.10);
-  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  --serif: "Source Serif 4", Georgia, serif;
-  --pad: clamp(12px, 1.7vw, 24px);
-  --gut: 14px;
-  --ease: cubic-bezier(0.16, 1, 0.3, 1);
-  color-scheme: dark;
+  --bg: #fffdf8; --fg: #1a1a1a; --mute: #555; --line: #ddd6c8; --card: #fff; --hl: #f3ecdc;
+  --ok: #1d6b2f; --bad: #a3221b; --warn: #7a5200;
+  --serif: Georgia, "Times New Roman", serif;
+  --mono: Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme: light;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
-body { background: var(--bg); color: var(--fg); font: 16px/1.7 var(--serif); -webkit-font-smoothing: antialiased; }
-button, select, input { font: 500 12px var(--mono); color: inherit; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #161513; --fg: #f2efe8; --mute: #b5b0a5; --line: #3a3731; --card: #1f1e1b; --hl: #2a2822; --ok: #7fd18f; --bad: #ff8a80; --warn: #e8c170; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --bg: #161513; --fg: #f2efe8; --mute: #b5b0a5; --line: #3a3731; --card: #1f1e1b; --hl: #2a2822; --ok: #7fd18f; --bad: #ff8a80; --warn: #e8c170; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 21px/1.6 var(--serif); overflow-wrap: anywhere; }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
-[data-copy]:empty { display: none; }
+button, select, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--fg); outline-offset: 2px; }
 [hidden] { display: none !important; }
-.lbl { font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
-.tag { font: 500 10px var(--mono); letter-spacing: 0.04em; color: var(--faint); border: 1px solid var(--border); border-radius: 3px; padding: 0 5px; margin-left: 6px; text-transform: none; }
-.t { font: 400 10.5px var(--mono); color: var(--faint); white-space: nowrap; }
-.ok { color: var(--green); } .bad { color: var(--red); } .warn { color: var(--yellow); }
+p { margin: 8px 0; }
+.ok { color: var(--ok); } .bad { color: var(--bad); } .wait, .warn { color: var(--warn); }
+.mute { color: var(--mute); }
 
-/* shell: slim header, panes fill the viewport */
-.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 12px; padding: var(--pad) max(var(--pad), env(safe-area-inset-right)) var(--pad) max(var(--pad), env(safe-area-inset-left)); }
-.top { display: flex; align-items: center; gap: 8px 14px; min-height: 36px; max-height: 48px; }
-.brand { font: 700 15px var(--mono); white-space: nowrap; }
-.brand span { color: var(--blue); }
-.mode { font: 500 10.5px var(--mono); color: var(--text-secondary); border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
-.mode[data-live="1"] { color: var(--green); border-color: rgba(16, 185, 129, 0.4); }
-.clock { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; color: var(--fg); min-width: 5ch; }
-.cost { font: 500 11.5px var(--mono); color: var(--fg-2); text-decoration: none; white-space: nowrap; }
-.cost:hover { color: var(--blue); }
-.ih .usd { color: var(--fg-2); margin-left: 8px; }
-.ctl { display: flex; align-items: center; gap: 6px; flex: none; }
-.btn { font: 500 12px var(--mono); padding: 5px 11px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--fg); cursor: pointer; text-decoration: none; line-height: 1.4; }
-.btn--play { background: var(--blue); border-color: var(--blue); color: #fff; min-width: 5.4rem; }
+.page { max-width: 820px; margin: 0 auto; padding: 0 16px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+/* header */
+.top { padding: 28px 0 16px; border-bottom: 1px solid var(--line); }
+.title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+h1 { font-size: 32px; line-height: 1.2; margin: 0; }
+.mode { font-size: 19px; color: var(--mute); }
+.cost { font-size: 19px; color: var(--mute); margin-left: auto; }
+.sum { font-size: 20px; margin: 12px 0 0; }
+.ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 16px; }
+.ctl .grp { display: contents; }
+.btn { display: inline-block; font-size: 19px; line-height: 1.3; padding: 8px 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--fg); cursor: pointer; text-decoration: none; }
+.btn:hover { border-color: var(--fg); }
+.btn.main { background: var(--fg); border-color: var(--fg); color: var(--bg); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+label.pick { display: inline-flex; align-items: center; gap: 8px; font-size: 19px; }
+select { font-size: 19px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); max-width: 100%; }
 .more { position: relative; }
-.more > summary { list-style: none; cursor: pointer; padding: 3px 11px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font: 600 14px var(--mono); line-height: 1.3; }
+.more > summary { list-style: none; }
 .more > summary::-webkit-details-marker { display: none; }
-.menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: min(19rem, 86vw); background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px; display: grid; gap: 10px; font: 12px/1.5 var(--mono); }
-.menu label { display: grid; gap: 4px; }
-.menu select, .menu input { width: 100%; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
-.menu .row { display: flex; gap: 6px; }
-.menu .row input { flex: 1; min-width: 0; }
-.saved { display: grid; gap: 2px; max-height: 46vh; overflow-y: auto; }
-.saved button { display: grid; text-align: left; background: none; border: 0; color: var(--fg); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
-.saved button:hover { background: var(--hl-soft); }
-.saved button.cur { background: var(--hl); }
-.saved .st-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.err { font: 600 11px var(--mono); color: var(--red); white-space: nowrap; }
-.scrub { position: relative; flex: 1; min-width: 80px; height: 22px; cursor: pointer; touch-action: none; }
-.scrub .track { position: absolute; left: 0; right: 0; top: 10px; height: 2px; background: var(--border); border-radius: 1px; }
-.scrub .fill { position: absolute; left: 0; top: 10px; height: 2px; background: var(--blue); border-radius: 1px; width: 0; }
-.scrub .head { position: absolute; top: 5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--fg); left: 0; pointer-events: none; }
-.scrub .tk { position: absolute; top: 4px; width: 2px; height: 14px; margin-left: -1px; background: var(--text-tertiary); border: 0; padding: 0; cursor: pointer; }
-.scrub .tk.f { background: var(--red); width: 3px; }
+.menu { position: absolute; left: 0; top: calc(100% + 6px); z-index: 20; width: min(420px, calc(100vw - 32px)); max-height: 60vh; overflow-y: auto; background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+.saved button { display: block; width: 100%; text-align: left; background: none; border: 0; border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 19px; }
+.saved button:hover, .saved button.cur { background: var(--hl); }
+.saved .when { display: block; font-size: 17px; color: var(--mute); }
+.err { color: var(--bad); font-size: 19px; }
 
-/* layout: side panels + centered conversation */
-.cols { display: grid; grid-template-columns: var(--wl, 30vw) var(--gut) minmax(320px, 1fr) var(--gut) var(--wr, 30vw); min-height: 0; }
-.side { position: relative; background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.rail { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 8px 14px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--text-tertiary); font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; text-align: left; }
-.rail:hover { color: var(--fg); }
-.rail .chev { font-size: 12px; letter-spacing: 0; }
-.side.collapsed > :not(.rail) { display: none !important; }
-.side.collapsed .rail { height: 100%; border-bottom: 0; writing-mode: vertical-rl; justify-content: flex-start; padding: 14px 0; align-items: center; }
-.center { position: relative; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.pane { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.feed { flex: 1; overflow-y: auto; min-height: 0; padding: 10px 18px 28px; font: 12.5px/1.6 var(--mono); color: var(--text-secondary); overscroll-behavior: contain; overflow-anchor: auto; overflow-wrap: anywhere; }
-.chat { padding: 18px max(18px, calc((100% - 720px) / 2)) 28px; }
-.gutter { cursor: col-resize; display: flex; justify-content: center; touch-action: none; }
-.gutter::after { content: ""; width: 2px; border-radius: 1px; background: transparent; transition: background-color 150ms var(--ease); }
-.gutter:hover::after, .gutter.drag::after { background: var(--border); }
-.gutter:focus-visible { outline: none; } .gutter:focus-visible::after { background: var(--blue); }
-.gutter.off { pointer-events: none; }
-.hgut { flex: none; height: 10px; cursor: row-resize; display: flex; align-items: center; touch-action: none; }
-.hgut::after { content: ""; flex: 1; height: 2px; margin: 0 14px; border-radius: 1px; background: var(--border); opacity: 0.5; }
-.hgut:hover::after, .hgut.drag::after, .hgut:focus-visible::after { background: var(--blue); opacity: 1; }
-.hgut:focus-visible { outline: none; }
-.pill { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 3; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--blue); background: var(--surface); color: var(--fg); font: 600 11px var(--mono); cursor: pointer; }
-.am-top { flex: none; padding: 8px 18px 2px; font: 11.5px var(--mono); }
-.termd { flex: none; border-top: 1px solid var(--border); }
-.termd > summary { list-style: none; cursor: pointer; padding: 6px 14px; font: 500 11px var(--mono); color: var(--text-tertiary); }
-.termd > summary::-webkit-details-marker { display: none; }
-.termd > summary::before { content: "▸ "; } .termd[open] > summary::before { content: "▾ "; }
-.termd > summary:hover { color: var(--fg); }
-@media (max-width: 900px) {
-  .app { height: auto; }
-  .top { flex-wrap: wrap; max-height: none; }
-  .scrub { order: 10; flex-basis: 100%; }
-  .cols { grid-template-columns: 1fr; gap: 14px; }
-  .center { order: -1; min-height: 70vh; }
-  .gutter, .hgut { display: none; }
-  .side { max-height: 85vh; }
-  .side:not(.collapsed) { min-height: 60vh; }
-  .side.collapsed .rail { writing-mode: horizontal-tb; height: auto; padding: 8px 14px; }
+/* the call */
+main { padding: 8px 0 24px; min-height: 40vh; }
+.empty { color: var(--mute); padding: 24px 0; }
+.grp-sec { border-bottom: 1px solid var(--line); padding: 12px 0 16px; }
+.grp-sec:last-child { border-bottom: 0; }
+.ln { margin: 14px 0; }
+.ln .who { display: block; font-size: 18px; color: var(--mute); }
+.ln .who b { color: var(--fg); }
+.ln.caller p { font-style: italic; }
+.ln p { margin: 2px 0 0; }
+.ln .src { font-size: 18px; color: var(--warn); }
+.think { margin: 10px 0; }
+.think > summary, .rc details > summary { cursor: pointer; font-size: 19px; color: var(--mute); }
+.think > summary:hover, .rc details > summary:hover { color: var(--fg); }
+.think p, .quote { background: var(--hl); padding: 12px 16px; border-radius: 6px; white-space: pre-wrap; }
+.uses { list-style: none; padding: 0; margin: 10px 0; font-size: 19px; color: var(--mute); }
+.uses li::before { content: "→ "; }
+.note { margin: 12px 0; padding: 10px 16px; border: 1px solid var(--line); border-left: 6px solid var(--warn); border-radius: 6px; background: var(--card); }
+.note.ok { border-left-color: var(--ok); color: var(--fg); }
+.note.bad { border-left-color: var(--bad); color: var(--fg); }
+
+/* receipts */
+.rc { background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--fg); border-radius: 8px; padding: 18px 22px; margin: 16px 0; scroll-margin: 24px; }
+.rc .kick { font-size: 18px; color: var(--mute); margin: 0; }
+.rc h3 { font-size: 24px; line-height: 1.3; margin: 2px 0 10px; }
+.rc .q { font-style: italic; }
+.rc ol { padding-left: 28px; margin: 6px 0; }
+.rc ol > li { margin: 10px 0; }
+.ev { list-style: none; padding: 0; margin: 4px 0 0; }
+.ev li { color: var(--mute); padding-left: 14px; border-left: 3px solid var(--line); margin-top: 4px; }
+.ev li.bad { color: var(--bad); }
+.maps { margin: 4px 0 8px; padding-left: 28px; }
+.caveat { padding: 8px 14px; background: var(--hl); border-radius: 6px; }
+.st { font-weight: bold; margin: 14px 0 4px; }
+.st span + span::before { content: " · "; color: var(--mute); font-weight: normal; }
+.rc details { margin-top: 8px; }
+pre.raw { font: 17px/1.5 var(--mono); background: var(--hl); padding: 12px 14px; border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 8px 0 0; max-height: 70vh; overflow-y: auto; }
+.mono { font-family: var(--mono); font-size: 17px; }
+/* minor receipts: one line until opened */
+.rc.minor { border-left-width: 1px; padding: 0; margin: 8px 0; }
+.rc.minor > summary { list-style: none; cursor: pointer; padding: 10px 16px; font-size: 19px; display: flex; gap: 12px; align-items: baseline; color: var(--fg); }
+.rc.minor > summary::-webkit-details-marker { display: none; }
+.rc.minor > summary::before { content: "▸"; color: var(--mute); }
+.rc.minor[open] > summary::before { content: "▾"; }
+.rc.minor > summary .t { flex: 1; }
+.rc.minor > .in { padding: 0 22px 16px; border-top: 1px solid var(--line); }
+.ckb { margin-top: 8px; }
+
+/* bottom bar */
+.bottom { position: sticky; bottom: 0; z-index: 10; background: var(--bg); border-top: 1px solid var(--line); padding: 12px 0 max(12px, env(safe-area-inset-bottom)); }
+.say { display: flex; gap: 10px; align-items: flex-end; }
+.say textarea { flex: 1; min-width: 0; resize: none; border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 10px 14px; font-size: 21px; line-height: 1.5; height: 3.3em; max-height: 9em; }
+.say textarea:focus { border-color: var(--fg); outline: none; }
+.say-msg { font-size: 18px; margin: 6px 0 0; }
+.ro { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.latest { position: fixed; left: 50%; transform: translateX(-50%); bottom: 110px; z-index: 11; }
+
+footer { padding: 24px 0 48px; color: var(--mute); font-size: 18px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: baseline; }
+footer details { flex-basis: 100%; }
+footer summary { cursor: pointer; }
+footer .row { display: flex; gap: 8px; margin-top: 8px; }
+footer input { flex: 1; min-width: 0; font-size: 18px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); }
+
+@media (max-width: 600px) {
+  body { font-size: 20px; }
+  h1 { font-size: 28px; }
+  .rc { padding: 14px 16px; }
+  .rc.minor > .in { padding: 0 16px 14px; }
+  .cost { margin-left: 0; }
+  .latest { bottom: 120px; }
 }
-
-/* parts, tethers, flash */
-.part { border-radius: 4px; cursor: default; transition: background-color 150ms var(--ease); }
-.part:hover { background: var(--hl-soft); }
-.part.rel { background: var(--hl); }
-.flash { animation: flash 1.4s var(--ease); }
-@keyframes flash { 0%, 40% { background: var(--hl); box-shadow: 0 0 0 1.5px var(--blue); } 100% { background: transparent; box-shadow: 0 0 0 0 transparent; } }
-.jp { display: inline-block; white-space: nowrap; opacity: 0; padding: 0 3px; margin-left: 3px; color: var(--blue); text-decoration: none; font: 600 11px var(--mono); transition: opacity 150ms var(--ease); }
-.part:hover > .jp, .part:focus-within > .jp, .part:focus > .jp { opacity: 1; }
-.jp:focus-visible { opacity: 1; }
-#tether { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 30; }
-#tether line { stroke: var(--blue); stroke-width: 1; opacity: 0.85; transition: opacity 400ms var(--ease); }
-#tether.fade line { opacity: 0; }
-.enter { animation: enter 180ms var(--ease) both; }
-@keyframes enter { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
-
-/* conversation */
-.turn { display: block; padding: 6px 10px; margin: 0 -10px 18px; }
-.turn .who { display: block; font: 600 10.5px var(--mono); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; }
-.turn[data-who="agent"] .who { color: var(--blue); }
-.turn .tx { display: block; font: 17px/1.6 var(--serif); color: var(--fg); white-space: pre-wrap; }
-.say { flex: none; padding: 8px max(12px, calc((100% - 720px) / 2)) 4px; }
-.composer { position: relative; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); padding: 12px 54px 12px 14px; transition: border-color 150ms var(--ease); }
-.composer:focus-within { border-color: var(--blue); }
-.composer textarea { display: block; width: 100%; resize: none; border: 0; outline: none; background: transparent; color: var(--fg); font: 15px/1.5 var(--serif); height: 3em; min-height: 3em; max-height: 12em; overflow-y: auto; }
-.composer textarea::placeholder { color: var(--faint); }
-.composer .count { display: block; margin-top: 4px; font: 500 10.5px var(--mono); color: var(--faint); }
-.composer .count.warn { color: var(--yellow); }
-.say.ro { display: flex; justify-content: center; padding-bottom: 12px; }
-.say[hidden] { display: none !important; }
-.composer .note { display: block; margin-top: 4px; font: 500 11px var(--mono); color: var(--yellow); }
-.send { position: absolute; right: 10px; bottom: 10px; width: 32px; height: 32px; border-radius: 8px; border: 0; background: var(--blue); color: #fff; font: 700 15px var(--mono); cursor: pointer; }
-.send[data-stop="1"] { background: var(--surface); border: 1px solid var(--border); color: var(--fg); font-size: 12px; }
-
-/* model tree */
-.rules { margin-bottom: 18px; }
-.node { display: block; padding: 1px 6px; margin: 0 -6px; }
-.kids { margin-left: 8px; padding-left: 12px; border-left: 1px solid var(--border); }
-.card { padding: 0 0 22px; }
-.hd { display: block; padding: 2px 6px; margin: 0 -6px; }
-.hd b { font: 600 12px var(--mono); color: var(--fg); letter-spacing: 0.04em; }
-.hd .pt { color: var(--text-secondary); margin-left: 8px; }
-.k { color: var(--faint); }
-.v { color: var(--fg-2); }
-.ih .in { color: var(--blue); font-weight: 600; }
-.ih .il { color: var(--fg); }
-.sr[data-s="timeout"] { color: var(--yellow); } .sr[data-s="end_turn"] { color: var(--green); }
-.think { display: block; font: 15px/1.65 var(--serif); color: var(--fg-2); padding: 2px 6px; margin: 0 -6px; }
-.think .part { text-decoration: underline; text-decoration-color: var(--border); text-underline-offset: 3px; }
-.caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -2px; background: var(--blue); opacity: 0.55; border-radius: 1px; }
-.claim .cid { color: var(--faint); margin-right: 6px; }
-.claim .ct { font: 14.5px/1.55 var(--serif); color: var(--fg); }
-.claim.unsup .ct, .claim.unsup .cid { color: var(--yellow); }
-.claim.final .cid { color: var(--blue); }
-.cite { display: block; color: var(--text-secondary); padding: 0 6px; margin: 0 -6px; }
-.cite::before { content: "↳ "; color: var(--faint); }
-.cite[data-kind="rule"] .cv { color: var(--blue); } .cite[data-kind="tool"] .cv { color: var(--green); }
-.cite.warn { color: var(--yellow); }
-.tn { color: var(--green); }
-.pending { color: var(--faint); }
-.srow .sk { color: var(--faint); margin-right: 6px; }
-.srow .sn { color: var(--fg-2); }
-.srow .sd { color: var(--fg); margin-left: 6px; }
-.srow.err .sk, .srow.err .sn { color: var(--yellow); }
-.pol { color: var(--text-secondary); }
-.pol::before { content: attr(data-pol) " "; font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
-
-/* failure story */
-.story { display: block; margin: 10px -6px; padding: 4px 6px 6px; }
-.story .sh b { font-weight: 600; margin-right: 8px; }
-.story .st { font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; }
-.story[data-state="recovering"] .sh { color: var(--yellow); }
-.story[data-state="recovered"] .sh { color: var(--green); }
-.story[data-state="failed"] .sh { color: var(--red); }
-.story ol { list-style: none; margin: 2px 0 0 8px; padding-left: 12px; border-left: 1px solid var(--border); }
-.story li { color: var(--fg-2); }
-.story li:last-child { color: var(--fg); }
-
-/* filet column */
-.aline { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 4px; color: var(--text-tertiary); min-height: 20px; }
-.aline .tick { align-self: center; width: 6px; height: 6px; border-radius: 50%; background: var(--off); }
-.aline.live .tick { background: var(--green); animation: tick 250ms steps(2, jump-none) infinite; }
-@keyframes tick { from { opacity: 1; } to { opacity: 0.2; } }
-.tok { padding: 0 3px; white-space: nowrap; }
-.tok:not([hidden]) ~ .tok:not([hidden])::before { content: "· "; color: var(--text-tertiary); }
-.tok .tv { display: inline-block; color: var(--fg); }
-.tok.warn .tv { color: var(--yellow); }
-.tv.bump { animation: bump 250ms var(--ease) both; }
-@keyframes bump { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
-.rcpt { font: 12.5px/1.65 var(--mono); margin: 0 0 24px; color: var(--fg); scroll-margin: 24px; }
-.rcpt .br, .rcpt .pn { color: var(--text-tertiary); }
-.jl { display: block; padding-left: 2ch; }
-.jk { color: var(--text-tertiary); }
-.js { position: relative; color: var(--fg); padding: 0 2px; margin: 0 -2px; }
-.js > .jp, .tok > .jp { position: absolute; left: 100%; top: 0; margin: 0; }
-.tok { position: relative; }
-.js.pend { color: var(--faint); }
-.js.bad, .js.warn { color: var(--yellow); }
-.js.rec { color: var(--green); }
-.ckb { border: 0; background: none; padding: 0 0 0 8px; font: 500 11px var(--mono); color: var(--blue); cursor: pointer; }
-.ckb.ok { color: var(--green); } .ckb.bad { color: var(--red); }
-.summary { display: block; font: 600 12px var(--mono); margin: 4px 0 20px; }
-
-/* terminal */
-.term { height: var(--th, 200px); margin: 0 12px 12px; border-radius: 8px; overflow: hidden; background: var(--bg); display: flex; flex-direction: column; position: relative; }
-.tbody { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 10px; font: 11px/1.6 var(--mono); color: var(--text-secondary); overflow-wrap: anywhere; white-space: pre-wrap; }
-.tl { display: block; padding: 0 3px; margin: 0 -3px; }
-.tl .tp { color: var(--text-tertiary); }
-.tl .cmd { color: var(--fg-2); }
-.tl .tr { display: block; color: var(--text-secondary); padding-left: 2ch; }
-.tl.warn .tr { color: var(--yellow); } .tl.bad .tr { color: var(--red); } .tl.ok .tr { color: var(--green); }
-.tl .go { color: var(--faint); text-decoration: none; margin-left: 6px; }
-.tl .go:hover { color: var(--blue); }
-
-/* simple view: details hidden unless toggled */
-body:not(.details-on) .d-only { display: none !important; }
-body:not(.details-on) .jp { display: none !important; }
-body:not(.details-on) .claim .cid { display: none; }
-body:not(.details-on) .iter-empty { display: none; }
-.think .part { text-decoration: none !important; }
-.caller-line { display: block; font: 14.5px/1.55 var(--serif); color: var(--fg); padding: 2px 6px; margin: 0 -6px 4px; }
-.caller-line::before { content: "“"; color: var(--faint); } .caller-line::after { content: "”"; color: var(--faint); }
-.tool-plain { color: var(--green); }
-.res-sum { color: var(--fg-2); }
-.answer { display: block; font: 14.5px/1.55 var(--serif); color: var(--fg); }
-.claim + .cites { display: none; }
-.claim.open + .cites, body.details-on .claim + .cites { display: block; }
-.claim { cursor: pointer; }
-/* receipt cards */
-.rc { margin: 0 0 14px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg); scroll-margin: 24px; }
-.rc.minor { display: none; } body.all-rcpt .rc.minor { display: block; }
-.rc-sum { display: block; cursor: pointer; padding: 0; margin: 0; }
-.rc-dec { font: 600 13px var(--mono); color: var(--fg); }
-.rc-dec.err { color: var(--yellow); } .rc-dec.rec { color: var(--green); }
-.rc-rule { font: 12px/1.5 var(--mono); color: var(--text-secondary); margin-top: 2px; }
-.rc-rule b { color: var(--blue); font-weight: 600; margin-right: 6px; }
-.rc-claims { list-style: none; margin: 6px 0 0; display: grid; gap: 1px; }
-.rc-claims li { font: 13.5px/1.5 var(--serif); color: var(--fg-2); padding-left: 12px; position: relative; }
-.rc-claims li::before { content: "·"; position: absolute; left: 2px; color: var(--faint); }
-.rc-st { margin-top: 6px; font: 500 11.5px var(--mono); color: var(--faint); }
-.rc-st .ok { color: var(--green); } .rc-st .wait { color: var(--yellow); }
-.rc .rcpt { margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--border); }
-.ameta { margin-top: 3px; font: 10.5px/1.5 var(--mono); color: var(--faint); overflow-wrap: anywhere; }
-.ameta b { color: var(--text-secondary); font-weight: 500; }
-.tgl { border: 0; background: none; color: var(--faint); font: 500 11px var(--mono); cursor: pointer; padding: 0; margin-left: auto; }
-.tgl[aria-pressed="true"] { color: var(--blue); }
-.btn[aria-pressed="true"] { border-color: var(--blue); color: var(--blue); }
-
-/* thread modal */
-.modal { position: fixed; inset: 0; z-index: 40; background: rgba(5, 9, 18, 0.72); display: flex; align-items: center; justify-content: center; padding: 24px; }
-.mbox { width: min(720px, 100%); max-height: min(86vh, 900px); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; }
-.mhd { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); font: 600 12px var(--mono); }
-.mhd .mt { flex: 1; color: var(--fg); }
-.mbody { flex: 1; overflow-y: auto; padding: 14px 18px 24px; font: 12.5px/1.6 var(--mono); color: var(--text-secondary); overflow-wrap: anywhere; }
-.mn { display: block; text-decoration: none; padding: 2px 6px; margin: 0 -6px 2px; border-radius: 4px; scroll-margin: 40px; }
-.mn:hover { background: var(--hl-soft); }
-.mn .lbl { display: block; }
-.mn pre, .mn .mx { white-space: pre-wrap; overflow-wrap: anywhere; font: 12px/1.55 var(--mono); color: var(--fg-2); }
-.mn .ms { font: 15px/1.6 var(--serif); color: var(--fg); }
-.msec { margin: 0 0 10px 0; padding-left: 12px; border-left: 1px solid var(--border); }
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
-}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: auto; } }
 </style>
 </head>
 <body>
-<div class="app">
+<div class="page">
   <header class="top">
-    <span class="brand">filet<span>.ai</span></span>
-    <span class="mode" id="mode" hidden></span>
-    <span class="clock" id="clock" hidden></span>
-    <a class="cost" id="cost" href="costs.html" target="_blank" rel="noopener" hidden></a>
-    <p data-copy="subtitle"></p>
-    <div class="scrub rec-only" id="scrub" aria-label="Timeline"><div class="track"></div><div class="fill" id="fill"></div><div id="ticks"></div><div class="head" id="head"></div></div>
-    <span class="err" id="err" role="status" hidden></span>
-    <div class="ctl">
-      <button class="btn rec-only" id="prev" type="button" aria-label="Previous step">←</button>
-      <button class="btn btn--play rec-only" id="play" type="button">Play</button>
-      <button class="btn rec-only" id="next" type="button" aria-label="Next step">→</button>
-      <button class="btn" id="details" type="button" aria-pressed="false">Details</button>
-      <button class="btn" id="newsess" type="button">New session</button>
-      <button class="btn" id="endcall" type="button" hidden>End call</button>
-      <a class="btn" id="apilink" href="api.html" target="_blank" rel="noopener">API</a>
-      <a class="btn" id="pkglink" href="package.html" target="_blank" rel="noopener" hidden>Package</a>
-      <details class="more" id="more">
-        <summary aria-label="More">⋯</summary>
-        <div class="menu">
-          <label><span class="lbl">Run</span>
-            <select id="run">
-              <option value="">recorded call</option>
-              <option value="llm_timeout">recorded · llm_timeout</option>
-              <option value="tool_error">recorded · tool_error</option>
-              <option value="authority_down">recorded · authority_down</option>
-              <option value="signer_crash">recorded · signer_crash</option>
-            </select>
-          </label>
-          <label><span class="lbl">Speed</span><select id="speed"><option value="1">normal</option><option value="3">fast</option></select></label>
-          <label><span class="lbl">API</span><span class="row"><input id="api" type="url" placeholder="https://…" spellcheck="false"><button class="btn" id="api-save" type="button">Save</button></span></label>
-          <div><span class="lbl">Sessions</span><div class="saved" id="saved"></div></div>
-        </div>
-      </details>
+    <div class="title">
+      <h1>Member line call</h1>
+      <span class="mode" id="mode"></span>
+      <a class="cost" id="cost" href="costs.html" target="_blank" rel="noopener" hidden></a>
     </div>
+    <p class="sum" id="sum"></p>
+    <div class="ctl">
+      <span class="grp rec-only">
+        <button class="btn" id="play" type="button">Pause</button>
+        <button class="btn" id="restart" type="button">Restart</button>
+        <button class="btn" id="all" type="button">Show all</button>
+        <label class="pick">Recording
+          <select id="run">
+            <option value="">Normal call</option>
+            <option value="llm_timeout">Model times out</option>
+            <option value="tool_error">Lookup fails</option>
+            <option value="authority_down">Public log offline</option>
+            <option value="signer_crash">Signing service restarts</option>
+          </select>
+        </label>
+      </span>
+      <button class="btn" id="endcall" type="button" hidden>End call</button>
+      <a class="btn" id="pkglink" href="package.html" target="_blank" rel="noopener" hidden>Evidence package</a>
+      <button class="btn main" id="newsess" type="button">Start a live call</button>
+      <details class="more" id="more"><summary class="btn">Past calls</summary><div class="menu"><div class="saved" id="saved"></div></div></details>
+    </div>
+    <p class="err" id="err" role="status" hidden></p>
   </header>
 
-  <main class="cols" id="cols">
-    <section class="side" id="side-l" data-pane="model" aria-label="Model">
-      <button class="rail" type="button" data-toggle="l" aria-expanded="true" title="Model ( [ )"><span>Model</span><span class="chev">‹</span></button>
-      <p data-copy="col-model"></p>
-      <div class="pane"><div class="feed" id="model"><p data-copy="empty-model"></p></div></div>
-    </section>
-    <div class="gutter" role="separator" aria-orientation="vertical" aria-label="Resize Model panel" tabindex="0" data-g="l"></div>
-    <section class="center" data-pane="call" aria-label="Conversation">
-      <p data-copy="col-call"></p>
-      <div class="pane"><div class="feed chat" id="call"><p data-copy="empty-call"></p></div></div>
-      <form class="say" id="say" autocomplete="off"><div class="composer"><textarea id="say-in" rows="2" placeholder="Speak as the caller…" aria-label="Speak as the caller"></textarea><span class="note" id="say-note" hidden></span><span class="count" id="say-count" hidden></span><button class="send" id="say-go" type="submit" aria-label="Send">↑</button></div></form>
-      <div class="say ro" id="say-ro" hidden><button class="btn btn--play" id="ro-new" type="button">New session</button></div>
-    </section>
-    <div class="gutter" role="separator" aria-orientation="vertical" aria-label="Resize filet panel" tabindex="0" data-g="r"></div>
-    <section class="side" id="side-r" data-pane="filet" aria-label="filet">
-      <button class="rail" type="button" data-toggle="r" aria-expanded="true" title="filet ( ] )"><span>filet</span><span class="chev">›</span></button>
-      <p data-copy="col-filet"></p>
-      <div class="am-top"><div class="aline" id="aline"></div><div class="ameta" id="ameta" hidden></div><p data-copy="authority"></p></div>
-      <div class="pane"><div class="feed" id="am"><p data-copy="empty-filet"></p></div></div>
-      <details class="termd" id="termd"><summary id="termsum">terminal</summary>
-        <div class="hgut" id="hgut" role="separator" aria-orientation="horizontal" aria-label="Resize terminal" tabindex="0"></div>
-        <div class="term" id="termbox"><div class="tbody" id="term"></div></div>
-      </details>
-    </section>
-  </main>
-</div>
-<svg id="tether" aria-hidden="true"></svg>
-<div class="modal" id="modal" hidden>
-  <div class="mbox" role="dialog" aria-modal="true" aria-labelledby="m-title">
-    <div class="mhd"><button class="btn" id="m-prev" type="button" aria-label="Previous decision">←</button><span class="mt" id="m-title"></span><button class="btn" id="m-next" type="button" aria-label="Next decision">→</button><button class="btn" id="m-x" type="button" aria-label="Close">×</button></div>
-    <div class="mbody" id="m-body"></div>
+  <main id="feed"></main>
+
+  <div class="bottom" id="bottom">
+    <form class="say" id="say" autocomplete="off">
+      <textarea id="say-in" rows="2" placeholder="Type what the caller says" aria-label="What the caller says"></textarea>
+      <button class="btn main" id="say-go" type="submit">Send</button>
+    </form>
+    <p class="say-msg warn" id="say-note" hidden></p>
+    <p class="say-msg mute" id="say-count" hidden></p>
+    <div class="ro" id="say-ro" hidden><span id="ro-text">This is a recorded call.</span><button class="btn main" id="ro-new" type="button">Start a live call</button></div>
   </div>
+
+  <footer>
+    <a href="api.html" id="apilink" target="_blank" rel="noopener">Network log</a>
+    <a href="costs.html" target="_blank" rel="noopener">Costs</a>
+    <details><summary>Backend</summary><div class="row"><input id="api" type="url" placeholder="https://…" spellcheck="false" aria-label="Backend URL"><button class="btn" id="api-save" type="button">Save</button></div></details>
+  </footer>
 </div>
+<button class="btn latest" id="latest" type="button" hidden>Jump to latest ↓</button>
 
 <script>
 "use strict";
 const $ = (s, r = document) => r.querySelector(s);
 const RM = matchMedia("(prefers-reduced-motion: reduce)");
-const WIDE = matchMedia("(min-width: 901px)");
 const EVENTS = ["start", "turn", "model_input", "thinking", "span", "loop", "tool_call", "tool_result", "failure", "decision", "signed",
   "queued", "batch", "consistency", "anchored", "verified", "gap", "reconciled", "done", "cost", "call_cost", "interrupted", "api"];
-const MODEL_DEFAULT = "claude-opus-5-5";
-const AUTH = "https://filet-authority.anikethsubs.workers.dev";
-const AUTH_HOST = "filet-authority.anikethsubs.workers.dev";
 
 // ── browser storage ──
 const store = {
-  get(k, d) { try { const v = localStorage.getItem(`filet.${k}`); return v == null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { if (v == null) localStorage.removeItem(`filet.${k}`); else localStorage.setItem(`filet.${k}`, JSON.stringify(v)); return true; } catch { return false; } },
+  get(k, d) { try { const v = localStorage.getItem(`filet.v3.${k}`); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { if (v == null) localStorage.removeItem(`filet.v3.${k}`); else localStorage.setItem(`filet.v3.${k}`, JSON.stringify(v)); return true; } catch { return false; } },
 };
 const qs = new URLSearchParams(location.search);
 if (qs.has("api")) { const a = qs.get("api"); store.set("api", a ? a.replace(/\/+$/, "") : null); }
@@ -371,780 +200,367 @@ const API_DEFAULT = "https://filet-call.anikethsubs.workers.dev";
 { const a = store.get("api", null); window.FILET_API = a === "off" ? null : a || window.FILET_API || API_DEFAULT; }
 const PRESENTER = store.get("presenter", null);
 
-// ── helpers ──
+// ── plain words ──
 const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-const short = (x) => (x && x.length > 16 ? `${x.slice(0, 8)}…${x.slice(-4)}` : String(x ?? ""));
-const s4 = (x) => (x ? `${String(x).slice(0, 4)}…` : "…");
-const J = (v) => JSON.stringify(v, null, 2);
-const pad = (n, w = 2) => String(n).padStart(w, "0");
+const words = (x) => String(x ?? "").replace(/^(decide|disclose|error):/, "").replace(/[_-]+/g, " ").trim();
+const cap = (s) => (s ? s[0].toUpperCase() + s.slice(1) : s);
+const clip = (v, n = 180) => { const s = typeof v === "string" ? v : JSON.stringify(v); return s.length > n ? `${s.slice(0, n - 1)}…` : s; };
+const withheld = (t) => (t && typeof t === "object" && "withheld" in t ? "(withheld by the safety scan)" : t);
 const live = () => S.mode === "live";
-const fmtT = (us) => { const ms = Math.max(0, Math.floor((us || 0) / 1000)); const b = `${pad(Math.floor(ms / 60000))}:${pad(Math.floor(ms / 1000) % 60)}`; return live() ? `${b}.${pad(ms % 1000, 3)}` : b; };
-const fmtDur = (us) => !live() || us == null ? "" : us < 1000 ? `${Math.round(us)} µs` : us < 1e6 ? `${(us / 1000).toFixed(us < 1e4 ? 1 : 0)} ms` : `${(us / 1e6).toFixed(2)} s`;
-const turnId = (at, who) => `turn-${String(at).replace(/\D/g, "")}-${who}`;
-const info = new WeakMap();
-// a part: clickable, tethers to everything sharing a key; `to` adds a ↗ link that jumps to the target
-function part(tag, cls, text, inf = {}) {
-  const e = h(tag, `part ${cls || ""}`.trim(), text);
-  e.tabIndex = 0;
-  e.dataset.k = (inf.keys || []).filter(Boolean).join(" ");
-  if (inf.id) e.id = inf.id;
-  info.set(e, inf);
-  if (inf.to) jump(e, inf.to);
-  return e;
-}
-function jump(e, to) {
-  const ext = to.startsWith("api.html");
-  const a = h("a", "jp", "↗"); a.href = ext ? to : `#${to}`; if (ext) { a.target = "_blank"; a.rel = "noopener"; }
-  a.setAttribute("aria-label", "Go to linked item"); e.append(a); return e;
-}
-function addKey(el, k) { if (!el || !k) return; const s = new Set((el.dataset.k || "").split(" ").filter(Boolean)); s.add(k); el.dataset.k = [...s].join(" "); }
-function enter(el) { if (!S.instant && !RM.matches) el.classList.add("enter"); return el; }
-function line(k, v, inf) { const e = part("div", "node", null, inf); e.append(h("span", "k", `${k} `)); if (typeof v === "string") e.append(h("span", "v", v)); else e.append(v); if (inf?.to) e.append(e.querySelector(".jp")); return e; }
-function polOf(v) { return v && typeof v === "object" && !Array.isArray(v) ? ("hashed" in v ? "hashed" : "dropped" in v ? "dropped" : null) : null; }
-function valNode(v) {
-  const pol = polOf(v);
-  if (pol) { const e = h("span", "pol", pol === "hashed" ? short(v.hashed) : ""); e.dataset.pol = pol; return e; }
-  return h("span", "v", typeof v === "object" ? JSON.stringify(v) : String(v));
-}
-
-const human = (x) => String(x ?? "").replace(/^(decide|disclose|error):/, "").replace(/[_-]+/g, " ").trim();
-const VERB = { lookup: "looked up", check: "checked", find: "found", create: "created", estimate: "estimated", verify: "verified", send: "sent", get: "got", log: "logged", search: "searched", fetch: "fetched", update: "updated" };
-function toolPlain(name) { const w = String(name || "").split("_"); return VERB[w[0]] ? [VERB[w[0]], ...w.slice(1)].join(" ") : w.join(" "); }
-function summarize(v, max = 110) {
-  if (v == null) return "";
-  if (typeof v !== "object") return String(v);
-  const bits = [];
-  for (const [k, x] of Object.entries(v)) {
-    if (x == null || polOf(x)) continue;
-    bits.push(typeof x === "object" ? `${k.replace(/_/g, " ")} (${Array.isArray(x) ? x.length : Object.keys(x).length})` : `${k.replace(/_/g, " ")} ${x}`);
-    if (bits.join("; ").length > max) break;
-  }
-  const t = bits.join("; "); return t.length > max ? `${t.slice(0, max - 1)}…` : t;
-}
-function dOnly(el) { el.classList.add("d-only"); return el; }
+const DECISION = {
+  ai_and_recording_disclosed: "Told the caller it is an AI and the call is recorded",
+  authorized_rep_found_pending_dob: "Caller is on file as a representative; date of birth still to check",
+  rep_verified: "Caller verified",
+  rep_not_verified: "Caller not verified",
+  member_not_found: "Member not found",
+  member_verified: "Member verified",
+  remaining_visits_stated: "Remaining visits given",
+  remaining_visits_flagged: "Remaining visits given, with a pending claim flagged",
+  in_network_cost_stated: "In-network cost given",
+  out_of_network_costs_stated: "Out-of-network and in-network costs given",
+  declined_provider_must_request_pa: "Declined: the provider must request prior authorization",
+  pa_letter_sent: "Prior authorization letter sent",
+  declined_out_of_scope: "Declined: outside what the agent can do",
+  sms_consent_recorded: "Consent to text recorded",
+  sms_declined: "Caller declined texts",
+  escalated_to_human: "Passed to a person",
+  info_provided: "Information given",
+  call_closed: "Call closed",
+};
+const CAVEAT = { pending_claims: "A claim is still being processed, so this number may change.", out_of_scope: "This is outside what the agent is allowed to do.", not_verified: "The caller is not verified yet.", claims_lag: "A claim is still being processed, so this number may change.", estimate: "This is an estimate." };
+const TOOL_DID = { check_authorized_rep: "Checked the list of authorized representatives", verify_rep_dob: "Checked the caller's date of birth", lookup_benefits: "Looked up the plan's benefits",
+  check_network: "Checked whether the provider is in network", check_prior_auth: "Checked prior authorization rules", send_pa_letter: "Sent the prior authorization letter",
+  find_providers: "Searched for in-network providers", estimate_cost: "Estimated the cost", check_coverage_requirements: "Checked coverage requirements" };
+const TOOL_ASK = { check_authorized_rep: "check the authorized representatives", verify_rep_dob: "check the date of birth", lookup_benefits: "look up benefits", check_network: "check the provider network",
+  check_prior_auth: "check prior authorization rules", send_pa_letter: "send the prior authorization letter", record_decision: "record a decision" };
+const ERR = { llm_timeout: "The model did not answer in time", llm_error: "The model returned an error", tool_error: "A member-system lookup failed", authority_down: "The public log could not be reached",
+  signer_crash: "The signing service stopped", refusal: "The model refused to answer", leak_blocked: "Text was held back by the safety scan", loop_limit: "The model took too many steps",
+  agent_error: "The agent hit an error", boot_error: "The call failed to start" };
+const STAGE = { detected: "Detected", retrying: "Retrying", queued: "Receipts held until the log is back", restarted: "Restarted", recovered: "Recovered", unrecoverable: "Could not recover" };
+const COUNT = { turns: "Turns", model_iterations: "Model steps", llm_requests: "Model requests", decisions: "Decisions", errors: "Problems", failures: "Problems", receipts: "Receipts",
+  tool_calls: "Lookups", observed_responses: "Model responses seen", matched: "Matched to receipts" };
+const decisionText = (d) => DECISION[d] || cap(words(d));
+const toolDid = (n) => TOOL_DID[n] || cap(words(n));
+const toolAsk = (n) => TOOL_ASK[n] || words(n);
 
 // ── view state ──
 let S;
-const cols = { model: $("#model"), call: $("#call"), am: $("#am") };
-const termEl = $("#term");
-const PANES = [cols.model, cols.call, cols.am, termEl];
+const feed = $("#feed");
 function fresh(mode) {
-  return { mode, instant: false, rules: {}, steps: new Map(), atStep: {}, lastCallerAt: null, curStep: null, turns: new Map(),
-    rec: new Map(), rid: new Map(), byHash: new Map(), batches: new Map(), queue: [], stories: new Map(), lastSeq: 0,
-    delayedAny: false, gap: false, start: null, usd: 0, tok: 0, costFinal: false, maxT: 0, curId: 0, lastB: null, ver: new Map(), startId: 0 };
+  return { mode, instant: false, rules: {}, model: null, groups: [], cur: null, byTurn: new Map(), stepGroup: new Map(), turns: new Map(), think: new Map(),
+    rec: new Map(), rid: new Map(), nDec: 0, nCaller: 0, stories: new Map(), usd: 0, tok: 0, costFinal: false, reconciled: null, done: null, consistencyBad: false, closeG: null, curId: 0 };
 }
-function copySlot(name) { const p = h("p"); p.dataset.copy = name; return p; }
-function clearEmpty(col) { col.querySelector(":scope > [data-copy]")?.remove(); }
 function resetView(mode) {
   S = fresh(mode);
-  cols.model.replaceChildren(copySlot("empty-model"));
-  cols.call.replaceChildren(copySlot("empty-call"));
-  cols.am.replaceChildren(copySlot("empty-filet"));
-  termEl.replaceChildren(); $("#termsum").textContent = "terminal";
-  for (const c of PANES) setFollow(c, true);
-  buildStrip(); buildAline();
-  $("#clock").hidden = true; $("#cost").hidden = true;
-  const m = $("#mode"); m.hidden = false; m.dataset.live = mode === "live" ? "1" : "";
-  m.textContent = mode === "live" ? `live · ${MODEL_DEFAULT}` : "recorded";
+  feed.replaceChildren(h("p", "empty", mode === "live" ? "Connecting to the call…" : "Loading the recorded call…"));
+  $("#cost").hidden = true;
+  $("#mode").textContent = mode === "live" ? "Live call" : "Recorded call";
   document.querySelectorAll(".rec-only").forEach((e) => { e.hidden = mode === "live"; });
   $("#err").hidden = true;
+  updateSummary();
 }
+function clearEmpty() { feed.querySelector(":scope > .empty")?.remove(); }
 
-// ── follow: only while the pane sits at the bottom ──
-for (const c of PANES) {
-  const pill = h("button", "pill", "↓ live"); pill.type = "button"; pill.hidden = true;
-  pill.addEventListener("click", () => {
-    if (P.src?.kind === "live" && P.pos < P.ev.length) { seek(P.ev.length); setPlaying(true); return; } // catch up to live
-    setFollow(c, true); toBottom(c);
-  });
-  (c === termEl ? $("#termbox") : c.parentElement).append(pill); c.pill = pill;
-  c.userAt = 0;
-  for (const ev of ["wheel", "touchstart", "pointerdown", "keydown"]) c.addEventListener(ev, () => { c.userAt = performance.now(); }, { passive: true });
-  c.addEventListener("scroll", () => {
-    if (c.prog) return;
-    const atBottom = c.scrollHeight - c.scrollTop - c.clientHeight < 40;
-    if (!atBottom && performance.now() - c.userAt > 1200) { if (c.follow) toBottom(c); return; } // reflow, not the user
-    setFollow(c, atBottom);
-  }, { passive: true });
+// a group = one caller line and everything the agent did about it
+function newGroup(turn) {
+  clearEmpty();
+  const el = h("section", "grp-sec");
+  const g = { el, turn, callerText: null, caller: h("div"), notes: h("div"), decs: h("div"), reply: h("div"), minor: h("div"), uses: h("ul", "uses"), results: [], pending: [], replied: false, userSet: false, thinkText: "" };
+  g.work = h("details", "think"); g.work.hidden = true;
+  const sm = h("summary", null, "Model's thinking"); sm.addEventListener("click", () => { g.userSet = true; });
+  g.workBody = h("p"); g.work.append(sm, g.workBody);
+  g.uses.hidden = true;
+  el.append(g.caller, g.work, g.uses, g.notes, g.decs, g.reply, g.minor);
+  if (S.closeG) feed.insertBefore(el, S.closeG.el); else feed.append(el);
+  S.groups.push(g); S.cur = g;
+  if (turn != null) S.byTurn.set(turn, g);
+  return g;
 }
-function setFollow(c, on) { c.follow = on; c.pill.hidden = (on && !(P.src?.kind === "live" && P.pos < P.ev.length)) || !S || P.ev.length === 0; }
-function toBottom(c) { c.prog = true; c.scrollTop = c.scrollHeight; requestAnimationFrame(() => { c.prog = false; }); }
-
-// ── status strip: lights only from server data ──
-const LIGHTS = [["salted", "salted"], ["key_isolated", "key isolated"], ["anchored", "anchored"], ["reconciled", "requests matched"], ["leak_scan", "leak scan"], ["no_gaps", "no gaps"]];
-function buildStrip() {}
-function light(k, s) {
-  if (k === "no_gaps" && s !== "off") { setTok("tk-c", s === "ok" ? "valid" : "broken", ["chain"]); $("#tk-c").classList.toggle("warn", s !== "ok"); }
-  if (k === "anchored" && s === "ok") { const e = $("#tk-c"); if (e && e.hidden && !S.gap) setTok("tk-c", "valid", ["chain"]); }
+function groupFor(d) {
+  if (live() && typeof d.turn === "number" && S.byTurn.has(d.turn)) return S.byTurn.get(d.turn);
+  if (!live() && d.step != null && S.stepGroup.has(d.step)) return S.stepGroup.get(d.step);
+  return S.cur || newGroup(live() && typeof d.turn === "number" ? d.turn : null);
 }
-function anchCount() {
-  const tot = S.rec.size, ok = [...S.rec.values()].filter((r) => S.ver.get(r.seq)?.log === "passed").length;
-  if (tot) {
-    setTok("tk-n", `${tot} receipt${tot === 1 ? "" : "s"}`, [...S.rec.values()].map((r) => `r:${r.seq}`));
-    setTok("tk-a", ok >= tot ? "all anchored" : `anchoring ${ok}/${tot}`, [...S.rec.values()].map((r) => `anc:${r.seq}`)); $("#tk-a").classList.toggle("warn", ok < tot);
-    if (ok >= tot && [...S.ver.values()].every((v) => v.chain_ok) && !S.gap) setTok("tk-c", "valid", ["chain"]);
-  }
+function closeGroup() {
+  if (S.closeG) return S.closeG;
+  const g = newGroup(null); S.closeG = g; S.cur = S.groups.at(-2) || g;
+  return g;
 }
-
-// ── authority line ──
-function tok(id, label, keys) { const e = part("span", "tok", null, { keys }); e.id = id; e.hidden = true; e.append(`${label} `, h("span", "tv", "")); return e; }
-function buildAline() {
-  const a = $("#aline"); a.replaceChildren(); a.classList.remove("live");
-  const arr = (id) => { const e = h("span", "arr", "→"); e.id = id; e.hidden = true; return e; };
-  const tick = h("span", "tick"); tick.hidden = true;
-  a.append(tick, tok("tk-n", "", []), tok("tk-a", "", []), tok("tk-q", "queue", ["queue"]), tok("tk-c", "chain", ["chain"]));
-  const all = h("button", "tgl", "all receipts"); all.type = "button"; all.id = "allrc"; all.setAttribute("aria-pressed", String(document.body.classList.contains("all-rcpt")));
-  all.addEventListener("click", () => { const on = !document.body.classList.contains("all-rcpt"); document.body.classList.toggle("all-rcpt", on); all.setAttribute("aria-pressed", String(on)); store.set("allReceipts", on); });
-  a.append(all); $("#ameta").hidden = true;
-}
-function setTok(id, text, keys) {
-  const e = $("#" + id); if (!e) return;
-  e.hidden = id === "tk-q" && Number(text) === 0 && !e.classList.contains("warn");
-  $("#aline .tick").hidden = false;
-  const old = e.querySelector(".tv");
-  if (old.textContent !== String(text)) old.replaceWith(h("span", S.instant || RM.matches ? "tv" : "tv bump", String(text)));
-  if (keys) e.dataset.k = keys.filter(Boolean).join(" ");
-}
-
-// ── terminal ──
-function term(cmd, resp, keys, cls = "", api = null, id = null) {
-  const e = part("div", `tl ${cls}`.trim(), null, { keys, id, noThread: true });
-  e.append(h("span", "tp", "$ "), h("span", "cmd", cmd));
-  if (api != null) { const a = h("a", "go", "↗"); a.href = `api.html#${api}`; a.target = "_blank"; a.rel = "noopener"; a.setAttribute("aria-label", "Open in API viewer"); e.append(a); }
-  if (resp != null) e.append(h("span", "tr", `→ ${resp}`));
-  termEl.append(enter(e));
-  $("#termsum").textContent = `terminal · ${termEl.childElementCount}`;
+const itKey = (d) => (live() ? `${d.turn}:${d.iteration ?? 1}` : `s${d.step}`);
+function speech(who, at, text, src) {
+  const e = h("div", `ln ${who}`);
+  const w = h("span", "who"); w.append(h("b", null, who === "caller" ? "Caller" : "Ava (AI agent)"), at ? ` · ${at}` : "");
+  e.append(w, h("p", null, text));
+  if (src) e.append(h("span", "src", src === "no_reply" ? "No reply from the model; standard line used." : "Standard line used after a model problem."));
   return e;
 }
 
-// ── model column: turn → iteration → thinking → claims → tool_use → tool_result → spans ──
-function ck(d) { return live() && typeof d.turn === "number" ? d.turn : d.step ?? S.curStep; }
-function ensureStep(n, t) {
-  if (S.steps.has(n)) return S.steps.get(n);
-  const st = { n, thinking: "", spans: new Map(), failBySpan: new Map(), iters: [], cur: 0, loops: [] };
-  clearEmpty(cols.model);
-  const mc = enter(h("article", "card"));
-  st.mHead = part("div", "hd", null, { keys: [`step:${n}`], id: `s-${n}`, step: n });
-  st.mHead.append(h("b", null, live() ? `TURN ${n}` : `DECISION ${n + 1}`), st.mPoint = h("span", "pt"));
-  st.kids = h("div", "kids");
-  st.mInput = h("div"); st.mLoop = h("div"); st.mFail = h("div"); st.mStack = h("div");
-  st.kids.append(st.mInput, st.mLoop, st.mFail, st.mStack);
-  mc.append(st.mHead, st.kids);
-  cols.model.append(mc);
-  S.steps.set(n, st); S.curStep = n;
-  return st;
+// ── receipts ──
+function makeCard(g, kind, where) {
+  const minor = kind !== "decide" && kind !== "close";
+  const c = { g, kind, minor, rec: null, dec: null, n: 0 };
+  if (minor) {
+    c.el = h("details", "rc minor"); c.sumT = h("span", "t"); c.sumMark = h("span"); const s = h("summary"); s.append(c.sumT, c.sumMark); c.inner = h("div", "in"); c.el.append(s, c.inner);
+  } else { c.el = h("article", "rc"); c.inner = c.el; }
+  c.kick = h("p", "kick"); c.title = h("h3"); c.body = h("div"); c.st = h("p", "st"); c.st.append(h("span", "wait", "… Being signed"));
+  c.raw = h("details"); const rs = h("summary", null, "Show raw receipt"); c.pre = h("pre", "raw"); c.raw.append(rs, c.pre); c.raw.hidden = true;
+  c.raw.addEventListener("toggle", () => { rs.textContent = c.raw.open ? "Hide raw receipt" : "Show raw receipt"; if (c.raw.open) fillRaw(c); });
+  if (minor) c.inner.append(c.body, c.st, c.raw); else c.inner.append(c.kick, c.title, c.body, c.st, c.raw);
+  (where || (kind === "decide" || kind === "close" ? g.decs : kind === "err" ? g.notes : g.minor)).append(c.el);
+  return c;
 }
-function iter(st, i) {
-  if (st.iters[i]) return st.iters[i];
-  const box = enter(h("div", "iter-empty"));
-  const hd = part("div", "node ih", null, { keys: [`it:${st.n}:${i}`, i === 1 ? `mi:${st.n}` : null, "llmreq"], id: `s-${st.n}-i${i}`, step: st.n });
-  hd.append(h("span", "in", `Step ${i} `), dOnly(h("span", "il", "model call")));
-  const kids = h("div", "kids"); const stat = dOnly(h("div", "node pending", "running")); kids.append(stat);
-  box.append(hd, kids); st.mLoop.append(box);
-  const it = { i, box, hd, kids, stat, done: false, text: "", sent: 0 };
-  st.iters[i] = it; st.cur = i;
-  return it;
+function fillRaw(c) {
+  const rec = c.rec; if (!rec) return;
+  const r = { ...rec.r };
+  if (rec.anch?.log_inclusion_proof) r.log_inclusion_proof = rec.anch.log_inclusion_proof;
+  c.pre.textContent = JSON.stringify(r, null, 2);
 }
-const lastIter = (st) => st.iters[st.cur] || iter(st, 1);
-const openIter = (st) => { const it = lastIter(st); return it.done ? iter(st, st.cur + 1) : it; };
-function renderThinking(st, it, final) {
-  if (!it.thinkEl) {
-    const lab = h("div", "lbl", "thinking"); lab.append(h("span", "tag", S.thinkingKind || (live() ? "summary" : "scripted")));
-    it.thinkEl = part("div", "think", null, { keys: [`think:${st.n}`], id: st.thinkId ? null : `s-${st.n}-think`, step: st.n });
-    st.thinkId = st.thinkId || `s-${st.n}-think`;
-    it.tail = h("span"); it.caret = h("span", "caret");
-    it.box.classList.remove("iter-empty");
-    it.thinkEl.append(it.tail, it.caret); it.thinkSec = h("div"); it.thinkSec.append(lab, it.thinkEl); it.kids.append(it.thinkSec);
+// one line per receipt: signed, in the public log, chain intact
+function statusParts(rec) {
+  if (!rec) return [["wait", "… Being signed"]];
+  const v = rec.ver, out = [];
+  out.push(v && v.issuer === false ? ["bad", "✗ Signature did not verify"] : ["ok", "✓ Signed"]);
+  if (v && v.log && v.log !== "passed") out.push(["bad", "✗ Not in public log"]);
+  else if ((v && v.log === "passed") || rec.anch) out.push(["ok", "✓ In public log"]);
+  else out.push(["wait", "… Waiting for public log"]);
+  const link = chainLink(rec);
+  if ((v && v.chain_ok === false) || link === false) out.push(["bad", link === false ? "✗ Chain broken: previous receipt does not match" : "✗ Chain broken"]);
+  else if ((v && v.chain_ok) || link === true) out.push(["ok", "✓ Chain intact"]);
+  else out.push(["wait", "… Checking chain"]);
+  return out;
+}
+function chainLink(rec) {
+  const prev = rec.d.previous_receipt_hash ?? rec.r.previous_receipt_hash ?? null;
+  if (rec.seq === 1) return prev == null;
+  const p = S.rec.get(rec.seq - 1); if (!p) return null;
+  return prev === p.d.receipt_hash;
+}
+function renderStatus(c) {
+  const parts = statusParts(c.rec);
+  c.st.replaceChildren(...parts.map(([cls, t]) => h("span", cls, t)));
+  if (c.minor) { const bad = parts.some((p) => p[0] === "bad"), wait = parts.some((p) => p[0] === "wait"); c.sumMark.className = bad ? "bad" : wait ? "wait" : "ok"; c.sumMark.textContent = bad ? "✗" : wait ? "…" : "✓"; c.sumMark.title = parts.map((p) => p[1]).join(" · "); }
+  c.raw.hidden = !c.rec;
+  if (c.raw.open) fillRaw(c);
+}
+function para(label, text, cls) { const p = h("p", cls); if (label) { p.append(h("b", null, label), " "); } p.append(text ?? ""); return p; }
+function turnText(ref) { const t = S.turns.get(`caller:${ref}`) || S.turns.get(`agent:${ref}`); return t ? `${t.who === "caller" ? "Caller" : "Ava"} (${t.at}): ${t.text}` : null; }
+// a cite's value: from the receipt (live) or from what the page saw (recorded)
+function citeValue(c, g) {
+  if (c.value !== undefined) return c.value;
+  if (c.kind === "rule") return S.rules[c.ref];
+  if (c.kind === "turn") return turnText(c.ref);
+  if (c.kind === "tool") { for (const t of [...g.results].reverse()) { const r = t.result; if (r && typeof r === "object" && c.ref in r) return r[c.ref]; } return undefined; }
+  return undefined;
+}
+function citeItem(c, claims, g) {
+  const li = h("li");
+  const val = c.kind === "claim" ? null : citeValue(c, g);
+  if (c.kind === "claim") {
+    const i = claims.findIndex((x) => x.id === c.ref);
+    if (i < 0) { li.className = "bad"; li.textContent = `✗ Earlier point ${c.ref} not found`; } else li.textContent = `Builds on point ${i + 1}`;
+    return li;
   }
-  const parts = it.text.split(/(?<=[.?!])\s+/);
-  const complete = final ? parts.filter(Boolean) : parts.slice(0, -1);
-  const ids = Object.keys(S.rules);
-  for (let i = it.sent; i < complete.length; i++) {
-    const sent = complete[i];
-    const cites = ids.filter((id) => new RegExp(`(^|[^\\w-])${id.replace(/-/g, "\\-")}(?![\\w-])`).test(sent));
-    const node = cites.length ? part("span", null, sent, { keys: cites.map((c) => `rule:${c}`), step: st.n }) : h("span", null, sent);
-    it.thinkEl.insertBefore(node, it.tail); it.thinkEl.insertBefore(document.createTextNode(" "), it.tail);
-  }
-  it.sent = complete.length;
-  it.tail.textContent = final ? "" : (parts.at(-1) ?? "");
-  if (final) { it.caret?.remove(); it.caret = null; }
+  if (c.resolved === false || val == null) { li.className = "bad"; li.textContent = `✗ Cited ${c.kind} "${c.ref}" could not be found`; return li; }
+  const v = withheld(val);
+  if (c.kind === "rule") li.textContent = `Rule ${c.ref}: ${v}`;
+  else if (c.kind === "turn") { const m = /^(Caller|Ava|Agent) \(([0-9:]+)\): ([\s\S]*)$/.exec(String(v)); li.textContent = m ? `${m[1] === "Caller" ? "Caller" : "Ava"} said (${m[2]}): “${m[3]}”` : `Said at ${c.ref}: “${v}”`; }
+  else if (c.kind === "tool") li.textContent = `Lookup result: ${c.ref} = ${clip(v)}`;
+  else li.textContent = `${c.ref}: ${clip(v)}`;
+  return li;
 }
-function finishThinking(st) { for (const it of st.iters) if (it?.thinkEl && it.caret) renderThinking(st, it, true); }
-function citeKey(n, c) { return c.kind === "rule" ? `rule:${c.ref}` : c.kind === "tool" ? `tr:${n}:${c.ref}` : c.kind === "turn" ? `at:${c.ref}` : c.kind === "claim" ? `claim:${n}:${c.ref}` : `cite:${c.ref}`; }
-function citeTo(n, c) {
-  if (c.kind === "rule") return `rule-${c.ref}`;
-  if (c.kind === "tool") return `s-${n}-res`;
-  if (c.kind === "claim") return `s-${n}-c-${c.ref}`;
-  if (c.kind === "turn") return S.turns.has(turnId(c.ref, "caller")) ? turnId(c.ref, "caller") : turnId(c.ref, "agent");
-  return null;
-}
-function renderClaims(st, claims) {
-  const n = st.n; st.claims = claims;
-  const sec = enter(h("div"));
-  const lab = h("div", "lbl", "Claims"); lab.append(h("span", "tag", S.claimsSource === "model" ? "model-reported" : S.claimsSource || (live() ? "model-reported" : "scripted"))); sec.append(lab);
-  claims.forEach((c, i) => {
-    const cites = c.cites || [], final = i === claims.length - 1;
-    const el = part("div", `node claim ${cites.length ? "" : "unsup"} ${final ? "final" : ""}`, null,
-      { keys: [`claim:${n}:${c.id}`, ...cites.map((x) => citeKey(n, x)), final ? `dec:${n}` : null], id: `s-${n}-c-${c.id}`, step: n });
-    el.append(h("span", "cid", c.id), h("span", "ct", c.text));
-    const kids = h("div", "kids cites");
-    for (const x of cites) {
-      const e = part("div", "cite", null, { keys: [citeKey(n, x)], step: n, to: citeTo(n, x) });
-      e.dataset.kind = x.kind; e.prepend(h("span", "ck", `${x.kind} `), h("span", "cv", x.ref)); kids.append(e);
+function renderDecision(c) {
+  const ev = c.rec?.r?.evidence || {}, dec = c.dec || {};
+  const dr = ev.decision_record || dec.decision_record || {};
+  const rs = ev.reasoning || dec.reasoning || null;
+  const claims = rs?.claims || dec.claims || [];
+  const decision = rs?.decision || dr.decision;
+  c.kick.textContent = `Decision ${c.n}${c.rec ? ` · receipt ${c.rec.seq}` : ""}`;
+  c.title.textContent = decisionText(decision);
+  const b = [];
+  const q = withheld(rs?.question) || c.g.callerText;
+  if (q) b.push(para("Caller asked:", rs?.question ? q : `“${q}”`, "q"));
+  const rule = rs?.rule_id || dr.rule_id;
+  if (rule) b.push(para(`Rule ${rule}.`, ev.policy?.rule_text || S.rules[rule] || claims.flatMap((x) => x.cites || []).find((x) => x.kind === "rule" && x.ref === rule)?.value || ""));
+  const maps = ev.policy?.maps_to || dec.maps_to || (rule ? S.start?.policy_map?.[rule] : null);
+  if (Array.isArray(maps) && maps.length) { b.push(para("Maps to:", null)); const ul = h("ul", "maps"); for (const m of maps) ul.append(h("li", null, String(m))); b.push(ul); }
+  if (ev.claims_source === "scripted") b.push(para(null, "This line is scripted, not chosen by the model.", "mute"));
+  if (claims.length) {
+    b.push(para("Because", null));
+    const ol = h("ol");
+    for (const cl of claims) {
+      const li = h("li", null, withheld(cl.text)); const ul = h("ul", "ev");
+      const cites = cl.cites || [];
+      for (const x of cites) ul.append(citeItem(x, claims, c.g));
+      if (!cites.length) { const n = h("li", "bad", "No evidence cited"); ul.append(n); }
+      li.append(ul); ol.append(li);
     }
-    if (!cites.length) kids.append(part("div", "cite warn", "unsupported", { keys: [`claim:${n}:${c.id}`], step: n }));
-    if (final) kids.append(part("div", "cite", "decision", { keys: [`dec:${n}`], step: n, to: st.seq ? `r-${S.rec.get(st.seq)?.rid}` : null }));
-    sec.append(el, kids);
-  });
-  const it1 = st.iters[1] || lastIter(st);
-  if (it1.thinkSec) it1.thinkSec.after(sec); else it1.kids.append(sec);
-}
-const SPAN_KEYS = { turn: (n) => [`step:${n}`], "llm.request": (n) => [`mi:${n}`, "llmreq"], "llm.response": (n) => [`think:${n}`],
-  "tool.dispatch": (n) => [`tool:${n}`], "tool.exec": (n) => [`tool:${n}`], "downstream.call": () => [], "tool.result": (n) => [`toolres:${n}`], decision: (n) => [`dec:${n}`] };
-function renderStack(st) {
-  const spans = [...st.spans.values()], kids = new Map();
-  for (const s of spans) { const p = s.parent_id && st.spans.has(s.parent_id) ? s.parent_id : null; if (!kids.has(p)) kids.set(p, []); kids.get(p).push(s); }
-  const box = dOnly(h("div")); box.append(h("div", "lbl", "Spans"));
-  const walk = (pid, parent) => {
-    for (const s of (kids.get(pid) || []).sort((a, b) => a.start_us - b.start_us)) {
-      const f = st.failBySpan.get(s.span_id);
-      const row = part("div", `node srow ${s.status === "error" ? "err" : ""}`, null,
-        { keys: [`span:${s.span_id}`, ...(SPAN_KEYS[s.kind]?.(st.n) || []), f ? `fail:${f}` : null], id: `sp-${s.span_id}`, step: st.n, to: s.parent_id ? `sp-${s.parent_id}` : null });
-      row.prepend(h("span", "sk", s.kind), h("span", "sn", `${s.name}${(s.attempt ?? 1) > 1 || s.status === "error" ? ` · attempt ${s.attempt ?? 1}` : ""}${s.error_kind ? ` · ${s.error_kind}` : ""}`));
-      const dur = fmtDur(s.dur_us); if (dur) row.querySelector(".sn").after(h("span", "sd", dur));
-      parent.append(row);
-      if (kids.get(s.span_id)?.length) { const k = h("div", "kids"); parent.append(k); walk(s.span_id, k); }
-    }
-  };
-  const root = h("div"); walk(null, root); box.append(root);
-  st.mStack.replaceChildren(box);
-}
-
-// ── failure stories ──
-function story(d) {
-  const id = d.failure_id || `${d.kind}-${d.span_id || d.step}`;
-  let st = S.stories.get(id);
-  if (!st) {
-    const el = enter(part("div", "story", null, { keys: [`fail:${id}`, `failk:${d.kind}`, d.span_id ? `span:${d.span_id}` : null], id: `f-${id}`, step: d.step ?? undefined, to: d.span_id ? `sp-${d.span_id}` : null }));
-    const hd = h("div", "sh"); const stt = h("span", "st");
-    hd.append(h("b", null, d.kind), stt); el.prepend(hd); el.append(h("ol"));
-    const inModel = d.step != null && (d.kind === "llm_timeout" || d.kind === "tool_error");
-    if (inModel) ensureStep(ck(d), d.t_us).mFail.append(el); else { clearEmpty(cols.am); cols.am.append(el); }
-    st = { id, el, stt, kind: d.kind, step: d.step, state: "recovering", stages: [] };
-    S.stories.set(id, st);
+    b.push(ol);
   }
-  if (d.span_id) { addKey(st.el, `span:${d.span_id}`); const sp = S.steps.get(d.step); if (sp) { sp.failBySpan.set(d.span_id, id); if (sp.spans.size) renderStack(sp); } }
-  const state = d.state || (d.recovered ? "recovered" : "recovering");
-  st.state = state; st.el.dataset.state = state; st.stt.textContent = state;
-  const text = d.stage || `attempt ${d.attempt ?? 1}${d.recovered ? " · recovered" : ""}`;
-  st.stages.push(text);
-  st.el.querySelector("ol").append(enter(h("li", null, text)));
-  for (const r of S.rec.values()) if (r.errKind === d.kind) markErr(r);
-  if (d.kind === "authority_down") $("#tk-q").classList.toggle("warn", state === "recovering");
-  const isReq = d.kind === "authority_down" && /unreachable/.test(text);
-  term(isReq ? `curl -s -X POST ${AUTH}/authority/v1/batches` : `filet trace --kind ${d.kind}`, isReq ? `503 {"error":"authority unavailable"}` : text,
-    [`fail:${id}`, d.span_id ? `span:${d.span_id}` : null], state === "recovered" ? "ok" : state === "failed" ? "bad" : "warn", isReq ? S.curId : null);
+  const u = rs?.uncertainty || dr.uncertainty;
+  if (u && u !== "none") b.push(para("Caveat:", CAVEAT[u] || cap(words(u)), "caveat"));
+  c.body.replaceChildren(...b);
 }
-
-// ── receipts: one JSON block each, fields one per line, nested objects indented ──
-const q = (v) => `"${v}"`;
-function jl(body, key, depth = 1) { const l = h("div", "jl"); l.style.paddingLeft = `${depth * 2}ch`; l.dataset.key = key; body.append(l); return l; }
-function setJ(l, vals, last) { l.replaceChildren(h("span", "jk", `"${l.dataset.key}"`), h("span", "pn", ": "), ...vals); if (!last) l.append(h("span", "pn", ",")); }
-function V(text, keys, cls = "", extra = {}) { return part("span", `js ${cls}`.trim(), text, { keys, ...extra }); }
-function obj(l, rows, last) { // nested object under a key
-  l.replaceChildren(h("span", "jk", `"${l.dataset.key}"`), h("span", "pn", ": {"));
-  const depth = parseInt(l.style.paddingLeft) / 2 + 1;
-  const frag = []; rows.forEach(([k, vals], i) => { const r = h("div", "jl"); r.style.paddingLeft = `${depth * 2}ch`; r.dataset.key = k; setJ(r, vals, i === rows.length - 1); frag.push(r); });
-  const close = h("div", "jl"); close.style.paddingLeft = l.style.paddingLeft; close.append(h("span", "pn", last ? "}" : "},"));
-  l.append(...frag, close);
-}
-function blockFor(step) {
-  clearEmpty(cols.am);
-  const wrap = enter(h("div", "rc"));
-  const sum = part("div", "rc-sum", null, { keys: step != null ? [`step:${step}`] : [], step: step ?? undefined });
-  const dec = h("div", "rc-dec"), rule = h("div", "rc-rule"), cl = h("ol", "rc-claims"), stt = h("div", "rc-st");
-  rule.hidden = true; cl.hidden = true; stt.append(h("span", "wait", "○ signing"));
-  sum.append(dec, rule, cl, stt);
-  const el = h("div", "rcpt"); el.hidden = true; const body = h("div");
-  el.append(h("span", "br", "{"), body, h("span", "br", "}"));
-  wrap.append(sum, el);
-  const L = {};
-  for (const k of ["seq", "decision", "rule", "evidence", "question", "claims", "reasoning", "prev", "signed_by", "anchored_by"]) L[k] = jl(body, k);
-  cols.am.append(wrap);
-  return { el, wrap, sum, dec, rule, cl, stt, L, step };
-}
-function cardSummary(blk, n, dr, claims) {
-  if (dr?.decision) blk.dec.textContent = human(dr.decision);
-  if (dr?.rule_id) { blk.rule.hidden = false; blk.rule.replaceChildren(h("b", null, dr.rule_id), S.rules[dr.rule_id] || ""); }
-  const cs = (claims || []).slice(0, 3);
-  if (cs.length) { blk.cl.hidden = false; blk.cl.replaceChildren(...cs.map((c) => h("li", null, c.text))); }
-}
-function cardStatus(blk, rec) {
-  const a = rec?.anch;
-  blk.stt.replaceChildren(h("span", rec ? "ok" : "wait", rec ? "✓ signed" : "○ signing"), " · ",
-    a ? h("span", a.delayed ? "wait" : "ok", a.delayed ? "✓ anchored · delayed" : "✓ anchored") : h("span", "wait", "○ anchoring"));
-}
-function fillDecision(blk, n, dr) {
-  const st = S.steps.get(n); const lastClaim = st?.claims?.at(-1)?.id;
-  cardSummary(blk, n, dr, st?.claims);
-  blk.L.seq.hidden = true; blk.L.prev.hidden = true; blk.L.reasoning.hidden = true;
-  if (dr.decision) setJ(blk.L.decision, [V(q(dr.decision), [`dec:${n}`], "", { step: n, to: lastClaim ? `s-${n}-c-${lastClaim}` : S.steps.has(n) ? `s-${n}` : null })]); else blk.L.decision.remove();
-  if (dr.rule_id) setJ(blk.L.rule, [V(q(dr.rule_id), [`rule:${dr.rule_id}`], "", { step: n, to: `rule-${dr.rule_id}` })]); else blk.L.rule.remove();
-  if (Array.isArray(dr.evidence) && dr.evidence.length) {
-    const l = blk.L.evidence; l.replaceChildren(h("span", "jk", '"evidence"'), h("span", "pn", ": ["));
-    dr.evidence.forEach((e, i) => {
-      const r = h("div", "jl"); r.style.paddingLeft = "4ch";
-      const to = e.speaker === "tool" ? `s-${n}-res` : turnId(e.at, e.speaker);
-      r.append(V(q(e.at), [`at:${e.at}`, e.speaker === "tool" ? `toolres:${n}` : null], "", { step: n, to }), h("span", "pn", i < dr.evidence.length - 1 ? "," : ""));
-      l.append(r);
-    });
-    const c = h("div", "jl"); c.style.paddingLeft = "2ch"; c.append(h("span", "pn", "],")); l.append(c);
-  } else blk.L.evidence.remove();
-  fillReasoning(blk, n, null);
-  setJ(blk.L.signed_by, [V(q("signing"), [], "pend")]);
-  setJ(blk.L.anchored_by, [V(q("pending"), [], "pend")], true);
-}
-// reasoning in the receipt: the question and the claims, each with its cites and their values
-function citeValue(n, c) {
-  if (c.value != null) return typeof c.value === "string" ? c.value : JSON.stringify(c.value);
-  if (c.kind === "rule") return S.rules[c.ref] ?? "";
-  if (c.kind === "tool") { const v = S.steps.get(n)?.result?.[c.ref]; return v == null ? "" : typeof v === "string" ? v : JSON.stringify(v); }
-  if (c.kind === "turn") return (S.turns.get(turnId(c.ref, "caller")) || S.turns.get(turnId(c.ref, "agent")))?.text ?? "";
-  if (c.kind === "claim") return S.steps.get(n)?.claims?.find((x) => x.id === c.ref)?.text ?? "";
-  return "";
-}
-function fillReasoning(blk, n, reasoning) {
-  const st = n != null ? S.steps.get(n) : null;
-  const question = reasoning?.question ?? (st?.re ? S.turns.get(turnId(st.re, "caller"))?.text : null);
-  const claims = reasoning?.claims ?? st?.claims;
-  if (!blk.L.question.isConnected && !blk.L.claims.isConnected) return;
-  if (question) setJ(blk.L.question, [V(q(question), st?.re ? [`at:${st.re}`] : [], "", { step: n ?? undefined, to: st?.re ? turnId(st.re, "caller") : null })]); else blk.L.question.remove();
-  if (!claims?.length) { blk.L.claims.remove(); return; }
-  const l = blk.L.claims; l.replaceChildren(h("span", "jk", '"claims"'), h("span", "pn", ": ["));
-  claims.forEach((c, i) => {
-    const cites = c.cites || [];
-    const r = h("div", "jl"); r.style.paddingLeft = "4ch";
-    r.append(V(q(`${c.id} ${c.text}`), [`claim:${n}:${c.id}`, ...cites.map((x) => citeKey(n, x))], cites.length ? "" : "warn", { step: n ?? undefined, to: `s-${n}-c-${c.id}` }));
-    l.append(r);
-    for (const x of cites) {
-      const cr = h("div", "jl"); cr.style.paddingLeft = "6ch";
-      const val = citeValue(n, x);
-      cr.append(h("span", "pn", "↳ "), V(`${x.kind} ${x.ref}${val ? ` = ${q(val.length > 140 ? `${val.slice(0, 140)}…` : val)}` : ""}`, [citeKey(n, x)], "", { step: n ?? undefined, to: citeTo(n, x) }));
-      l.append(cr);
-    }
-    if (!cites.length) { const cr = h("div", "jl"); cr.style.paddingLeft = "6ch"; cr.append(h("span", "pn", "↳ "), V("unsupported", [`claim:${n}:${c.id}`], "warn", { step: n ?? undefined })); l.append(cr); }
-    if (i < claims.length - 1) r.append(h("span", "pn", ","));
-  });
-  const c = h("div", "jl"); c.style.paddingLeft = "2ch"; c.append(h("span", "pn", "],")); l.append(c);
-}
-function fillSigned(blk, d, rec) {
-  const r = d.receipt || {}, ev = r.evidence || {}, dr = ev.decision_record || {}, n = d.step, seq = d.seq;
-  blk.wrap.id = `r-${d.receipt_id}`;
-  if (["model", "other", "close"].includes(rec.kind) || /interrupt/.test(r.action || "")) blk.wrap.classList.add("minor");
-  addKey(blk.sum, `r:${seq}`);
-  if (rec.kind === "model") blk.dec.textContent = `model call${ev.iteration != null ? ` ${ev.iteration}` : ""}`;
-  else if (rec.kind !== "decide") { blk.dec.textContent = human(r.action) || r.action; if (rec.kind === "err") blk.dec.classList.add("err"); }
-  if (rec.kind === "decide") cardSummary(blk, n, dr, ev.reasoning?.claims || S.steps.get(n)?.claims);
-  cardStatus(blk, rec);
-  ameta(d);
-  const X = { seq, step: n ?? undefined };
-  if (rec.kind === "decide" && !blk.filled) fillDecision(blk, n, dr);
-  for (const k of ["seq", "prev", "reasoning"]) blk.L[k].hidden = false;
-  setJ(blk.L.seq, [V(String(seq), [`r:${seq}`, n != null ? `step:${n}` : null], "", X)]);
-  if (rec.kind === "model") {
-    const it = ev.iteration;
-    blk.L.decision.dataset.key = "kind";
-    setJ(blk.L.decision, [V(q(`model call${it != null ? ` #${it}` : ""}`), [it != null ? `it:${n}:${it}` : null], "", { ...X, to: it != null && S.steps.has(n) ? `s-${n}-i${it}` : null })]);
-    if (ev.request_id) { blk.L.rule.dataset.key = "request_id"; setJ(blk.L.rule, [V(q(ev.request_id), [`req:${ev.request_id}`], "", X)]); } else blk.L.rule.remove();
-    if (ev.stop_reason) { blk.L.evidence.dataset.key = "stop_reason"; setJ(blk.L.evidence, [V(q(ev.stop_reason), [it != null ? `it:${n}:${it}` : null], "", X)]); } else blk.L.evidence.remove();
-    blk.L.question.remove(); blk.L.claims.remove();
-  } else if (rec.kind !== "decide") {
-    rec.decEl = V(q(r.action), rec.kind === "err" ? [`failk:${ev.error_kind}`, ev.span_id ? `span:${ev.span_id}` : null] : [rec.kind], rec.kind === "err" ? "bad" : "", X);
-    setJ(blk.L.decision, [rec.decEl]);
-    if (rec.kind === "err") markErr(rec);
-    blk.L.rule.remove(); blk.L.evidence.remove(); blk.L.question.remove(); blk.L.claims.remove();
-    if (ev.counts) { const l = jl(blk.L.decision.parentElement, "counts"); blk.L.decision.after(l); obj(l, Object.entries(ev.counts).map(([k, v]) => [k, [V(String(v), ["close"], "", X)]])); }
+function renderMinor(c) {
+  const r = c.rec.r, ev = r.evidence || {}, b = [];
+  if (c.kind === "model") {
+    const uses = ev.tool_uses || [];
+    const did = uses.length ? `asked to ${uses.map(toolAsk).join(", ")}` : ev.stop_reason === "end_turn" ? "wrote the reply" : ev.stop_reason === "refusal" ? "refused" : words(ev.stop_reason || "finished");
+    c.sumT.textContent = `Model step ${ev.iteration ?? ""}: ${did}`.replace("  ", " ");
+    const t = S.think.get(`${ev.turn}:${ev.iteration}`);
+    b.push(para("Model's thinking (summary)", null));
+    b.push(h("p", "quote", t ? t.trim() : "No thinking text was shown for this step."));
+    if (r.reasoning_hash) b.push(para(null, "The receipt holds a sealed fingerprint of this text, not the text itself.", "mute"));
+    if (ev.request_id) { const p = para("Model request ID:", null); p.append(h("span", "mono", ev.request_id)); b.push(p); }
+    if (PRESENTER && r.reasoning_hash) { const btn = h("button", "btn ckb", "Check the thinking matches the receipt"); btn.type = "button"; btn.addEventListener("click", () => runCheck(c.rec.seq, btn)); b.push(btn); }
+  } else if (c.kind === "err") {
+    const k = ev.error_kind || words(r.action);
+    const story = [...S.stories.values()].find((s) => s.kind === k);
+    const rec = ev.recovered === true || story?.state === "recovered";
+    c.sumT.textContent = `Problem receipt: ${ERR[k] || cap(words(k))}`;
+    b.push(para("What happened:", ERR[k] || cap(words(k))));
+    const att = ev.attempt ?? ev.attempts; if (att != null) b.push(para("Attempt:", String(att)));
+    if (ev.injected) b.push(para(null, "This fault was injected on purpose as a test.", "mute"));
+    b.push(para("Outcome:", rec ? "Recovered" : story?.state === "failed" ? "Did not recover" : "Recorded"));
+  } else if (c.kind === "interrupted") {
+    c.sumT.textContent = `Agent interrupted${ev.reason === "barge_in" ? ": the caller spoke" : ev.reason === "stop" ? ": stopped" : ""}`;
+    if (ev.spoken_before_interrupt) b.push(para("Said before the interruption:", `“${ev.spoken_before_interrupt}”`));
+    else b.push(para(null, "Nothing had been said yet.", "mute"));
+  } else if (c.kind === "decide-minor") {
+    c.sumT.textContent = decisionText(ev.decision_record?.decision);
+  } else {
+    c.sumT.textContent = cap(words(r.action)) || "Receipt";
+    b.push(para("Action:", String(r.action || "")));
   }
-  if (rec.kind === "decide" && (r.evidence?.reasoning || ev.reasoning)) fillReasoning(blk, n, r.evidence?.reasoning || ev.reasoning);
-  if (r.reasoning_hash) {
-    setJ(blk.L.reasoning, [V(q(short(r.reasoning_hash)), n != null ? [`think:${n}`] : [], "", { ...X, to: n != null ? S.steps.get(n)?.thinkId : null })]);
-    if (PRESENTER) { const b = h("button", "ckb", "check"); b.type = "button"; b.addEventListener("click", (e) => { e.stopPropagation(); runCheck(seq, b); }); blk.L.reasoning.insertBefore(b, blk.L.reasoning.lastChild); }
-  } else blk.L.reasoning.remove();
-  const prev = d.previous_receipt_hash ?? r.previous_receipt_hash ?? null;
-  const prevSeq = prev ? S.byHash.get(prev) : null; const prevRec = prevSeq != null ? S.rec.get(prevSeq) : null;
-  setJ(blk.L.prev, [V(prev ? q(short(prev)) : "null", [prev ? `r:${prevSeq ?? "?"}` : null], "", { ...X, to: prevRec ? `r-${prevRec.rid}` : null })]);
-  obj(blk.L.signed_by, [
-    ["sig", [V(q(short(d.signature || r.signature)), [`sig:${seq}`], "", X)]],
-  ]);
-  setJ(blk.L.anchored_by, [V(q("pending"), [`anc:${seq}`], "pend", X)], true);
+  c.body.replaceChildren(...b);
 }
-function markErr(rec) {
-  const st = [...S.stories.values()].find((s) => s.kind === rec.errKind);
-  const recovered = rec.data?.receipt?.evidence?.recovered || st?.state === "recovered";
-  if (!rec.decEl) return;
-  rec.decEl.firstChild.textContent = q(`${rec.data.receipt.action}${recovered ? " · recovered" : ""}`);
-  rec.decEl.classList.toggle("bad", !recovered); rec.decEl.classList.toggle("rec", !!recovered);
-  if (st) { addKey(rec.decEl, `fail:${st.id}`); if (!rec.decEl.querySelector(".jp")) jump(rec.decEl, `f-${st.id}`); }
+function renderClose(c) {
+  const ev = c.rec.r.evidence || {};
+  c.kick.textContent = `End of call · receipt ${c.rec.seq}`;
+  c.title.textContent = "Call closed";
+  const b = [];
+  const counts = Object.entries(ev.counts || {}).filter(([k]) => COUNT[k]);
+  if (counts.length) { const ul = h("ul"); for (const [k, v] of counts) ul.append(h("li", null, `${COUNT[k]}: ${v}`)); b.push(ul); }
+  const rc = S.reconciled;
+  if (rc) {
+    const seen = rc.observed_responses ?? rc.provider_requests, un = (rc.unmatched_observed || rc.unmatched || []).length + (rc.unmatched_receipts || []).length;
+    b.push(para(null, un ? `✗ ${un} model request${un === 1 ? "" : "s"} not matched to a receipt` : `✓ All ${rc.matched ?? seen} model requests matched to receipts`, un ? "bad" : "ok"));
+  }
+  c.body.replaceChildren(...b);
 }
-
-function ameta(d) {
-  const m = $("#ameta"); const key = d?.key_id || d?.receipt?.key_id || S.start?.issuer_key_id;
-  m.hidden = false;
-  m.replaceChildren(h("b", null, "authority "), AUTH_HOST, ...(S.start?.log_id ? [" · ", h("b", null, "log "), short(S.start.log_id)] : []), ...(key ? [" · ", h("b", null, "issuer "), short(key)] : []));
+function renderCard(c) {
+  if (c.kind === "decide") renderDecision(c);
+  else if (c.kind === "close") renderClose(c);
+  else if (c.rec) renderMinor(c);
+  renderStatus(c);
 }
 
-// ── cost ──
+// ── call summary ──
+function updateSummary() {
+  const el = $("#sum"); if (!S) return;
+  const recs = [...S.rec.values()], n = recs.length;
+  if (!n) { el.replaceChildren(S.mode === "live" ? "No receipts yet." : ""); return; }
+  const parts = recs.map(statusParts);
+  const sigBad = parts.filter((p) => p[0][0] === "bad").length;
+  const logBad = parts.filter((p) => p[1][0] === "bad").length, logWait = parts.filter((p) => p[1][0] === "wait").length;
+  const chBad = parts.filter((p) => p[2][0] === "bad").length || (S.done && S.done.chain && !S.done.chain.valid);
+  const out = [h("span", null, `${n} receipt${n === 1 ? "" : "s"}`)];
+  out.push(h("span", sigBad ? "bad" : "ok", sigBad ? `✗ ${sigBad} signature${sigBad === 1 ? "" : "s"} failed` : "✓ All signed"));
+  out.push(logBad ? h("span", "bad", `✗ ${logBad} not in public log`) : logWait ? h("span", "wait", `… ${logWait} waiting for public log`) : h("span", "ok", "✓ All in public log"));
+  out.push(h("span", chBad || S.consistencyBad ? "bad" : "ok", chBad ? "✗ Chain broken" : S.consistencyBad ? "✗ Public log inconsistent" : "✓ Chain intact"));
+  const st = [...S.stories.values()];
+  if (st.length) { const rec = st.filter((s) => s.state === "recovered").length; out.push(h("span", rec === st.length ? "ok" : "wait", `${st.length} problem${st.length === 1 ? "" : "s"}, ${rec} recovered`)); }
+  el.replaceChildren(); out.forEach((s, i) => { if (i) el.append(" · "); el.append(s); });
+}
 const usd = (v) => `$${Number(v).toFixed(4)}`;
-const ktok = (n) => n >= 1000 ? `${(n / 1000).toFixed(1)}k tok` : `${n} tok`;
-function showCost() { const c = $("#cost"); c.hidden = false; c.textContent = `${usd(S.usd)} · ${ktok(S.tok)}${live() ? "" : " · recorded"}`; }
+function showCost() { const c = $("#cost"); c.hidden = false; c.textContent = `Cost ${usd(S.usd)}`; }
 
 // ── event handlers ──
 const H = {
   start(d) {
-    S.start = d; S.rules = d.rules || {}; S.startId = S.curId;
-    if (d.model) $("#mode").textContent = `live · ${d.model}`;
-    S.thinkingKind = d.thinking_kind; S.claimsSource = d.claims_source;
-    if (d.key_isolated === true) light("key_isolated", "ok");
-    clearEmpty(cols.model);
-    const box = dOnly(h("div", "rules")); box.id = "rules"; box.append(h("div", "lbl", "Rules"));
-    const kids = h("div", "kids");
-    for (const [id, text] of Object.entries(S.rules)) { const e = part("div", "node", null, { keys: [`rule:${id}`], id: `rule-${id}` }); e.append(h("span", "cv", `${id} `), h("span", "v", text)); kids.append(e); }
-    box.append(kids); cols.model.append(box);
-    if (!S.realApi && !live()) term(`curl -s ${AUTH}/authority/v1/key`, `200 {"log_id":"${s4(d.log_id)}"}`, ["log"], "", S.curId);
-    if (!S.realApi && !live()) term(`curl -s -X POST ${AUTH}/authority/v1/issuers`, `200 {"key_id":"${d.issuer_key_id || d.key_id || "…"}"}`, ["issuer"], "", `${S.curId}-2`);
+    S.start = d; S.rules = d.rules || {}; S.model = d.model || null;
+    if (live()) $("#mode").textContent = `Live call${d.model ? ` · model ${d.model}` : ""}`;
   },
   turn(d) {
-    clearEmpty(cols.call);
-    const step = live() && typeof d.turn === "number" ? d.turn : d.step ?? (d.who === "agent" ? S.atStep[d.at] : undefined);
-    if (d.who === "caller") S.lastCallerAt = d.at;
-    const id = turnId(d.at, d.who);
-    const e = enter(part("div", "turn", null, { keys: [`at:${d.at}`, step != null ? `step:${step}` : null], id: S.turns.has(id) ? null : id, step, to: step != null && S.steps.has(step) ? `s-${step}` : null }));
-    S.turns.set(id, d);
-    e.dataset.who = d.who;
-    const who = h("span", "who", `${d.who === "agent" ? "Ava" : "Caller"} · ${d.at}`); const jpEl = e.querySelector(".jp"); if (jpEl) who.append(jpEl);
-    const tx = h("span", "tx", d.text); e.prepend(who, tx);
-    if (d.who === "agent" && step != null && S.steps.has(step)) { const st2 = S.steps.get(step); st2.answerEl?.remove(); st2.answerEl = part("div", "node", null, { keys: [`at:${d.at}`, `step:${step}`], step, to: id }); st2.answerEl.prepend(h("span", "k", "answer "), h("span", "answer", d.text)); st2.mLoop.after(st2.answerEl); }
-    cols.call.append(e);
-    if (d.who === "agent" && !S.instant && !RM.matches) {
-      const words = d.text.split(/(\s+)/); let i = 0; tx.textContent = "";
-      const t = setInterval(() => { if (!tx.isConnected) return clearInterval(t); tx.textContent += words.slice(i, i + 2).join(""); i += 2; if (cols.call.follow) toBottom(cols.call); if (i >= words.length) clearInterval(t); }, 70);
+    S.turns.set(`${d.who}:${d.at}`, d);
+    if (d.who === "caller") {
+      const g = newGroup(typeof d.turn === "number" ? d.turn : ++S.nCaller);
+      g.callerText = d.text; g.caller.append(speech("caller", d.at, d.text));
+    } else {
+      const g = groupFor(d);
+      g.reply.append(speech("agent", d.at, d.text, d.source));
+      g.replied = true; if (!g.userSet) g.work.open = false;
     }
   },
-  model_input(d) {
-    const n = ck(d);
-    S.atStep[d.at] = n;
-    const st = ensureStep(n, d.t_us); st.at = d.at; st.turn = d.turn;
-    if (!st.inputDone) {
-      st.inputDone = true; st.re = S.lastCallerAt;
-      const ct = S.lastCallerAt ? S.turns.get(turnId(S.lastCallerAt, "caller")) : null;
-      if (ct) st.mInput.append(part("div", "caller-line", ct.text, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") }));
-      if (S.lastCallerAt) st.mInput.append(dOnly(line("replying to", S.lastCallerAt, { keys: [`at:${S.lastCallerAt}`], step: n, to: turnId(S.lastCallerAt, "caller") })));
-      st.mInput.append(dOnly(line("prompt", `${d.prompt_version} · ${short(d.prompt_sha256)}`, { keys: ["prompt", `ctx:${n}`, `mi:${n}`], step: n })));
-      st.mInput.append(dOnly(line("rules", `${(d.rules_in_context || []).length} in context`, { keys: (d.rules_in_context || []).map((r) => `rule:${r}`), step: n, to: "rules" })));
-      if (d.transcript_turns != null) st.mInput.append(dOnly(line("turns", String(d.transcript_turns), { keys: [`ctx:${n}`], step: n })));
-    }
-    iter(st, d.iteration || 1);
+  model_input(d) { const g = groupFor(d); if (d.step != null) S.stepGroup.set(d.step, g); },
+  thinking(d) {
+    const g = groupFor(d), k = itKey(d);
+    S.think.set(k, (S.think.get(k) || "") + d.chunk);
+    if (g.thinkText && !g.thinkText.endsWith(" ") && g.lastThinkKey !== k) g.thinkText += "\n\n";
+    g.lastThinkKey = k; g.thinkText += d.chunk;
+    g.work.hidden = false; g.workBody.textContent = g.thinkText.trim();
+    if (!S.instant && !g.replied && !g.userSet) g.work.open = true;
   },
-  thinking(d) { const st = ensureStep(ck(d), d.t_us); st.thinking += d.chunk; const it = live() && d.iteration ? iter(st, d.iteration) : openIter(st); it.text += d.chunk; renderThinking(st, it, false); },
-  loop(d) {
-    const st = ensureStep(ck(d), d.t_us);
-    const it = iter(st, d.iteration || st.cur || 1);
-    finishThinking(st);
-    it.done = true; st.cur = d.iteration; st.loops[d.iteration] = { ...d, id: S.curId };
-    const bits = [`${(d.input_tokens ?? 0).toLocaleString("en-US")}→${(d.output_tokens ?? 0).toLocaleString("en-US")} tok`];
-    if (d.cache_read_tokens) bits.push(`cache ${d.cache_read_tokens.toLocaleString("en-US")}`);
-    if (live() && d.ms != null) bits.push(`${d.ms} ms`);
-    it.stat.className = "node d-only"; it.stat.textContent = bits.join(" · ");
-    const sr = dOnly(h("span", "sr", ` ${d.stop_reason}`)); sr.dataset.s = d.stop_reason; it.hd.append(sr);
-    if (d.request_id) {
-      const rq = dOnly(line("request_id", d.request_id, { keys: [`req:${d.request_id}`, "llmreq"], step: st.n, to: `api.html#${S.curId}` }));
-      it.stat.after(rq);
-    }
-  },
-  span(d) { const st = ensureStep(ck(d), d.t_us); st.spans.set(d.span_id, d); renderStack(st); },
   tool_call(d) {
-    const n = ck(d), x = live() && d.iteration ? `-${d.iteration}` : "";
-    const st = ensureStep(n, d.t_us); finishThinking(st);
-    const it = live() && d.iteration ? iter(st, d.iteration) : lastIter(st), sec = enter(h("div"));
-    const tu = part("div", "node", null, { keys: [`tool:${n}`], id: `s-${n}-tool${x}`, step: n, to: `s-${n}-res${x}` });
-    tu.prepend(h("span", "tool-plain", toolPlain(d.name)), dOnly(h("span", "k", " · tool_use ")), dOnly(h("span", "tn", d.name)));
-    const kids = dOnly(h("div", "kids"));
-    for (const [k, v] of Object.entries(d.input || {})) { const e = part("div", "node", null, { keys: [`ti:${n}:${k}`], step: n }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
-    st.resBox = h("div"); st.resBox.append(h("div", "node pending", "tool_result · running"));
-    sec.append(tu, kids, st.resBox); it.kids.append(sec); it.box.classList.remove("iter-empty");
-    st.tool = { name: d.name, input: d.input };
+    if (d.name === "record_decision") return;
+    const g = groupFor(d); g.uses.hidden = false;
+    const li = h("li", null, toolDid(d.name)); li.dataset.id = d.tool_use_id || ""; g.uses.append(li);
   },
   tool_result(d) {
-    const n = ck(d), x = live() && d.iteration ? `-${d.iteration}` : "";
-    const st = ensureStep(n, d.t_us);
-    const box = st.resBox || lastIter(st).kids; box.replaceChildren();
-    const tr = part("div", "node", null, { keys: [`toolres:${n}`, `tool:${n}`], id: `s-${n}-res${x}`, step: n, to: `s-${n}-tool${x}` });
-    tr.prepend(h("span", "res-sum", summarize(d.result) || "done"), dOnly(h("span", "k", " · tool_result ")), dOnly(h("span", "tn", d.name)));
-    const kids = dOnly(h("div", "kids"));
-    for (const [k, v] of Object.entries(d.result || {})) { const e = part("div", "node", null, { keys: [`tr:${n}:${k}`], step: n }); e.append(h("span", "k", `${k} `), valNode(v)); kids.append(e); }
-    box.append(tr, kids);
-    st.result = d.result;
+    if (d.name === "record_decision") return;
+    const g = groupFor(d); g.results.push({ name: d.name, result: d.result });
+    if (d.result && d.result.error) { const li = [...g.uses.children].reverse().find((x) => !x.dataset.done); if (li) li.append(h("span", "warn", ` (refused: ${words(d.result.error)})`)); }
+    const li = [...g.uses.children].reverse().find((x) => !x.dataset.done); if (li) li.dataset.done = "1";
   },
-  failure(d) { story(d); },
-  cost(d) {
-    const st = ensureStep(ck(d), d.t_us);
-    const it = d.iteration ? iter(st, d.iteration) : lastIter(st);
-    if (d.usd != null) { const old = it.hd.querySelector(".usd"); if (old) old.textContent = usd(d.usd); else it.hd.append(dOnly(h("span", "usd", usd(d.usd)))); }
-    if (!S.costFinal) { S.usd += d.usd || 0; S.tok += (d.input_tokens || 0) + (d.output_tokens || 0) + (d.cache_read_tokens || 0); showCost(); }
+  failure(d) {
+    const id = d.failure_id || `${d.kind}-${d.step}`;
+    let st = S.stories.get(id);
+    if (!st) { const g = d.step != null || d.turn != null ? groupFor(d) : S.cur || newGroup(null); st = { id, kind: d.kind, el: h("div", "note"), state: "recovering" }; g.notes.append(st.el); S.stories.set(id, st); }
+    st.state = d.state || (d.recovered ? "recovered" : "recovering");
+    const stage = STAGE[d.stage] ? `${STAGE[d.stage]}${d.stage === "retrying" && d.attempt != null ? ` (attempt ${d.attempt}${d.of ? ` of ${d.of}` : ""})` : ""}${d.detail ? `: ${d.detail}` : ""}` : cap(String(d.stage || ""));
+    const mark = st.state === "recovered" ? "✓" : st.state === "failed" ? "✗" : "⚠";
+    st.el.className = `note ${st.state === "recovered" ? "ok" : st.state === "failed" ? "bad" : ""}`;
+    st.el.replaceChildren(h("b", null, `${mark} ${ERR[d.kind] || cap(words(d.kind))}.`), ` ${stage}${/[.!]$/.test(stage) ? "" : "."}`);
+    if (d.injected) st.el.append(h("span", "mute", " (Test fault, injected on purpose.)"));
+    for (const r of S.rec.values()) if (r.kind === "err" && r.r.evidence?.error_kind === d.kind) renderCard(r.card);
+    updateSummary();
   },
+  cost(d) { if (!S.costFinal) { S.usd += d.usd || 0; showCost(); } },
+  call_cost(d) { S.costFinal = true; if (d.usd != null) S.usd = d.usd; showCost(); },
   interrupted(d) {
-    const st = S.steps.get(ck(d)) || [...S.steps.values()].reverse().find((x) => d.turn == null || x.turn === d.turn) || (S.curStep != null ? S.steps.get(S.curStep) : null);
-    const why = `interrupted${d.reason ? ` · ${d.reason}` : ""}`;
-    if (st) {
-      finishThinking(st);
-      const it = d.iteration ? st.iters[d.iteration] || lastIter(st) : lastIter(st);
-      if (it && !it.hd.querySelector(".cut")) it.hd.append(h("span", "sr cut warn", ` ${why}`));
-      if (it && !it.done) { it.done = true; it.stat.className = "node warn"; it.stat.textContent = d.at_ms != null && live() ? `cut at ${d.at_ms} ms` : "cut"; }
-    }
-    clearEmpty(cols.call);
-    const e = enter(part("div", "turn", null, { keys: [st ? `step:${st.n}` : null], step: st?.n, to: st ? `s-${st.n}` : null }));
-    e.dataset.who = "agent";
-    const who = h("span", "who", "Ava"); const jpEl = e.querySelector(".jp"); if (jpEl) who.append(jpEl);
-    e.prepend(who, h("span", "tx warn", `— ${why}`));
-    cols.call.append(e);
-  },
-  api(d) {
-    S.realApi = true;
-    const host = { authority: AUTH_HOST, anthropic: "api.anthropic.com", signer: "filet-signer" }[d.target] || d.origin || "";
-    const url = d.url || `${host && d.method !== "RPC" ? `https://${host}` : ""}${d.path || ""}`;
-    const ms = live() && d.ms != null ? ` · ${d.ms} ms` : "";
-    const rids = d.receipt_ids || d.receipts || [];
-    const keys = rids.map((r) => (S.rid.has(r) ? `r:${S.rid.get(r)}` : null));
-    const st = String(d.status ?? "");
-    const extra = `${d.leaves != null ? ` · ${d.leaves} leaves` : ""}${d.request_id ? ` · ${d.request_id}` : ""}${d.summary ? ` ${typeof d.summary === "string" ? d.summary : JSON.stringify(d.summary)}` : ""}`;
-    if (d.request_id) keys.push(`req:${d.request_id}`);
-    term(d.method === "RPC" ? `${host || d.target} rpc ${d.path}` : `curl -s${d.method && d.method !== "GET" ? ` -X ${d.method}` : ""} ${url}`, `${st}${ms}${extra}`,
-      keys, st.startsWith("2") ? "" : st.startsWith("4") || st.startsWith("5") ? "warn" : "", d.id ?? S.curId);
-  },
-  call_cost(d) {
-    S.costFinal = true; if (d.usd != null) S.usd = d.usd;
-    const t = d.tokens ?? d.tokens_by_kind;
-    if (typeof t === "number") S.tok = t; else if (t && typeof t === "object") S.tok = Object.values(t).reduce((a, v) => a + (Number(v) || 0), 0);
-    showCost();
+    const g = groupFor(d);
+    g.reply.append(h("p", "warn", d.reason === "stop" ? "Ava was stopped." : "Ava was interrupted by the caller."));
   },
   decision(d) {
-    const n = ck(d);
-    const st = ensureStep(n, d.t_us); finishThinking(st);
-    const r = d.decision_record || {}; st.decision = r;
-    st.mPoint.textContent = human(r.point);
-    if (Array.isArray(d.claims) && d.claims.length) renderClaims(st, d.claims);
-    st.blk = blockFor(n); fillDecision(st.blk, n, r); st.blk.filled = true;
+    const g = groupFor(d);
+    const c = makeCard(g, "decide"); c.dec = d; c.n = ++S.nDec; g.pending.push(c);
+    renderCard(c);
   },
   signed(d) {
-    const r = d.receipt || {};
-    const act = String(r.action || ""), n = ck(d), seq = d.seq ?? r.seq;
-    const kind = act.startsWith("error:") ? "err" : act === "close" ? "close" : act === "model:iteration" ? "model" : r.evidence?.decision_record ? "decide" : "other";
-    const st = n != null ? S.steps.get(n) : null;
-    const blk = kind === "decide" && st?.blk && !st.blk.seq ? st.blk : blockFor(n);
-    blk.seq = seq; d = { ...d, seq, step: n };
-    const rec = { seq, step: n, rid: d.receipt_id, kind, data: d, blk, errKind: kind === "err" ? r.evidence?.error_kind : null };
-    S.rec.set(d.seq, rec); S.rid.set(d.receipt_id, d.seq); S.byHash.set(d.receipt_hash, d.seq);
-    if (kind === "decide" && st) st.seq = seq;
-    fillSigned(blk, d, rec);
-    const us = fmtDur(d.sign_us);
-    term(`filet sign --seq ${d.seq} --action ${r.action}`, `${us ? `${us} · ` : ""}sig ${s4(d.signature || r.signature)}`, [`r:${d.seq}`, `sig:${d.seq}`]);
-    if (r.reasoning_hash) light("salted", (r.commitment_alg || r.evidence?.commitment_alg) ? "ok" : "bad");
-    if (S.lastSeq && d.seq !== S.lastSeq + 1) { S.gap = true; light("no_gaps", "bad"); }
-    S.lastSeq = Math.max(S.lastSeq, d.seq);
-    anchCount();
+    const r = d.receipt || {}, act = String(r.action || ""), ev = r.evidence || {}, seq = d.seq ?? r.seq;
+    const kind = act.startsWith("error:") ? "err" : act === "close" ? "close" : act === "model:iteration" ? "model" : act === "interrupted" ? "interrupted" : ev.decision_record ? "decide" : "other";
+    const g = kind === "close" ? closeGroup() : groupFor(d);
+    let c = null;
+    if (kind === "decide") { const i = g.pending.findIndex((x) => x.dec?.decision_record?.decision === ev.decision_record.decision); if (i >= 0) c = g.pending.splice(i, 1)[0]; }
+    if (!c) { c = makeCard(g, kind); if (kind === "decide") c.n = ++S.nDec; }
+    const rec = { seq, rid: d.receipt_id, d, r, kind, card: c, anch: null, ver: null };
+    c.rec = rec; c.el.id = `r-${d.receipt_id}`;
+    S.rec.set(seq, rec); S.rid.set(d.receipt_id, seq);
+    renderCard(c);
+    const nx = S.rec.get(seq + 1); if (nx) renderStatus(nx.card);
+    updateSummary();
   },
-  queued(d) {
-    if (!recOf(d)) return;
-    S.queue.push(d.seq);
-    setTok("tk-q", d.queue_depth ?? S.queue.length, ["queue", ...S.queue.map((x) => `r:${x}`)]);
-  },
-  batch(d) {
-    const B = d.batch_id, n = S.batches.size + 1; S.batches.set(B, { ...d, n, id: S.curId });
-    if (d.delayed) S.delayedAny = true;
-    for (const s of d.seqs || []) { const rec = S.rec.get(s); if (rec) rec.batch = B; }
-    for (const rec of S.rec.values()) if (rec.batch) addKey(rec.blk.L.seq.querySelector(".js"), `sth:${B}`);
-    S.queue = S.queue.filter((x) => !(d.seqs || []).includes(x));
-    setTok("tk-q", S.queue.length, ["queue", ...S.queue.map((x) => `r:${x}`)]);
-    setTok("tk-b", `#${n}`, [`batch:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)]); $("#tk-b")?.classList.toggle("warn", !!d.delayed);
-    setTok("tk-s", d.tree_size_after, [`batch:${B}`]);
-    S.lastB = B;
-    const ms = live() && d.authority_ms != null ? `,"authority_ms":${d.authority_ms}` : "";
-    if (!S.realApi && !live()) term(`curl -s -X POST ${AUTH}/authority/v1/batches -d '{"leaf_hashes":[${(d.leaf_hashes || []).map((x) => `"${s4(x)}"`).join(",")}]}'`,
-      `200 {"tree_size_after":${d.tree_size_after},"root_hash":"${s4(d.root_hash)}"${ms}}`, [`batch:${B}`, `sth:${B}`, ...(d.seqs || []).map((x) => `r:${x}`)], d.delayed ? "warn" : "", S.curId, `b-${B}`);
-  },
-  consistency(d) {
-    if (!S.realApi && !live()) term(`curl -s "${AUTH}/authority/v1/consistency?from=${d.from_size}&to=${d.to_size}"`, `200 {"ok":${d.ok}}`, S.lastB ? [`batch:${S.lastB}`] : [], d.ok ? "" : "bad", S.curId);
-    if (!d.ok) $("#tk-c").classList.add("warn");
-  },
-  anchored(d) {
-    const rec = recOf(d); if (!rec) return;
-    rec.anch = d; if (d.delayed) S.delayedAny = true;
-    const B = d.batch_id, bt = S.batches.get(B), X = { seq: rec.seq, step: rec.step ?? undefined };
-    const rows = [
-      ["leaf", [V(String(d.leaf_index), [`r:${rec.seq}`, `anc:${rec.seq}`], "", { ...X, to: `b-${B}` })]],
-      ["tree_size", [V(String(d.tree_size), [`batch:${B}`], "", X)]],
-      ["root", [V(q(short(d.root_hash)), [`batch:${B}`, `sth:${B}`], "", { ...X, to: `b-${B}` })]],
-    ];
-    if (d.delayed) rows.push(["delayed", [V("true", ["failk:authority_down"], "warn", { ...X, to: S.stories.has("f-auth") ? "f-f-auth" : null })]]);
-    obj(rec.blk.L.anchored_by, rows, true);
-    cardStatus(rec.blk, rec);
-  },
-  verified(d) {
-    const rec = recOf(d); if (!rec) return;
-    S.ver.set(rec.seq, d); rec.ver = d;
-    const all = [...S.rec.values()].every((r) => S.ver.get(r.seq)?.log === "passed");
-    const bad = [...S.ver.values()].some((v) => v.log !== "passed" || !v.issuer || !v.chain_ok);
-    light("anchored", bad ? "bad" : all ? (S.delayedAny ? "warn" : "ok") : "off"); anchCount();
-  },
-  gap() { S.gap = true; light("no_gaps", "bad"); },
-  reconciled(d) {
-    light("reconciled", (d.unmatched || []).length ? "bad" : "ok");
-  },
-  done(d) {
-    $("#aline").classList.remove("live");
-    if (d.chain?.valid && !S.gap) light("no_gaps", "ok"); else if (d.chain && !d.chain.valid) light("no_gaps", "bad");
-    if (d.leak_scan) light("leak_scan", d.leak_scan.ok ? "ok" : "bad");
-    const lb = S.batches.get(S.lastB);
-    if (lb && !S.realApi && !live()) term(`curl -s ${AUTH}/authority/v1/sth`, `200 {"tree_size":${lb.tree_size_after},"root_hash":"${s4(lb.root_hash)}"}`, [`batch:${S.lastB}`, `sth:${S.lastB}`], "", S.curId);
-    const stories = [...S.stories.values()];
-    const rec = stories.filter((s) => s.state === "recovered").length;
-    const intact = !!d.chain?.valid && !S.gap;
-    clearEmpty(cols.am);
-    const bits = [`${stories.length} failure${stories.length === 1 ? "" : "s"}`];
-    if (stories.length) bits.push(`${rec} recovered`);
-    bits.push(intact ? "chain intact" : "chain broken");
-    cols.am.append(enter(part("div", `summary ${intact && rec === stories.length ? "ok" : "bad"}`, `// ${bits.join(" · ")}`, { keys: stories.map((s) => `fail:${s.id}`) })));
-  },
+  anchored(d) { const rec = recOf(d); if (!rec) return; rec.anch = d; renderStatus(rec.card); updateSummary(); },
+  verified(d) { const rec = recOf(d); if (!rec) return; rec.ver = d; renderStatus(rec.card); updateSummary(); },
+  consistency(d) { if (d.ok === false) { S.consistencyBad = true; updateSummary(); } },
+  reconciled(d) { S.reconciled = d; if (S.closeG) for (const r of S.rec.values()) if (r.kind === "close") renderCard(r.card); },
+  done(d) { S.done = d; updateSummary(); },
 };
 function recOf(d) {
-  const seq = d.receipt_id && S.rid.has(d.receipt_id) ? S.rid.get(d.receipt_id) : d.seq != null && S.rec.has(d.seq) ? d.seq
-    : d.step != null ? [...S.rec.values()].find((r) => r.step === d.step && r.kind === "decide")?.seq : undefined;
+  const seq = d.receipt_id && S.rid.has(d.receipt_id) ? S.rid.get(d.receipt_id) : d.seq != null && S.rec.has(d.seq) ? d.seq : undefined;
   return seq != null ? S.rec.get(seq) : null;
 }
 
-// ── tethers: hover/click draws thin lines to linked items in other panes ──
-const svg = $("#tether");
-let tetherFor = null, tetherTimer = 0, relEls = [];
-function related(el) {
-  const out = new Set();
-  for (const k of (el.dataset.k || "").split(" ").filter(Boolean)) document.querySelectorAll(`[data-k~="${CSS.escape(k)}"]`).forEach((e) => { if (e !== el) out.add(e); });
-  return [...out];
-}
-function visibleIn(e) {
-  const r = e.getBoundingClientRect(); if (!r.width && !r.height) return null;
-  const sc = e.closest(".feed, .tbody, .am-top");
-  if (sc && sc.classList.contains("feed") || sc?.classList.contains("tbody")) { const c = sc.getBoundingClientRect(); if (r.bottom < c.top || r.top > c.bottom) return null; }
-  return r;
-}
-function tether(el, hold) {
-  if (hold !== null) clearTimeout(tetherTimer);
-  relEls.forEach((e) => e.classList.remove("rel")); relEls = [];
-  svg.replaceChildren(); svg.classList.remove("fade");
-  tetherFor = el; if (!el) return;
-  const pane = el.closest("[data-pane]"), a = el.getBoundingClientRect();
-  for (const e of related(el)) {
-    e.classList.add("rel"); relEls.push(e);
-    if (e.closest("[data-pane]") === pane) continue;
-    const b = visibleIn(e); if (!b) continue;
-    const ax = b.left > a.right ? a.right : b.right < a.left ? a.left : a.left + a.width / 2;
-    const bx = b.left > a.right ? b.left : b.right < a.left ? b.right : b.left + b.width / 2;
-    const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    ln.setAttribute("x1", ax); ln.setAttribute("y1", a.top + a.height / 2); ln.setAttribute("x2", bx); ln.setAttribute("y2", b.top + Math.min(b.height / 2, 10));
-    svg.append(ln);
-  }
-  if (hold) tetherTimer = setTimeout(fadeTether, 1500);
-}
-function fadeTether() { svg.classList.add("fade"); relEls.forEach((e) => e.classList.remove("rel")); relEls = []; tetherFor = null; setTimeout(() => { if (!tetherFor) svg.replaceChildren(); }, 450); }
-if (false) document.addEventListener("pointerover", (e) => {
-  if (e.pointerType === "touch") return;
-  const p = e.target.closest?.(".part"); if (p && p !== tetherFor) tether(p, false);
-});
-document.addEventListener("pointerout", (e) => {
-  const p = e.target.closest?.(".part"); if (p && p === tetherFor && !p.contains(e.relatedTarget)) { clearTimeout(tetherTimer); tetherTimer = setTimeout(fadeTether, 250); }
-});
-for (const c of PANES) c.addEventListener("scroll", () => { if (tetherFor) tether(tetherFor, null); }, { passive: true });
-document.addEventListener("click", (e) => {
-  if (e.target.closest("button, input, select, summary, .menu, .scrub")) return;
-  const a = e.target.closest("a.jp");
-  if (a && a.getAttribute("href").startsWith("#")) { e.preventDefault(); const id = a.getAttribute("href").slice(1); history.pushState({ id }, "", `#${id}`); goTo(id); return; }
-  if (e.target.closest("a")) return;
-  const p = e.target.closest(".part"); if (!p) return;
-  if (p.classList.contains("claim")) p.classList.toggle("open");
-  const rc = p.closest(".rc-sum"); if (rc) { const pre = rc.parentElement.querySelector(".rcpt"); pre.hidden = !pre.hidden; }
-  tether(p, true);
-});
-function goTo(id) {
-  const t = id && document.getElementById(id); if (!t) return;
-  const sc = t.closest(".feed, .tbody");
-  if (sc && WIDE.matches) { setFollow(sc, false); const c = sc.getBoundingClientRect(), r = t.getBoundingClientRect(); sc.scrollTo({ top: sc.scrollTop + r.top - c.top - c.height / 3, behavior: RM.matches ? "auto" : "smooth" }); }
-  else t.scrollIntoView({ block: "center", behavior: RM.matches ? "auto" : "smooth" });
-  t.classList.remove("flash"); void t.offsetWidth; t.classList.add("flash");
-  setTimeout(() => tether(t, true), RM.matches ? 0 : 350);
-}
-addEventListener("popstate", () => goTo(location.hash.slice(1)));
-
-// ── thread modal: double-click or Enter ──
-const modal = $("#modal"), mbody = $("#m-body");
-let threadStep = null;
-function threadOf(el) {
-  const inf = info.get(el) || {};
-  if (inf.step != null) return inf.step;
-  if (inf.seq != null) return S.rec.get(inf.seq)?.step ?? null;
-  return null;
-}
-function mnode(id, label, content, pre) {
-  const a = h("a", "mn"); a.id = `m-${id}`; a.href = `#m-${id}`;
-  a.append(h("span", "lbl", label));
-  if (content != null) a.append(pre ? h("pre", null, content) : h("span", content.length > 80 ? "ms" : "mx", content));
-  return a;
-}
-function openThread(n) {
-  const st = S.steps.get(n); if (!st) return;
-  threadStep = n;
-  $("#m-title").textContent = `STEP ${n + 1} · ${st.decision?.point || ""}`;
-  const out = [];
-  const caller = st.re && S.turns.get(turnId(st.re, "caller"));
-  if (caller) out.push(mnode("turn", `caller · ${st.re}`, caller.text));
-  st.iters.forEach((it, i) => {
-    if (!it) return;
-    const lp = st.loops[i];
-    const sec = h("div", "msec");
-    sec.append(mnode(`it${i}`, `#${i} model call${lp ? ` · ${lp.stop_reason}` : ""}`, lp ? `${lp.input_tokens}→${lp.output_tokens} tok${lp.request_id ? ` · ${lp.request_id}` : ""}` : null));
-    if (it.text) sec.append(mnode(`think${i}`, `thinking · ${live() ? "summary" : "scripted"}`, it.text));
-    if (i === 1 && st.claims) for (const c of st.claims) sec.append(mnode(`c-${c.id}`, `claim ${c.id}${(c.cites || []).length ? "" : " · unsupported"}`, `${c.text}\n${(c.cites || []).map((x) => `↳ ${x.kind} ${x.ref}`).join("\n")}`, true));
-    if (i === st.cur || (st.tool && i === 1)) { if (st.tool && i === 1) { sec.append(mnode("tool", `tool_use · ${st.tool.name}`, J(st.tool.input), true)); if (st.result) sec.append(mnode("res", "tool_result", J(st.result), true)); } }
-    out.push(sec);
-  });
-  if (st.decision) out.push(mnode("dec", "decision record", J(st.decision), true));
-  const rec = st.seq != null ? S.rec.get(st.seq) : null;
-  if (rec) {
-    const r = rec.data.receipt;
-    out.push(mnode("rcpt", `signed receipt · seq ${rec.seq}`, J({ seq: rec.seq, action: r.action, decision: r.evidence?.decision_record?.decision, rule: r.evidence?.decision_record?.rule_id,
-      reasoning_hash: r.reasoning_hash, previous_receipt_hash: r.previous_receipt_hash ?? null, key_id: r.key_id, signature: r.signature }), true));
-    const b = rec.batch && S.batches.get(rec.batch);
-    if (b) out.push(mnode("batch", `batch ${b.batch_id}`, J({ seqs: b.seqs, tree_size_before: b.tree_size_before, tree_size_after: b.tree_size_after, root_hash: b.root_hash, delayed: !!b.delayed }), true));
-    if (rec.anch) out.push(mnode("proof", `anchor proof · leaf ${rec.anch.leaf_index}`, (rec.anch.audit_path || []).map((p, i) => `${i + 1} ${p.side === "left" ? "L" : "R"} ${p.hash}`).join("\n") + `\nroot ${rec.anch.root_hash}`, true));
-    if (rec.ver) out.push(mnode("ver", "verified", J({ issuer: rec.ver.issuer, log: rec.ver.log, chain_ok: rec.ver.chain_ok }), true));
-  }
-  mbody.replaceChildren(...out);
-  modal.hidden = false; $("#m-x").focus();
-}
-function closeThread() { modal.hidden = true; threadStep = null; }
-mbody.addEventListener("click", (e) => { const a = e.target.closest("a.mn"); if (!a) return; e.preventDefault(); a.scrollIntoView({ block: "center", behavior: RM.matches ? "auto" : "smooth" }); a.classList.remove("flash"); void a.offsetWidth; a.classList.add("flash"); });
-modal.addEventListener("click", (e) => { if (e.target === modal) closeThread(); });
-$("#m-x").addEventListener("click", closeThread);
-$("#m-prev").addEventListener("click", () => { const ks = [...S.steps.keys()].filter((k) => k < threadStep); if (ks.length) openThread(ks.at(-1)); });
-$("#m-next").addEventListener("click", () => { const ks = [...S.steps.keys()].filter((k) => k > threadStep); if (ks.length) openThread(ks[0]); });
-let preSel = false;
-document.addEventListener("pointerdown", (e) => { if (e.detail <= 1) preSel = !!String(window.getSelection?.() || "").trim(); }, true);
-document.addEventListener("dblclick", (e) => {
-  if (preSel) return; // the user was selecting text
-  window.getSelection?.().removeAllRanges();
-  const p = e.target.closest(".part"); if (!p || p.closest(".tbody") || info.get(p)?.noThread) return;
-  const n = threadOf(p); if (n != null) openThread(n);
-});
-
-// ── reasoning check (presenter only) ──
+// ── presenter-only: open the sealed thinking and compare it with the receipt ──
 let BUNDLE = null;
 async function loadBundle() { if (BUNDLE) return BUNDLE; const r = await fetch("events.json"); if (!r.ok) throw new Error(`events.json ${r.status}`); BUNDLE = await r.json(); return BUNDLE; }
 async function disclose(id) {
@@ -1154,54 +570,41 @@ async function disclose(id) {
   if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) throw new Error(`disclose ${r.status}`);
   return r.json();
 }
-async function runCheck(seq, out) {
-  const rec = S.rec.get(seq); const r = rec?.data?.receipt; if (!r) return;
-  out.className = "ckb"; out.textContent = "…";
+async function runCheck(seq, btn) {
+  const rec = S.rec.get(seq); const r = rec?.r; if (!r) return;
+  btn.textContent = "Checking…";
   try {
     const { salt, text } = await disclose(rec.rid);
     const pre = (r.commitment_alg || r.evidence?.commitment_alg) ? `${salt}:${text}` : text;
     const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pre));
     const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-    const st = S.steps.get(rec.step);
-    const ok = hex === r.reasoning_hash && (!st || rec.kind !== "decide" || text === st.thinking);
-    out.className = `ckb ${ok ? "ok" : "bad"}`; out.textContent = ok ? "✓ match" : "✗ no match";
-    term(`curl -s ${location.origin}/disclose/${s4(rec.rid)}`, `200 {"salt":"${s4(salt)}"} · sha256 ${ok ? "match" : "no match"}`, [`r:${seq}`, rec.step != null ? `think:${rec.step}` : null], ok ? "ok" : "bad");
-    if (termEl.follow) toBottom(termEl);
-  } catch { out.className = "ckb bad"; out.textContent = "✗"; }
+    const ok = hex === r.reasoning_hash;
+    btn.className = `btn ckb ${ok ? "ok" : "bad"}`; btn.textContent = ok ? "✓ Thinking matches the receipt" : "✗ Thinking does not match the receipt";
+  } catch { btn.className = "btn ckb bad"; btn.textContent = "✗ Could not check"; }
 }
 
-// ── paced player over an event array: ingest immediately, render on a steady clock ──
-const DW = { start: 600, model_input: 2400, thinking: 80, span: 200, tool_call: 1200, tool_result: 1800, loop: 900, decision: 2000, signed: 2000,
-  queued: 700, batch: 2000, consistency: 700, anchored: 2000, verified: 400, failure: 3000, gap: 1600, reconciled: 1800, done: 1600 };
-const ITER_MIN = 4400;
-const P = { ev: [], sched: [], pos: 0, clock: 0, playing: false, open: false, src: null, last: 0, speed: Number(store.get("speed", 1)) || 1, scrubbing: false, iterStart: 0 };
-const dwell = (e) => e.event === "turn" ? (e.data.who === "caller" ? 3200 : 2800) : DW[e.event] ?? 300;
+// ── player: recorded calls play at reading pace, live events show at once ──
+const DW = { start: 600, model_input: 1600, thinking: 60, span: 0, tool_call: 900, tool_result: 1200, loop: 400, decision: 1800, signed: 1200,
+  queued: 0, batch: 0, consistency: 0, anchored: 700, verified: 300, failure: 2200, gap: 1000, reconciled: 800, done: 800, api: 0, cost: 0, call_cost: 0 };
+const P = { ev: [], sched: [], pos: 0, clock: 0, playing: false, open: false, src: null, last: 0 };
+const dwell = (e) => (e.event === "turn" ? (e.data.who === "caller" ? 2600 : 2400) : DW[e.event] ?? 300);
 function ingest(e) {
   const prev = P.sched.length ? P.sched[P.sched.length - 1] : 0;
-  let d = P.src?.kind === "live" ? 0 : dwell(e); // pacing is for recorded replay only
-  if (e.event === "model_input") P.iterStart = prev + d;
-  if (e.event === "loop" && P.src?.kind !== "live") { d = Math.max(d, ITER_MIN - (prev - P.iterStart)); P.iterStart = prev + d; }
-  P.ev.push(e); P.sched.push(prev + d);
-  drawTicks();
+  P.ev.push(e); P.sched.push(prev + (P.src?.kind === "live" ? 0 : dwell(e)));
 }
-function apply(e) {
-  S.curId = e.id;
-  if (typeof e.data.t_us === "number" && e.data.t_us > S.maxT) S.maxT = e.data.t_us;
-  try { H[e.event]?.(e.data); } catch (err) { console.error(e.event, err); }
-}
-function busy() { window.__filetBusy = !!(P.playing || P.scrubbing); }
+function apply(e) { S.curId = e.id; try { H[e.event]?.(e.data); } catch (err) { console.error(e.event, err); } }
+function busy() { window.__filetBusy = !!P.playing; }
 function setPlaying(on) {
   P.playing = on;
   $("#play").textContent = on ? "Pause" : P.pos >= P.ev.length && !P.open && P.ev.length ? "Replay" : "Play";
   if (on) P.last = performance.now();
-  $("#aline").classList.toggle("live", on);
   busy(); savePos();
 }
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(250, now - P.last); P.last = now;
   if (!P.playing) return;
-  P.clock += dt * P.speed;
+  P.clock += dt;
   let n = 0;
   while (P.pos < P.ev.length && P.sched[P.pos] <= P.clock) { apply(P.ev[P.pos++]); n++; }
   if (n) afterApply();
@@ -1209,184 +612,70 @@ function frame(now) {
 }
 let applyN = 0;
 function afterApply() {
-  $("#clock").textContent = fmtT(S.maxT);
-  for (const c of PANES) { if (c.follow) toBottom(c); else c.pill.hidden = false; }
-  if (tetherFor && tetherFor.isConnected) tether(tetherFor, null);
-  drawHead();
+  if (follow) toBottom(); else $("#latest").hidden = false;
   if (++applyN % 25 === 0) savePos();
-  if (P.src?.kind === "live" && applyN % 10 === 0) store.set("livecur", P.ev);
 }
 function seek(i) {
   i = Math.max(0, Math.min(P.ev.length, i));
   resetView(S.mode); S.instant = true;
   for (let k = 0; k < i; k++) apply(P.ev[k]);
   S.instant = false; P.pos = i; P.clock = i ? P.sched[i - 1] : 0;
-  for (const c of PANES) setFollow(c, true);
-  afterApply();
   if (!P.playing) $("#play").textContent = P.pos >= P.ev.length && !P.open && P.ev.length ? "Replay" : "Play";
   savePos();
 }
-const stepIdx = () => P.ev.reduce((a, e, i) => (e.event === "model_input" && a.push(i), a), []);
-function prevStep() { const cur = stepIdx().filter((i) => i < P.pos - 1); seek(cur.length > 1 ? cur[cur.length - 2] + 1 : 0); }
-function nextStep() { const s = stepIdx().find((i) => i >= P.pos); seek(s != null ? s + 1 : P.ev.length); }
 function savePos() { if (P.src && P.src.kind !== "live") store.set("pos", { src: P.src, pos: P.pos }); }
 function loadEvents(src, events, mode, startAt = 0, autoplay = true) {
-  P.ev = []; P.sched = []; P.pos = 0; P.clock = 0; P.src = src; P.open = mode === "live"; P.iterStart = 0;
+  P.ev = []; P.sched = []; P.pos = 0; P.clock = 0; P.src = src; P.open = mode === "live";
   resetView(mode);
   for (const e of events) ingest(e);
   store.set("src", src);
-  seek(startAt > 0 && startAt < P.ev.length ? startAt : 0);
+  seek(startAt > 0 && startAt <= P.ev.length ? startAt : 0);
   setPlaying(autoplay);
 }
 
-// timeline scrubber
-const scrub = $("#scrub");
-function drawTicks() {
-  if (drawTicks.raf) return;
-  drawTicks.raf = requestAnimationFrame(() => {
-    drawTicks.raf = 0;
-    const box = $("#ticks"); box.replaceChildren();
-    const total = P.sched[P.sched.length - 1] || 1, seenF = new Set();
-    P.ev.forEach((e, i) => {
-      let f = false;
-      if (e.event === "failure") { const id = e.data.failure_id ?? e.data.kind; f = !seenF.has(id); seenF.add(id); }
-      if (e.event !== "model_input" && !f) return;
-      const b = h("button", `tk ${f ? "f" : ""}`); b.type = "button"; b.style.left = `${((i ? P.sched[i - 1] : 0) / total) * 100}%`;
-      b.setAttribute("aria-label", f ? `failure ${e.data.kind}` : `step ${e.data.step + 1}`);
-      b.addEventListener("click", (ev) => { ev.stopPropagation(); seek(i + 1); });
-      box.append(b);
-    });
-    drawHead();
-  });
-}
-function drawHead() {
-  const total = P.sched[P.sched.length - 1] || 1;
-  const pct = Math.min(100, ((P.pos ? P.sched[P.pos - 1] : 0) / total) * 100);
-  $("#fill").style.width = `${pct}%`; $("#head").style.left = `${pct}%`;
-}
-function idxAt(x) {
-  const r = scrub.getBoundingClientRect(); const f = Math.max(0, Math.min(1, (x - r.left) / r.width));
-  if (f > 0.995) return P.ev.length;
-  const t = f * (P.sched[P.sched.length - 1] || 0);
-  let i = 0; while (i < P.sched.length && P.sched[i] <= t) i++; return i;
-}
-scrub.addEventListener("pointerdown", (e) => {
-  if (e.target.classList.contains("tk")) return;
-  P.scrubbing = true; busy(); scrub.setPointerCapture(e.pointerId);
-  const was = P.playing; P.playing = false; seek(idxAt(e.clientX));
-  let raf = 0, lastX = e.clientX;
-  const move = (ev) => { lastX = ev.clientX; if (!raf) raf = requestAnimationFrame(() => { raf = 0; seek(idxAt(lastX)); }); };
-  const up = () => { scrub.removeEventListener("pointermove", move); scrub.removeEventListener("pointerup", up); scrub.removeEventListener("pointercancel", up); P.scrubbing = false;
-    if (P.src?.kind === "live") { setPlaying(P.pos >= P.ev.length); for (const c of PANES) if (P.pos < P.ev.length) c.pill.hidden = false; } else setPlaying(was && P.pos < P.ev.length); };
-  scrub.addEventListener("pointermove", move); scrub.addEventListener("pointerup", up); scrub.addEventListener("pointercancel", up);
-});
+// follow the newest line only while the reader is at the bottom
+let follow = true, progScroll = false;
+const nearBottom = () => innerHeight + scrollY >= document.documentElement.scrollHeight - 200;
+function toBottom() { progScroll = true; scrollTo(0, document.documentElement.scrollHeight); requestAnimationFrame(() => { progScroll = false; }); $("#latest").hidden = true; }
+addEventListener("scroll", () => { if (progScroll) return; follow = nearBottom(); if (follow) $("#latest").hidden = true; }, { passive: true });
+$("#latest").addEventListener("click", () => { follow = true; toBottom(); });
 
-// controls + keyboard
-$("#play").addEventListener("click", () => { if (!P.playing && P.pos >= P.ev.length && !P.open) seek(0); setPlaying(!P.playing); });
-$("#prev").addEventListener("click", prevStep);
-$("#next").addEventListener("click", nextStep);
-document.addEventListener("keydown", (e) => {
-  const t = e.target;
-  if (e.key === "Escape") { if (!modal.hidden) closeThread(); $("#more").open = false; return; }
-  if (t.closest?.("input, select, textarea, summary, .menu")) return;
-  if (e.key === "Enter" && t.classList?.contains("part") && !info.get(t)?.noThread) { const n = threadOf(t); if (n != null) { e.preventDefault(); openThread(n); } return; }
-  if (t.classList?.contains("gutter") || t.id === "hgut") return;
-  if (S.mode === "live" && (e.key === " " || e.key === "ArrowLeft" || e.key === "ArrowRight")) return;
-  if (e.key === " ") { e.preventDefault(); $("#play").click(); }
-  else if (!modal.hidden) return;
-  else if (e.key === "ArrowLeft") { e.preventDefault(); prevStep(); }
-  else if (e.key === "ArrowRight") { e.preventDefault(); nextStep(); }
-});
-const speedSel = $("#speed"); speedSel.value = String(P.speed);
-speedSel.addEventListener("change", () => { P.speed = Number(speedSel.value) || 1; store.set("speed", P.speed); });
+// recorded controls
+$("#play").addEventListener("click", () => { if (!P.playing && P.pos >= P.ev.length && !P.open) { seek(0); scrollTo(0, 0); follow = true; } setPlaying(!P.playing); });
+$("#restart").addEventListener("click", () => { seek(0); scrollTo(0, 0); follow = true; setPlaying(true); });
+$("#all").addEventListener("click", () => { setPlaying(false); seek(P.ev.length); follow = false; setPlaying(false); });
 const runSel = $("#run");
-runSel.addEventListener("change", () => { playRecorded(runSel.value, 0); $("#more").open = false; });
+runSel.addEventListener("change", () => { playRecorded(runSel.value, 0); });
 const apiIn = $("#api"); apiIn.value = window.FILET_API || "";
-$("#api-save").addEventListener("click", () => { const v = apiIn.value.trim().replace(/\/+$/, ""); store.set("api", v || "off"); window.FILET_API = v || null; setupSay(); $("#more").open = false; });
+$("#api-save").addEventListener("click", () => { const v = apiIn.value.trim().replace(/\/+$/, ""); store.set("api", v || "off"); window.FILET_API = v || null; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") $("#more").open = false; });
+document.addEventListener("click", (e) => { const m = $("#more"); if (m.open && !m.contains(e.target)) m.open = false; });
 
-// side panels: collapse to a rail, resize, keys [ and ], saved
-const colsEl = $("#cols");
-const SIDE = Object.assign({ l: { open: true, w: 0 }, r: { open: true, w: 0 } }, store.get("sides", {}));
-function defW() { return Math.round(Math.max(280, Math.min(560, innerWidth * 0.3))); }
-function applySides() {
-  for (const k of ["l", "r"]) {
-    const el = $(`#side-${k}`), st = SIDE[k];
-    el.classList.toggle("collapsed", !st.open);
-    el.querySelector(".rail").setAttribute("aria-expanded", String(st.open));
-    el.querySelector(".chev").textContent = st.open === (k === "l") ? "‹" : "›";
-    colsEl.style.setProperty(`--w${k}`, st.open ? `${st.w || defW()}px` : "34px");
-    colsEl.querySelector(`.gutter[data-g="${k}"]`).classList.toggle("off", !st.open);
-  }
-  store.set("sides", SIDE);
-}
-function toggleSide(k) { SIDE[k].open = !SIDE[k].open; applySides(); if (tetherFor) tether(tetherFor, true); }
-document.querySelectorAll(".rail").forEach((b) => b.addEventListener("click", () => toggleSide(b.dataset.toggle)));
-applySides();
-const MINW = 240;
-function nudge(k, dx) {
-  const st = SIDE[k]; const cur = st.w || defW();
-  st.w = Math.round(Math.max(MINW, Math.min(innerWidth * 0.45, cur + (k === "l" ? dx : -dx)))); applySides();
-}
-colsEl.querySelectorAll(".gutter").forEach((g) => {
-  const k = g.dataset.g;
-  g.addEventListener("pointerdown", (e) => {
-    if (!WIDE.matches || !SIDE[k].open) return;
-    e.preventDefault(); g.setPointerCapture(e.pointerId); g.classList.add("drag");
-    let x = e.clientX;
-    const move = (ev) => { nudge(k, ev.clientX - x); x = ev.clientX; };
-    const up = () => { g.classList.remove("drag"); g.removeEventListener("pointermove", move); g.removeEventListener("pointerup", up); };
-    g.addEventListener("pointermove", move); g.addEventListener("pointerup", up);
-  });
-  g.addEventListener("dblclick", () => { SIDE[k].w = 0; applySides(); });
-  g.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft" || e.key === "ArrowRight") { e.preventDefault(); nudge(k, e.key === "ArrowLeft" ? -24 : 24); } });
-});
-document.addEventListener("keydown", (e) => {
-  if (e.target.closest?.("input, select, textarea") || !modal.hidden) return;
-  if (e.key === "[") { e.preventDefault(); toggleSide("l"); } else if (e.key === "]") { e.preventDefault(); toggleSide("r"); }
-});
-const termd = $("#termd");
-termd.open = !!store.get("termOpen", false);
-termd.addEventListener("toggle", () => { store.set("termOpen", termd.open); if (termd.open && termEl.follow) toBottom(termEl); });
-const termBox = $("#termbox"), hg = $("#hgut");
-let TH = store.get("termh", 200);
-const applyTH = () => termBox.style.setProperty("--th", `${TH}px`);
-applyTH();
-function setTH(v) { const max = Math.max(90, termBox.parentElement.getBoundingClientRect().height * 0.6); TH = Math.round(Math.max(80, Math.min(max, v))); applyTH(); store.set("termh", TH); }
-hg.addEventListener("pointerdown", (e) => {
-  if (!WIDE.matches) return;
-  e.preventDefault(); hg.setPointerCapture(e.pointerId); hg.classList.add("drag");
-  let y = e.clientY;
-  const move = (ev) => { setTH(TH - (ev.clientY - y)); y = ev.clientY; };
-  const up = () => { hg.classList.remove("drag"); hg.removeEventListener("pointermove", move); hg.removeEventListener("pointerup", up); };
-  hg.addEventListener("pointermove", move); hg.addEventListener("pointerup", up);
-});
-hg.addEventListener("dblclick", () => setTH(200));
-hg.addEventListener("keydown", (e) => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); setTH(TH + (e.key === "ArrowUp" ? 24 : -24)); } });
-
-// ── sources: recorded replay (default) and live sessions ──
+// ── sources: recorded replay (default) and live calls ──
 const MAXLEN = 2000;
 const LV = { id: null, es: null, api: null, ended: false };
 function closeStream() { LV.es?.close(); LV.es = null; }
-function setUrl(id) {
-  try { const u = new URL(location.href); if (id) u.searchParams.set("s", id); else u.searchParams.delete("s"); history.replaceState(history.state, "", u); } catch {}
-}
+function setUrl(id) { try { const u = new URL(location.href); if (id) u.searchParams.set("s", id); else u.searchParams.delete("s"); history.replaceState(history.state, "", u); } catch {} }
 function setLiveStored(v) { store.set("liveCall", v); window.__filetLive = !!v; }
 async function playRecorded(fail, startAt) {
   closeStream(); LV.id = null; LV.ended = false; setResponding(false);
   setLiveStored(null); setUrl(null);
-  $("#run").disabled = false; $("#endcall").hidden = true; $("#pkglink").hidden = true; $("#apilink").href = "api.html";
-  composerMode(); restoreDraft();
-  try { await loadBundle(); } catch { $("#err").hidden = false; $("#err").textContent = "recording unavailable"; return; }
+  $("#endcall").hidden = true; $("#pkglink").hidden = true; $("#apilink").href = "api.html";
+  composerMode();
+  try { await loadBundle(); } catch { $("#err").hidden = false; $("#err").textContent = "The recorded call could not be loaded."; return; }
   const run = BUNDLE.runs[fail] ?? BUNDLE.runs[""];
   runSel.value = BUNDLE.runs[fail] ? fail : "";
   const want = location.hash.startsWith("#r-") ? location.hash.slice(3) : null;
-  const at = want ? run.findIndex((e) => e.event === "anchored" && e.data.receipt_id === want) : -1;
-  const sAt = want ? run.findIndex((e) => e.event === "signed" && e.data.receipt_id === want) : -1;
-  if (want && (at >= 0 || sAt >= 0)) { loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", (at >= 0 ? at : sAt) + 1, false); requestAnimationFrame(() => goTo(`r-${want}`)); return; }
+  if (want && run.some((e) => e.event === "signed" && e.data.receipt_id === want)) {
+    loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", run.length, false); follow = false;
+    requestAnimationFrame(() => { const el = document.getElementById(`r-${want}`); if (el) { if (el.tagName === "DETAILS") el.open = true; el.scrollIntoView({ block: "start" }); } });
+    return;
+  }
+  follow = true;
   loadEvents({ kind: "recorded", fail: runSel.value }, run, "recorded", startAt, true);
 }
 
-// sessions: local list merged with the server's recent calls
+// past calls: local list merged with the server's recent calls
 const sessions = () => store.get("sessions", []);
 function upsertSession(id, patch) {
   const l = sessions(); const i = l.findIndex((x) => x.id === id);
@@ -1411,44 +700,47 @@ function mergedSessions() {
   for (const s of m.values()) s.ended = s.ended || !!s.endedAt;
   return [...m.values()].sort((a, b) => String(b.startedAt).localeCompare(String(a.startedAt)));
 }
-const fmtWhen = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }); };
+const fmtWhen = (iso) => { const d = new Date(iso); return isNaN(d) ? "" : d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }); };
 async function drawSaved() {
   const box = $("#saved");
-  if (!box.childElementCount) box.append(h("span", "t", "loading"));
+  if (!box.childElementCount) box.append(h("p", "mute", "Loading…"));
   await fetchServerCalls();
   box.replaceChildren();
+  const rec = h("button", LV.id ? null : "cur", "Recorded call"); rec.type = "button";
+  rec.addEventListener("click", () => { $("#more").open = false; playRecorded(runSel.value, 0); });
+  box.append(rec);
   const list = mergedSessions();
-  if (!list.length) { box.append(h("span", "t", "none")); return; }
+  if (!list.length) { box.append(h("p", "mute", "No live calls yet.")); return; }
   for (const s of list) {
     const b = h("button", s.id === LV.id ? "cur" : null); b.type = "button";
-    b.append(h("span", "st-title", s.title || `call · ${fmtWhen(s.startedAt)}`), h("span", "t", `${fmtWhen(s.startedAt)}${s.ended ? " · ended" : ""}`));
+    b.append(s.title ? `“${s.title}”` : "Live call", h("span", "when", `${fmtWhen(s.startedAt)}${s.ended ? " · ended" : ""}`));
     b.addEventListener("click", () => { $("#more").open = false; openSession(s.id); });
     box.append(b);
   }
 }
 
-// one session: replay everything (instant), then continue live
+// one live call: replay everything, then continue live
 let liveSaveT = 0;
 function openSession(id, api = window.FILET_API) {
   if (!api || !id) return;
-  closeStream();
-  saveDraftNow();
-  LV.id = id; LV.api = api; LV.ended = false; LV.ending = false; LV.sawCaller = false; setResponding(false);
+  closeStream(); saveDraftNow();
+  LV.id = id; LV.api = api; LV.ended = false; LV.sawCaller = false; setResponding(false);
   const s = upsertSession(id, {});
   setLiveStored({ id, api, startedAt: s.startedAt, lastEventId: s.lastEventId || 0 });
   setUrl(id);
   $("#apilink").href = `api.html?call=${encodeURIComponent(id)}`;
   const pk = $("#pkglink"); pk.href = `package.html?call=${encodeURIComponent(id)}`; pk.hidden = false;
-  $("#endcall").hidden = false; $("#endcall").disabled = false; $("#endcall").textContent = "End call"; $("#run").disabled = true;
+  const eb = $("#endcall"); eb.hidden = false; eb.disabled = false; eb.textContent = "End call";
+  follow = true;
   loadEvents({ kind: "live", id, api }, [], "live", 0, true);
   composerMode(); restoreDraft();
   const seen = new Set();
-  const es = new EventSource(`${api}/call/${encodeURIComponent(id)}/events?last_event_id=0`); // the server replays the whole call, then continues live
+  const es = new EventSource(`${api}/call/${encodeURIComponent(id)}/events?last_event_id=0`);
   LV.es = es;
   let got = 0;
   es.addEventListener("error", (e) => {
     if (e.data) { $("#err").hidden = false; try { $("#err").textContent = JSON.parse(e.data).message; } catch {} return; }
-    if (!got && es.readyState === EventSource.CLOSED && LV.es === es) { $("#err").hidden = false; $("#err").textContent = "session unavailable"; setLiveStored(null); }
+    if (!got && es.readyState === EventSource.CLOSED && LV.es === es) { $("#err").hidden = false; $("#err").textContent = "This call could not be opened."; setLiveStored(null); }
   });
   for (const name of EVENTS) es.addEventListener(name, (e) => {
     if (LV.es !== es) return;
@@ -1472,17 +764,17 @@ function finishLive(id) {
   closeStream(); P.open = false; $("#endcall").hidden = true;
   LV.ended = true;
   upsertSession(id, { endedAt: sessions().find((x) => x.id === id)?.endedAt || new Date().toISOString() });
-  if (store.get("liveCall", null)?.id === id) setLiveStored(null); // ended sessions stay reachable via ?s= and the list
-  store.set("livecur", P.ev);
+  if (store.get("liveCall", null)?.id === id) setLiveStored(null);
+  $("#mode").textContent = `Live call (ended)${S.model ? ` · model ${S.model}` : ""}`;
   composerMode();
 }
-// "New session" is the only way a new call starts
 async function newSession() {
-  if (!window.FILET_API) { showNote("connect live to reply"); return; }
+  if (!window.FILET_API) { $("#err").hidden = false; $("#err").textContent = "No backend is set, so a live call cannot start."; return; }
   if (LV.creating) return LV.creating;
+  const btns = [$("#newsess"), $("#ro-new")]; btns.forEach((b) => { b.disabled = true; });
   LV.creating = (async () => {
     const r = await fetch(`${window.FILET_API}/call`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" });
-    if (!r.ok) throw new Error(`call ${r.status}`);
+    if (!r.ok) throw new Error(r.status === 429 ? "Too many calls started. Try again in a minute." : `The call could not start (${r.status}).`);
     return (await r.json()).id;
   })();
   try {
@@ -1490,65 +782,66 @@ async function newSession() {
     upsertSession(id, { startedAt: new Date().toISOString() });
     openSession(id); sayIn.focus();
   } catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); }
-  finally { LV.creating = null; }
+  finally { LV.creating = null; btns.forEach((b) => { b.disabled = false; }); }
 }
 
 // composer
-function setupSay() { sayIn.placeholder = "Speak as the caller…"; sayIn.maxLength = MAXLEN; }
 const sayIn = $("#say-in"), sayGo = $("#say-go");
-function growSay() { sayIn.style.height = "auto"; const lh = parseFloat(getComputedStyle(sayIn).lineHeight) || 22; sayIn.style.height = `${Math.min(Math.max(sayIn.scrollHeight, lh * 2), lh * 8)}px`; }
+sayIn.maxLength = MAXLEN;
+function growSay() { sayIn.style.height = "auto"; const lh = parseFloat(getComputedStyle(sayIn).lineHeight) || 30; sayIn.style.height = `${Math.min(Math.max(sayIn.scrollHeight + 2, lh * 2 + 22), lh * 6)}px`; }
 function showNote(t) { const nt = $("#say-note"); nt.textContent = t; nt.hidden = false; }
-function noteLive() { showNote("connect live to reply"); }
 function composerMode() {
-  const ended = !!LV.id && LV.ended;
-  $("#say").hidden = ended; $("#say-ro").hidden = !ended;
+  const isLive = !!LV.id, ended = isLive && LV.ended;
+  $("#say").hidden = !isLive || ended;
+  $("#say-ro").hidden = isLive && !ended;
+  $("#ro-text").textContent = ended ? "This call has ended." : "This is a recorded call.";
+  $("#ro-new").textContent = ended ? "Start a new call" : "Start a live call";
+  $("#newsess").textContent = isLive ? "Start a new call" : "Start a live call";
+  $("#say-note").hidden = true;
 }
 function syncCount() {
   const n = sayIn.value.length, c = $("#say-count");
-  c.hidden = n < MAXLEN * 0.8; c.textContent = `${n.toLocaleString("en-US")} / ${MAXLEN.toLocaleString("en-US")}`; c.classList.toggle("warn", n >= MAXLEN);
+  c.hidden = n < MAXLEN * 0.8; c.textContent = `${n.toLocaleString("en-US")} of ${MAXLEN.toLocaleString("en-US")} characters`; c.className = `say-msg ${n >= MAXLEN ? "warn" : "mute"}`;
 }
 const draftKey = () => `draft.${LV.id || "recorded"}`;
 let draftT = 0;
-function saveDraftNow() { clearTimeout(draftT); const v = sayIn.value; store.set(draftKey(), v ? v : null); }
+function saveDraftNow() { clearTimeout(draftT); if (!LV.id) return; const v = sayIn.value; store.set(draftKey(), v ? v : null); }
 function restoreDraft() { sayIn.value = store.get(draftKey(), "") || ""; growSay(); syncCount(); syncSend(); $("#say-note").hidden = true; }
 sayIn.addEventListener("input", () => {
   growSay(); $("#say-note").hidden = true; syncSend(); syncCount();
   clearTimeout(draftT); const key = draftKey(); draftT = setTimeout(() => store.set(key, sayIn.value || null), 300);
 });
-sayIn.addEventListener("focus", () => { if (P.playing && !LV.id) setPlaying(false); }); // focusing pauses the replay at the current step
 sayIn.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("#say").requestSubmit(); } });
 function setResponding(on) { LV.responding = on; syncSend(); }
-function syncSend() { const stop = LV.responding && !sayIn.value.trim(); sayGo.dataset.stop = stop ? "1" : ""; sayGo.textContent = stop ? "■" : "↑"; sayGo.setAttribute("aria-label", stop ? "Stop" : "Send"); }
+function syncSend() { const stop = LV.responding && !sayIn.value.trim(); sayGo.textContent = stop ? "Stop" : "Send"; sayGo.classList.toggle("main", !stop); }
 async function interrupt() {
   if (!LV.id || !LV.api) return;
   try { await fetch(`${LV.api}/call/${LV.id}/interrupt`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); } catch {}
   setResponding(false);
 }
 async function sendCaller(text) {
-  if (text.length > MAXLEN) { showNote("Too long: 2,000 characters max"); return; }
+  if (text.length > MAXLEN) { showNote("Too long: 2,000 characters at most."); return; }
   const id = LV.id;
   setResponding(true);
   let r;
   try { r = await fetch(`${LV.api}/call/${id}/turn`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) }); }
-  catch { setResponding(false); showNote("Couldn't send, retry"); return; }
-  if (r.ok) { // 202: only now is the draft gone
+  catch { setResponding(false); showNote("Could not send. Try again."); return; }
+  if (r.ok) {
     if (LV.id === id && sayIn.value.trim() === text) { sayIn.value = ""; growSay(); syncCount(); }
     store.set(`draft.${id}`, null); syncSend(); return;
   }
   setResponding(false);
-  if (r.status === 413) showNote("Too long: 2,000 characters max");
-  else if (r.status === 429) { const ra = Number(r.headers.get("retry-after")); showNote(`Too many messages, try again in ${ra > 0 ? `${ra}s` : "a moment"}`); }
-  else if (r.status === 409) showNote("agent is answering");
-  else showNote("Couldn't send, retry");
+  if (r.status === 413) showNote("Too long: 2,000 characters at most.");
+  else if (r.status === 429) { const ra = Number(r.headers.get("retry-after")); showNote(`Too many messages. Try again in ${ra > 0 ? `${ra} seconds` : "a moment"}.`); }
+  else if (r.status === 409) showNote("The call has ended or the agent is still answering.");
+  else showNote("Could not send. Try again.");
 }
 $("#say").addEventListener("submit", (e) => {
   e.preventDefault();
   const t = sayIn.value.trim();
-  if (!t) { if (LV.responding) interrupt(); return; } // a typed line barges in; ■ only stops
-  if (P.playing && !LV.id) setPlaying(false);
-  if (!window.FILET_API) { noteLive(); return; }
-  if (!LV.id || LV.ended) { showNote("Start a new session to talk live"); return; }
-  if (t.length > MAXLEN) { showNote("Too long: 2,000 characters max"); return; }
+  if (!t) { if (LV.responding) interrupt(); return; }
+  if (!LV.id || LV.ended) { showNote("Start a live call first."); return; }
+  follow = true;
   sendCaller(t);
 });
 $("#more").addEventListener("toggle", () => { if ($("#more").open) drawSaved(); });
@@ -1556,23 +849,16 @@ $("#newsess").addEventListener("click", newSession);
 $("#ro-new").addEventListener("click", newSession);
 $("#endcall").addEventListener("click", async () => {
   if (!LV.id || !LV.api) return;
-  const b = $("#endcall"); b.disabled = true; b.textContent = "Ending…"; LV.ending = true;
+  const b = $("#endcall"); b.disabled = true; b.textContent = "Ending…";
   try { await fetch(`${LV.api}/call/${LV.id}/end`, { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }); }
   catch (err) { $("#err").hidden = false; $("#err").textContent = String(err.message || err); b.disabled = false; b.textContent = "End call"; }
-  // the stream stays open for reconciled, the close receipt and done; then the session turns read-only
+  // the stream stays open for the close receipt and done; then the call turns read-only
 });
 addEventListener("beforeunload", saveDraftNow);
 
-const detBtn = $("#details");
-function setDetails(on) { document.body.classList.toggle("details-on", on); detBtn.setAttribute("aria-pressed", String(on)); store.set("details", on); }
-detBtn.addEventListener("click", () => setDetails(!document.body.classList.contains("details-on")));
-setDetails(!!store.get("details", false));
-document.body.classList.toggle("all-rcpt", !!store.get("allReceipts", false));
-
-// boot: ?s=<id> opens that session; else resume the active session; else replay the recording
+// boot: ?s=<id> opens that call; else resume the active call; else play the recording
 window.__filetBusy = false; window.__filetLive = !!store.get("liveCall", null);
 S = fresh("recorded");
-setupSay();
 requestAnimationFrame((t) => { P.last = t; frame(t); });
 {
   const saved = store.get("pos", null), src = store.get("src", null);
@@ -1583,6 +869,5 @@ requestAnimationFrame((t) => { P.last = t; frame(t); });
   else { const fail = src?.kind === "recorded" ? src.fail || "" : ""; const at = same(saved?.src, { kind: "recorded", fail }) ? saved.pos : 0; playRecorded(fail, at); }
 }
 </script>
-
 </body>
 </html>

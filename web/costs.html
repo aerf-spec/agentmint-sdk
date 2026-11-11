@@ -3,35 +3,29 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>filet · Costs</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
+<title>Call Costs</title>
 <style>
-:root {
-  --bg: #0B1120; --fg: #E2E8F0; --fg-2: #CBD5E1; --surface: #141E30; --border: #1E3A5F; --code-bg: #0D1117;
-  --blue: #3B82F6; --green: #10B981; --text-secondary: #94A3B8; --text-tertiary: #475569; --faint: #64748B;
-  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
-  color-scheme: dark;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg); color: var(--fg); font: 13px/1.6 var(--mono); -webkit-font-smoothing: antialiased; }
-a { color: var(--blue); text-decoration: none; }
-.top { display: flex; align-items: center; gap: 10px; padding: 12px 24px; border-bottom: 1px solid var(--border); }
-.brand { font: 700 15px var(--mono); } .brand span { color: var(--blue); }
-.sub { color: var(--text-secondary); font-size: 12px; }
-main { max-width: 720px; margin: 0 auto; padding: 20px 24px 60px; }
-.lbl { display: block; font: 600 10.5px var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); margin: 18px 0 8px; }
-.call { border: 1px solid var(--border); border-radius: 10px; background: var(--code-bg); padding: 10px 14px; margin-bottom: 10px; }
-.row { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
-.usd { margin-left: auto; color: var(--fg); font-weight: 600; }
-.k { color: var(--faint); }
-.v { color: var(--fg-2); overflow-wrap: anywhere; }
-.sum { font-size: 15px; font-weight: 600; }
-.empty { color: var(--faint); }
+:root { --bg:#fffdf8; --fg:#1a1a1a; --mute:#555; --line:#ddd6c8; --card:#fff; --hl:#f3ecdc; --ok:#1d6b2f; --bad:#a3221b; --warn:#7a5200;
+  --serif: Georgia, "Times New Roman", serif; --mono: Menlo, Consolas, "Liberation Mono", monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 21px/1.6 var(--serif); overflow-wrap: anywhere; }
+a { color: inherit; }
+.top { max-width: 820px; margin: 0 auto; padding: 28px 16px 12px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: baseline; }
+.brand { font-size: 32px; font-weight: bold; } .sub { color: var(--mute); }
+main { max-width: 820px; margin: 0 auto; padding: 8px 16px 64px; }
+.lbl { display: block; font-size: 24px; font-weight: bold; margin: 28px 0 10px; }
+.call { border: 1px solid var(--line); border-radius: 8px; background: var(--card); padding: 12px 18px; margin-bottom: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
+.usd { margin-left: auto; font-weight: bold; }
+.k { color: var(--mute); } .v { overflow-wrap: anywhere; }
+.sum { font-size: 24px; font-weight: bold; }
+.empty { color: var(--mute); }
 </style>
 </head>
 <body>
-<header class="top"><span class="brand">filet<span>.ai</span></span><span class="sub">Costs</span></header>
+<header class="top"><span class="brand">Costs</span><a class="sub" href="index.html">Back to the call</a></header>
 <main>
   <span class="lbl">Live calls</span>
   <div id="list"><p class="empty">…</p></div>
@@ -43,7 +37,7 @@ main { max-width: 720px; margin: 0 auto; padding: 20px 24px 60px; }
 const h = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
 const usd = (v) => `$${Number(v || 0).toFixed(4)}`;
 let api = null;
-try { const a = JSON.parse(localStorage.getItem("filet.api") || "null"); api = a === "off" ? null : a; } catch {}
+try { const a = JSON.parse(localStorage.getItem("filet.v3.api") || "null"); api = a === "off" ? null : a; } catch {}
 api = api || "https://filet-call.anikethsubs.workers.dev";
 (async () => {
   const list = document.getElementById("list");

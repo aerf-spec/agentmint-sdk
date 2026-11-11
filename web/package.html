@@ -3,121 +3,102 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>filet · call package</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<title>Evidence Package</title>
 <style>
-:root{
-  --bg:#0B1120; --surface:#141E30; --border:#1E3A5F; --code:#0D1117;
-  --blue:#3B82F6; --green:#10B981; --amber:#FBBF24; --red:#EF4444;
-  --text:#E2E8F0; --muted:#94A3B8; --dim:#475569;
-  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --serif:"Source Serif 4",Georgia,serif;
-}
+:root { --bg:#fffdf8; --fg:#1a1a1a; --mute:#555; --line:#ddd6c8; --card:#fff; --hl:#f3ecdc; --ok:#1d6b2f; --bad:#a3221b; --warn:#7a5200;
+  --serif: Georgia, "Times New Roman", serif; --mono: Menlo, Consolas, "Liberation Mono", monospace; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; } }
+:root[data-theme="dark"] { --bg:#161513; --fg:#f2efe8; --mute:#b5b0a5; --line:#3a3731; --card:#1f1e1b; --hl:#2a2822; --ok:#7fd18f; --bad:#ff8a80; --warn:#e8c170; color-scheme: dark; }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--text)}
-body{font-family:var(--serif);font-size:16px;line-height:1.5;overflow-wrap:anywhere}
-a{color:var(--blue);text-decoration:none;cursor:pointer}
-a:hover{text-decoration:underline}
-button{font-family:var(--mono);font-size:12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:7px 12px;cursor:pointer}
-button:hover{border-color:var(--blue)}
-.mono{font-family:var(--mono)}
-.muted{color:var(--muted)} .dim{color:var(--dim)}
-.ok{color:var(--green)} .bad{color:var(--red)} .warn{color:var(--amber)} .blue{color:var(--blue)}
-
-header{height:56px;display:flex;align-items:center;gap:16px;padding:0 24px;border-bottom:1px solid var(--border);background:var(--bg);font-family:var(--mono);font-size:13px}
-header .brand{font-weight:700;letter-spacing:.02em}
-header .brand b{color:var(--blue)}
-header .callid{color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-header .tag{border:1px solid var(--amber);color:var(--amber);border-radius:3px;padding:1px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+html,body{margin:0;background:var(--bg);color:var(--fg)}
+body{font:21px/1.6 var(--serif);overflow-wrap:anywhere}
+a{color:inherit;text-decoration:underline;cursor:pointer}
+button{font:inherit;font-size:19px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px 16px;cursor:pointer}
+button:hover{border-color:var(--fg)}
+.mono{font-family:var(--mono);font-size:17px}
+.muted,.dim{color:var(--mute)}
+.ok{color:var(--ok)} .bad{color:var(--bad)} .warn{color:var(--warn)} .blue{color:var(--fg)}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;padding:24px 16px 14px;border-bottom:1px solid var(--line);max-width:1300px;margin:0 auto}
+header .brand{font-size:30px;font-weight:bold}
+header .brand b{font-weight:bold}
+header .callid{color:var(--mute);min-width:0;font-size:18px}
+header .tag{color:var(--warn);font-size:18px}
 header .sp{flex:1}
-
-main{display:grid;grid-template-columns:minmax(320px,380px) minmax(0,1fr);gap:16px;padding:16px;height:calc(100vh - 56px)}
-.pane{background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:0;overflow-y:auto;overflow-x:hidden}
-#left{display:flex;flex-direction:column;padding:0}
-#right{padding:28px 36px 48px}
-@media (max-width:900px){main{grid-template-columns:1fr;height:auto}.pane{overflow:visible}#right{padding:20px}}
-
-.label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-
-/* verification summary */
-#summary{padding:18px 20px;border-bottom:1px solid var(--border)}
-.check{display:grid;grid-template-columns:20px 1fr;gap:8px;padding:6px 0;font-family:var(--mono);font-size:12.5px;align-items:start}
-.check .mk{font-weight:700;text-align:center}
-.check .why{grid-column:2;color:var(--muted);font-size:11.5px}
-.check .why a{color:var(--red)}
-.check.fail .t{color:var(--red)}
-
-/* decision list */
-#list{flex:1;padding:8px 0}
-.row{display:grid;grid-template-columns:44px 1fr 18px;gap:8px;padding:9px 20px;font-family:var(--mono);font-size:12.5px;cursor:pointer;border-left:3px solid transparent;align-items:start}
-.row:hover{background:#18243a}
-.row.sel{background:#1a2a44;border-left-color:var(--blue)}
-.row .tm{color:var(--dim)}
-.row .dc{color:var(--text)}
-.row .rl{color:var(--blue);font-size:11.5px}
-.row.minor .dc{color:var(--muted)}
-.row .st{text-align:right;font-weight:700}
-#trans{border-top:1px solid var(--border);padding:12px 20px 18px}
-#trans summary{cursor:pointer;list-style:none}
-#trans summary::-webkit-details-marker{display:none}
-.tline{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:5px 6px;font-size:14px;border-radius:3px}
-.tline .at{font-family:var(--mono);font-size:11.5px;color:var(--dim);padding-top:2px}
-.tline .who{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;margin-right:6px}
-.tline.hl{background:#2a3550;outline:1px solid var(--amber)}
-
-/* fillet */
+main{display:grid;grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:24px;padding:16px;max-width:1300px;margin:0 auto}
+.pane{min-width:0}
+#left{display:flex;flex-direction:column}
+#right{padding:0 0 48px}
+@media (max-width:900px){main{grid-template-columns:1fr}}
+.label{font-size:20px;font-weight:bold;color:var(--fg)}
+#summary{padding:0 0 16px;border-bottom:1px solid var(--line)}
+.check{display:grid;grid-template-columns:26px 1fr;gap:6px;padding:6px 0;align-items:start;font-size:19px}
+.check .mk{font-weight:bold;text-align:center}
+.check .why{grid-column:2;color:var(--mute);font-size:17px}
+.check.fail .t{color:var(--bad)}
+#list{padding:8px 0}
+.row{display:grid;grid-template-columns:60px 1fr 22px;gap:8px;padding:10px 12px;cursor:pointer;border-left:4px solid transparent;align-items:start;font-size:19px;border-radius:4px}
+.row:hover{background:var(--hl)}
+.row.sel{background:var(--hl);border-left-color:var(--fg)}
+.row .tm{color:var(--mute);font-size:17px}
+.row .rl{color:var(--mute);font-size:17px}
+.row.minor .dc{color:var(--mute)}
+.row .st{text-align:right;font-weight:bold}
+#trans{border-top:1px solid var(--line);padding:12px 0}
+#trans summary{cursor:pointer}
+.tline{display:grid;grid-template-columns:60px 1fr;gap:8px;padding:6px;border-radius:4px;font-size:19px}
+.tline .at{color:var(--mute);font-size:17px}
+.tline .who{font-weight:bold;margin-right:6px}
+.tline.hl{background:var(--hl);outline:2px solid var(--fg)}
 .sec{margin:0 0 26px}
-.sec>.label{margin-bottom:10px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
-.q{font-size:22px;line-height:1.4;border-left:3px solid var(--blue);padding:4px 0 4px 16px}
-.quote{font-size:15px;color:var(--muted);margin-top:8px;padding-left:19px}
-.claim{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:16px 18px;margin:0 0 12px;position:relative}
-.claim.flash{outline:2px solid var(--blue)}
-.claim .cid{font-family:var(--mono);font-size:12px;color:var(--blue);margin-right:10px}
-.claim .ctext{font-size:17px}
-.claim .nocite{display:inline-block;margin-left:10px;font-family:var(--mono);font-size:11px;color:var(--amber);border:1px solid var(--amber);border-radius:3px;padding:0 6px;vertical-align:2px}
-.cites{margin-top:10px;display:flex;flex-direction:column;gap:6px}
-.cite{display:grid;grid-template-columns:62px 1fr;gap:10px;font-size:14px;align-items:start}
-.cite .k{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--dim);padding-top:3px}
+.sec>.label{margin-bottom:8px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.q{font-style:italic}
+.quote{color:var(--mute);margin-top:6px}
+.claim{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 18px;margin:0 0 12px}
+.claim.flash{outline:3px solid var(--fg)}
+.claim .cid{font-weight:bold;margin-right:10px}
+.claim .nocite{margin-left:10px;color:var(--warn);font-size:18px}
+.cites{margin-top:8px;display:flex;flex-direction:column;gap:4px}
+.cite{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:start;color:var(--mute);border-left:3px solid var(--line);padding-left:12px;font-size:19px}
+.cite .k{font-size:17px}
 .cite .v{min-width:0}
-.cite .ref{font-family:var(--mono);font-size:12.5px;color:var(--blue);margin-right:8px}
-.cite .val{font-family:var(--mono);font-size:12.5px;background:var(--code);border:1px solid var(--border);border-radius:3px;padding:1px 6px}
-.cite .unres{font-family:var(--mono);font-size:11px;color:var(--red);margin-left:6px}
-.cite .loc{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-left:6px}
-.decision{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:baseline;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:16px 18px}
-.decision .d{font-family:var(--mono);font-size:17px;font-weight:700}
-.decision .r{font-family:var(--mono);font-size:13px;color:var(--blue)}
-.decision .rt{flex-basis:100%;font-size:15px;color:var(--muted)}
-.kv{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:4px 16px;font-family:var(--mono);font-size:12.5px}
-.kv .k{color:var(--muted)}
-pre.json{background:var(--code);border:1px solid var(--border);border-radius:5px;padding:16px 18px;margin:0;font-family:var(--mono);font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-all;max-height:560px;overflow-y:auto}
-.jk{color:#7DD3FC} .js{color:#A7F3D0} .jn{color:#FBBF24} .jb{color:#F9A8D4} .jz{color:var(--dim)}
-.jk.lnk{color:var(--blue);text-decoration:underline;text-decoration-color:var(--border);cursor:pointer}
+.cite .ref{margin-right:8px;color:var(--fg)}
+.cite .val{font-family:var(--mono);font-size:17px;color:var(--fg)}
+.cite .unres{color:var(--bad);margin-left:6px}
+.cite .loc{font-size:17px;margin-left:6px}
+.decision{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--fg);border-radius:8px;padding:16px 20px}
+.decision .d{display:block;font-size:24px;font-weight:bold}
+.decision .r{font-weight:bold;margin-right:8px}
+.decision .rt{display:block;margin-top:4px}
+.decision ul{margin:4px 0;padding-left:28px}
+.kv{display:grid;grid-template-columns:minmax(120px,200px) 1fr;gap:4px 16px}
+.kv .k{color:var(--mute)}
+details.raw>summary{cursor:pointer;color:var(--mute);font-size:19px}
+pre.json{background:var(--hl);border-radius:6px;padding:14px 16px;margin:8px 0 0;font:17px/1.5 var(--mono);white-space:pre-wrap;word-break:break-all;max-height:600px;overflow-y:auto}
+.jk.lnk{text-decoration:underline;cursor:pointer}
 .proof{display:flex;flex-direction:column;gap:10px}
-.pr{display:grid;grid-template-columns:22px minmax(150px,220px) 1fr;gap:10px;font-family:var(--mono);font-size:12.5px;align-items:start;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:12px 14px}
-.pr.flash{outline:2px solid var(--blue)}
-.pr .mk{font-weight:700;font-size:14px;text-align:center}
-.pr .nm{color:var(--text)}
-.pr .dt{color:var(--muted);min-width:0;word-break:break-all}
+.pr{display:grid;grid-template-columns:26px minmax(140px,220px) 1fr;gap:10px;align-items:start;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:19px}
+.pr.flash{outline:3px solid var(--fg)}
+.pr .mk{font-weight:bold;text-align:center}
+.pr .dt{color:var(--mute);min-width:0;word-break:break-all;font-family:var(--mono);font-size:17px}
+@media (max-width:600px){.pr{grid-template-columns:26px 1fr}.pr .dt{grid-column:1/-1}}
 .path{margin-top:8px;display:flex;flex-direction:column;gap:3px}
 .path div{display:grid;grid-template-columns:52px 1fr;gap:8px}
-.path .sd{color:var(--dim)}
-.disc textarea, .modal textarea{width:100%;min-height:280px;background:var(--code);color:var(--text);border:1px solid var(--border);border-radius:4px;font-family:var(--mono);font-size:12px;padding:12px}
-.empty{color:var(--muted);font-family:var(--mono);font-size:13px;padding:40px 0}
-.modal{position:fixed;inset:0;background:rgba(5,8,16,.75);display:none;align-items:center;justify-content:center;z-index:10;padding:24px}
+.disc textarea,.modal textarea{width:100%;min-height:280px;background:var(--card);color:var(--fg);border:1px solid var(--line);border-radius:6px;font:17px/1.5 var(--mono);padding:12px}
+.empty{color:var(--mute);padding:40px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:10;padding:16px}
 .modal.on{display:flex}
-.modal .box{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;width:min(860px,100%);max-height:90vh;overflow:auto}
+.modal .box{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:24px;width:min(860px,100%);max-height:90vh;overflow:auto}
 .modal .bar{display:flex;gap:10px;align-items:center;margin-top:14px;flex-wrap:wrap}
-.drop{border:1px dashed var(--border);border-radius:5px;padding:14px;text-align:center;font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:12px}
-.drop.over{border-color:var(--blue);color:var(--blue)}
-#err{color:var(--red);font-family:var(--mono);font-size:12px}
-.status{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.drop{border:1px dashed var(--line);border-radius:6px;padding:14px;text-align:center;color:var(--mute);margin-bottom:12px}
+.drop.over{border-color:var(--fg);color:var(--fg)}
+#err{color:var(--bad)}
+.status{color:var(--mute);font-size:18px}
+input[type=file]{font-size:18px;max-width:100%}
 </style>
 </head>
 <body>
 <header>
-  <span class="brand"><b>filet</b> · call package</span>
+  <span class="brand">Evidence package</span>
   <span class="callid" id="callid">loading…</span>
   <span class="tag" id="rectag" hidden>recorded</span>
   <span class="sp"></span>
@@ -127,7 +108,7 @@ pre.json{background:var(--code);border:1px solid var(--border);border-radius:5px
 </header>
 <main>
   <aside class="pane" id="left">
-    <section id="summary"><div class="label">Verified in this browser</div><div id="checks"><div class="check"><span class="mk dim">…</span><span class="t muted">waiting for package</span></div></div></section>
+    <section id="summary"><div class="label">Checked in this browser</div><div id="checks"><div class="check"><span class="mk dim">…</span><span class="t muted">waiting for package</span></div></div></section>
     <section id="list"></section>
     <details id="trans"><summary class="label">Transcript</summary><div id="tlines"></div></details>
   </aside>
@@ -138,7 +119,7 @@ pre.json{background:var(--code);border:1px solid var(--border);border-radius:5px
   <div class="label" style="margin-bottom:12px">Load package</div>
   <div class="drop" id="drop">drop a package .json here, or paste it below</div>
   <textarea id="pasteTa" spellcheck="false" placeholder='{ "call_id": …, "receipts": [ … ] }'></textarea>
-  <div class="bar"><button id="btnVerify">Verify this package</button><input type="file" id="file" accept=".json,application/json" style="font-family:var(--mono);font-size:12px;color:var(--muted)"><span class="sp"></span><span id="err"></span><button data-close>Close</button></div>
+  <div class="bar"><button id="btnVerify">Verify this package</button><input type="file" id="file" accept=".json,application/json"><span class="sp"></span><span id="err"></span><button data-close>Close</button></div>
 </div></div>
 <div class="modal" id="mDl"><div class="box">
   <div class="label" style="margin-bottom:12px">Package JSON</div>
@@ -456,6 +437,8 @@ function discHTML(i){
   return`<section class="sec" id="p-disc"><div class="label">Reasoning commitment · disclosure</div>${head}${body}</section>`;
 }
 
+function plainWords(x){const t=String(x??"").replace(/[_-]+/g," ").trim();return t?t[0].toUpperCase()+t.slice(1):t}
+function mapsHTML(r,rule){const m=r.evidence?.policy?.maps_to||PKG.policy_map?.[rule];return Array.isArray(m)&&m.length?`<span class="rt"><b>Maps to:</b></span><ul>${m.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
 function renderRight(){
   const i=SEL,r=PKG.receipts[i];if(!r){$("#right").innerHTML='<div class="empty">no receipts in this package</div>';return}
   const v=V.per[i],rs=reasoningOf(r),R=rulesMap(PKG),x=rowInfo(r);
@@ -463,15 +446,15 @@ function renderRight(){
   H.push(`<div class="label" style="margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap"><span>${esc(rName(i))}</span><span class="dim" style="text-transform:none">${esc(r.id)}</span><span class="dim">${mmss(r)}</span>${v.why.length||v.chain==="fail"?`<span class="bad">✗ ${esc([...v.why,v.chain==="fail"?"chain link":""].filter(Boolean).join(", "))}</span>`:""}</div>`);
   if(rs){
     const ql=questionLine(r,rs);
-    H.push(`<section class="sec" id="f-q"><div class="label">Question</div><div class="q">${rs.question!=null?txt(rs.question):'<span class="muted">—</span>'}</div>${ql?`<div class="quote"><a data-at="${esc(ql.at)}" class="mono" style="font-size:12px">${esc(ql.at)}</a> caller: “${esc(ql.text)}”</div>`:""}</section>`);
-    H.push(`<section class="sec"><div class="label">Claims · ${(rs.claims||[]).length}${r._stream_reasoning?' <span class="warn">from event stream, not in signed receipt</span>':""}</div>${(rs.claims||[]).map((c,k)=>`<div class="claim" id="claim-${k}" data-claim="${esc(c.id)}"><span class="cid">${esc(c.id)}</span><span class="ctext">${txt(c.text)}</span>${!(c.cites||[]).length?'<span class="nocite">no cite</span>':""}${(c.cites||[]).length?`<div class="cites">${c.cites.map(x=>citeHTML(x,rs)).join("")}</div>`:""}</div>`).join("")||'<div class="muted">no claims</div>'}</section>`);
-    H.push(`<section class="sec" id="f-dec"><div class="label">Decision</div><div class="decision"><span class="d">${esc(rs.decision)}</span><span class="r">${esc(rs.rule_id)}</span><span class="mono muted" style="font-size:12px">uncertainty: ${esc(rs.uncertainty??"—")}</span>${R[rs.rule_id]?`<span class="rt">${esc(R[rs.rule_id])}</span>`:""}</div></section>`);
+    H.push(`<section class="sec" id="f-dec"><div class="label">Decision</div><div class="decision"><span class="d">${esc(plainWords(rs.decision))}</span><span class="rt"><span class="r">Rule ${esc(rs.rule_id)}.</span>${esc(r.evidence?.policy?.rule_text||R[rs.rule_id]||"")}</span>${mapsHTML(r,rs.rule_id)}${rs.uncertainty&&rs.uncertainty!=="none"?`<span class="rt"><b>Caveat:</b> ${esc(plainWords(rs.uncertainty))}</span>`:""}</div></section>`);
+    H.push(`<section class="sec" id="f-q"><div class="label">Caller asked</div><div class="q">${rs.question!=null?txt(rs.question):'<span class="muted">—</span>'}</div>${ql?`<div class="quote"><a data-at="${esc(ql.at)}">${esc(ql.at)}</a> caller: “${esc(ql.text)}”</div>`:""}</section>`);
+    H.push(`<section class="sec"><div class="label">Because${r._stream_reasoning?' <span class="warn">from event stream, not in signed receipt</span>':""}</div>${(rs.claims||[]).map((c,k)=>`<div class="claim" id="claim-${k}" data-claim="${esc(c.id)}"><span class="cid">${esc(c.id)}</span><span class="ctext">${txt(c.text)}</span>${!(c.cites||[]).length?'<span class="nocite">no cite</span>':""}${(c.cites||[]).length?`<div class="cites">${c.cites.map(x=>citeHTML(x,rs)).join("")}</div>`:""}</div>`).join("")||'<div class="muted">no claims</div>'}</section>`);
   }else{
     const dr=r.evidence?.decision_record;
-    H.push(`<section class="sec" id="f-dec"><div class="label">${dr?"Decision":"Event"}</div><div class="decision"><span class="d">${esc(x.d)}</span>${x.rule?`<span class="r">${esc(x.rule)}</span>`:""}${dr&&R[dr.rule_id]?`<span class="rt">${esc(R[dr.rule_id])}</span>`:""}<span class="rt mono" style="font-size:12px">${esc(r.policy_reason||"")}</span></div></section>`);
+    H.push(`<section class="sec" id="f-dec"><div class="label">${dr?"Decision":"Event"}</div><div class="decision"><span class="d">${esc(x.d)}</span>${x.rule?`<span class="r">${esc(x.rule)}</span>`:""}${dr&&R[dr.rule_id]?`<span class="rt">${esc(R[dr.rule_id])}</span>`:""}<span class="rt mono">${esc(r.policy_reason||"")}</span></div></section>`);
   }
   H.push(discHTML(i));
-  H.push(`<section class="sec"><div class="label">Receipt</div><pre class="json" id="rjson">${jsonHTML(r,"",0)}</pre></section>`);
+  H.push(`<section class="sec"><details class="raw"><summary>Show raw receipt</summary><pre class="json" id="rjson">${jsonHTML(r,"",0)}</pre></details></section>`);
   H.push(`<section class="sec"><div class="label">Proof</div><div class="proof">${proofHTML(i)}</div></section>`);
   $("#right").innerHTML=H.join("");$("#right").scrollTop=0;
 }

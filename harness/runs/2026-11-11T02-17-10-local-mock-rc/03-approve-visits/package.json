@@ -1,0 +1,1506 @@
+{
+  "call_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0",
+  "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0",
+  "started_at": "2026-11-11T02:17:11.187000+00:00",
+  "ended_at": "2026-11-11T02:17:11.234000+00:00",
+  "agent": "local-member-line",
+  "model": "mock-rc",
+  "prompt_version": "local-member-line@1.0",
+  "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+  "policy_hash": "b1ff67ae5ed976a1ec5fd0aade53cde6814862c058702d6116ca19fa155e0be2",
+  "rules": [
+    {
+      "id": "DISC-0",
+      "text": "Say you are an AI and that the call is recorded."
+    },
+    {
+      "id": "ID-3",
+      "text": "Share PHI only with the member or an authorized representative on file."
+    },
+    {
+      "id": "BEN-2",
+      "text": "If usage counts conflict, give the confirmed number and flag the conflict. Never guess."
+    },
+    {
+      "id": "BEN-5",
+      "text": "Always state in-network vs out-of-network cost."
+    },
+    {
+      "id": "NET-1",
+      "text": "When a provider is out of network, offer in-network alternatives."
+    },
+    {
+      "id": "COST-1",
+      "text": "Cost figures are estimates; state what they are based on."
+    },
+    {
+      "id": "PA-0",
+      "text": "The agent cannot approve care. Explain that the treating provider must request prior authorization; offer to send a letter explaining how."
+    },
+    {
+      "id": "SMS-1",
+      "text": "Text PHI only with explicit consent, to a number on file."
+    },
+    {
+      "id": "END-1",
+      "text": "Before ending, recap next steps and log the outcome."
+    }
+  ],
+  "receipts": [
+    {
+      "id": "3e280340-1e19-4eab-8f99-10b09b77cbd6",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "8f8e11321ca55af08bf3c9060a019a87767083b5bdee80a19b3375acc62bf79a550a8351e490f2f0323499ab11fdb5fa9cc88c1e038b95cfb35e55df1016ec59",
+      "observed_at": "2026-11-11T02:17:11.189000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "1170ee9e328d73f763a757f1f42692021ca547e16ac365f2269c7aa53dcd7d20",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 1,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "77b5016947ce779088d610fd42b184dcb602642db3800cc0f987e57cd67b668c404de937c71626abb5404defbeaf3dc166aacf3ffd3bd0502348ef4d7c47d00f",
+      "evidence": {
+        "turn": 1,
+        "iteration": 1,
+        "model": "mock-rc",
+        "request_id": "mock-1",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 934,
+          "output_tokens": 47
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "deb55a6895e8f2cb8ca6a8e9ef18c84afbc6117f72777847c8dbc0da77e85eaa",
+        "leaf_index": 202,
+        "tree_size": 223,
+        "audit_path": [
+          "4ff302a091e537aaecbbaeea2eecfdef04a46f205b63e210d81ed604c72a3e14",
+          "a0ae0d45767946458809e30ec382276f2239a47563d0354e115eec70d5af0a8a",
+          "ad1a09cd69a4275994dfa76171628b3e1f5a7c1e06c38f39c283cfa1226f16fc",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "45653e6a-261a-4a8a-b70a-969c456ef580",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "tool:check_authorized_rep",
+      "in_policy": true,
+      "policy_reason": "matched scope tool:*",
+      "evidence_hash_sha512": "c9f54a58872a5f5aabc116fd2d62d6dddf844e44510bafe3c9f9f4941180f27561b2721f6a27de1064c8441e4548bd1dee0bb7e4405010fa03c1e723bd0565a1",
+      "observed_at": "2026-11-11T02:17:11.191000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "9154fcdf2fe6e2d13ccb169e131f93c0de43d01997d60c25d92d09824d11af4e",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 2,
+      "signature": "0567b73ad3012e9d5ed085673643feaecaa4ff0e54675ae9cd12f3e958dfcbc77e408e1764cf2b1741e471594cbdeca45a28ee7b68569e8a0a5bbfdd0984c006",
+      "evidence": {
+        "turn": 1,
+        "iteration": 1,
+        "name": "check_authorized_rep",
+        "input_sha256": "b068f9431d4f6f2e88cf63225f5e240b267b83a16ed598ea774e367db6284cfd",
+        "result_sha256": "d26eb4569a6dac01b064ac16c25923e1fe06c5a8a3fa87f97dac3071b35012bf",
+        "ms": 22,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "4ff302a091e537aaecbbaeea2eecfdef04a46f205b63e210d81ed604c72a3e14",
+        "leaf_index": 203,
+        "tree_size": 223,
+        "audit_path": [
+          "deb55a6895e8f2cb8ca6a8e9ef18c84afbc6117f72777847c8dbc0da77e85eaa",
+          "a0ae0d45767946458809e30ec382276f2239a47563d0354e115eec70d5af0a8a",
+          "ad1a09cd69a4275994dfa76171628b3e1f5a7c1e06c38f39c283cfa1226f16fc",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "4c5e76d6-30f3-46df-8806-c71ad83435eb",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "8cae8daf4fc44b1dae492051836750ffb245ad029b2b958d04cd75d3dff085b48ee6ff15a7470a497201e22cb891b5471267673f7f65293e0b0b7fbb88ffdec4",
+      "observed_at": "2026-11-11T02:17:11.193000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "5660094931de0af9257f50ea9a796a2f152fcdaad54586f24f2db3ffb4e85ab2",
+      "previous_receipt_hash": "63570775271750fed671483602f659bfdeeee33c2861cab3e492a251b438cdc2",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 3,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "a22f69abd3a2cb4ea5655bb6790fe03c0c770ce43b63a6805511cc61e18446282fc841b5f213f6d2cdb760395f75d8116efa548c18f09c8b2537388b984a800e",
+      "evidence": {
+        "turn": 1,
+        "iteration": 2,
+        "model": "mock-rc",
+        "request_id": "mock-2",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 966,
+          "output_tokens": 189
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "b71630d1a13628083c2694533621ffd7c716d37ecb6d02efab07482ef9640ee8",
+        "leaf_index": 204,
+        "tree_size": 223,
+        "audit_path": [
+          "23b5f6395933b8d7318f10f03401b3bbfcd185b62dff931cd5cb955146fabd78",
+          "5a832760dacddabfdbcd4f3b29b14606f2b1b3ddbd4e749e4031ca6091947abd",
+          "265fc48c8f189280a68dfc9dbb7a004600cf6ffe9e8a359fa899a30d95034eda",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "da38bbb5-ca16-42fb-b0ed-26c5ee0dbf69",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "decide:identity",
+      "in_policy": true,
+      "policy_reason": "matched scope decide:*",
+      "evidence_hash_sha512": "aee9c02025097f5cd660fc1829ce8724aef0e897f2b154c65cb137f758d94e7f1e79a6b0e33f6e2a14d2246db0bdcb9d3650184543720108f6d45b5ca440baa9",
+      "observed_at": "2026-11-11T02:17:11.195000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "69b9cf0b686ce191e38532abf7c227985937df53b315c2b99ab7e8e5baf4145b",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 4,
+      "signature": "25b286d5d835c93ca96f8c972271c163a9e00e876266754ab58957739f60e152271e678e803e7ff9de54dce58fe15793ae4958984389fd59f1c45ba7d797d70c",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "identity",
+          "decision": "authorized_rep_found_pending_dob",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified",
+          "prompt_version": "local-member-line@1.0",
+          "turn": 1,
+          "iteration": 2
+        },
+        "reasoning": {
+          "question": "Can this caller discuss the member's account?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "The caller gave the member ID NH-552019 and the first name James.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:05",
+                  "value": "Caller (00:05): Hi, this is James. I'm calling about my wife Sarah. Her member ID is NH-552019."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "The caller is listed as an authorized representative.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "relationship",
+                  "value": "spouse"
+                },
+                {
+                  "kind": "tool",
+                  "ref": "authorized",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "A date of birth check is required before any PHI is shared.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "verify_with",
+                  "value": "caller_dob"
+                },
+                {
+                  "kind": "rule",
+                  "ref": "ID-3",
+                  "value": "Share PHI only with the member or an authorized representative on file."
+                }
+              ]
+            }
+          ],
+          "decision": "authorized_rep_found_pending_dob",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified"
+        },
+        "claims_source": "agent",
+        "model": "mock-rc",
+        "turn": 1,
+        "iteration": 2,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "23b5f6395933b8d7318f10f03401b3bbfcd185b62dff931cd5cb955146fabd78",
+        "leaf_index": 205,
+        "tree_size": 223,
+        "audit_path": [
+          "b71630d1a13628083c2694533621ffd7c716d37ecb6d02efab07482ef9640ee8",
+          "5a832760dacddabfdbcd4f3b29b14606f2b1b3ddbd4e749e4031ca6091947abd",
+          "265fc48c8f189280a68dfc9dbb7a004600cf6ffe9e8a359fa899a30d95034eda",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "71d0a826-683c-4b2b-9829-686997f3d399",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "1127634b49524a3a03be6109c21c87759a576539ddd3bffa27b82b7fef589c1636e6d22952ac3a12dea409d0c0bbcfee3dc7575472cc8060e891a4dbfab850d6",
+      "observed_at": "2026-11-11T02:17:11.198000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "99ea60f2989c01bc45674e3e55f4566e2ef79cd1aa3ccd91e3087521e031d085",
+      "previous_receipt_hash": "9807d4352798c2455049a1a697e15ea10a0b1f088e4eb152291c9a40bb011e5e",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 5,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "d4ff65925b4e8953811596091d9d401ebd3fca75f9a1be902347e8aecc4b9638137ad13cacf7b9276eecb04c2f07a306e2b3ae2de1c7695d8906229a820bee06",
+      "evidence": {
+        "turn": 1,
+        "iteration": 3,
+        "model": "mock-rc",
+        "request_id": "mock-3",
+        "stop_reason": "stop",
+        "usage": {
+          "input_tokens": 982,
+          "output_tokens": 41
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "af47a194d2c0af09fef5f16b3e433d22dea05f850bff6ba8a46fde05700ae261",
+        "leaf_index": 206,
+        "tree_size": 223,
+        "audit_path": [
+          "b55bfcb1b1f3513e98d150845b557ad1cb7ea3d457b13d8c8e381660e1e56591",
+          "703740583a1a1dff15d7174cbfc9248bd6a48628da3480c19bdce0f70e65c938",
+          "265fc48c8f189280a68dfc9dbb7a004600cf6ffe9e8a359fa899a30d95034eda",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "64e23c09-a2a4-4f47-8999-b3bc1ce5e92f",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "f5e612044236608ff17fbd6f81ea80ccc735e8addb838d7cf5647902eebcd1f748b820cc271dba39b4564b3121ad063f0092a1cd2ce712cf11ccc1de89f5bc40",
+      "observed_at": "2026-11-11T02:17:11.200000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "eac0481a243a41697994a32b7d2cfbaab61498bf344a04f45d015e038e92c629",
+      "previous_receipt_hash": "ff08aa9e38591c1c86ebd2d311fb06ea42d5a82073be645fa948b08a772ab8dc",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 6,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "0292bd8f9e170e13678c5047dee6b05b6a271cbb94cb082bf374c887211a8e81f7ff3c46f7811f67278a782f89a209c745bc683af497ca1d8ad4864b4009270c",
+      "evidence": {
+        "turn": 2,
+        "iteration": 1,
+        "model": "mock-rc",
+        "request_id": "mock-4",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1015,
+          "output_tokens": 48
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "b55bfcb1b1f3513e98d150845b557ad1cb7ea3d457b13d8c8e381660e1e56591",
+        "leaf_index": 207,
+        "tree_size": 223,
+        "audit_path": [
+          "af47a194d2c0af09fef5f16b3e433d22dea05f850bff6ba8a46fde05700ae261",
+          "703740583a1a1dff15d7174cbfc9248bd6a48628da3480c19bdce0f70e65c938",
+          "265fc48c8f189280a68dfc9dbb7a004600cf6ffe9e8a359fa899a30d95034eda",
+          "53869a130af47e1044e41649be609b78077dabd05ebef1b349db809f1115eb07",
+          "271fe6c6254d4265ef6d2b4310ce904e60bb695d4d3557464de2ab7adfd9b183",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "acc582d1-bf70-4892-85c2-902509ef47bb",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "tool:verify_rep_dob",
+      "in_policy": true,
+      "policy_reason": "matched scope tool:*",
+      "evidence_hash_sha512": "7191f6df60cd551352ff9d6fe094bfa0fd608c68f2b7cebbdce2c4aa9a89a10540a33b984f965c432c3f79105c93a4e178003f9c6eb7ead42c8e859f7335ce65",
+      "observed_at": "2026-11-11T02:17:11.202000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "fc5d193b0d50944c877ada80ada4a5eb0d3e9ef44236f1c1c461623a19ea0af1",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 7,
+      "signature": "7b63f5ef179d24518db3c113e16a2d41c2861de500644aec3e985c5d12def4aaae55649dd31f5aa3a98e7a939cee961ac925c3f8d63631fc3ad55be986ad2c05",
+      "evidence": {
+        "turn": 2,
+        "iteration": 1,
+        "name": "verify_rep_dob",
+        "input_sha256": "0ab8080d9cf427f10f390d6b1c23e87bcdad2fd432863ed49f7612a5b6033e10",
+        "result_sha256": "02e01ceed8e72720729e65b28479bb1b478483b4c0da8e4c8b710c8a8e0d6e07",
+        "ms": 19,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "4f8164c7846ff9cf3c2bb32ec76023f9c93f2ba6b2cec31d45379eed2fa1ca56",
+        "leaf_index": 208,
+        "tree_size": 223,
+        "audit_path": [
+          "c617fb67d005609edb8d1180ae4b0bef5072aba685c7fa433adfdde7521fb6b8",
+          "f5df6f3f002076ceb82300f010a538b2b13a88923772ef50a294bfb246376f14",
+          "43b3552d9fa056b58b173f97793f805debd09c049ee952b95bc0d508fd2f6094",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "163a5e77-a245-45d9-9915-bedb6c7b56bc",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "87ce582413bdb7c788a8cd354bd62386a6d53cf7c49ed14567704a92f0916ae965f9c48605d048f20d8a947800b3a9b1b301ad792b60695e2d91ad9da6f182c6",
+      "observed_at": "2026-11-11T02:17:11.204000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "f370c7dc71ff6f979767aa8e8b2722972fdebecc24209831c3d6d8a7d4525284",
+      "previous_receipt_hash": "d73448a557d0baa0ca0003eb13b0ea427a0d24c75d7fe1675f2a7d6258843246",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 8,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "7a541e124f760fea00c342ef0eb0c43027857177a87abec240bee37b9676da8dbd27b31580adef17c2c4f206eeb06870197f10f694adf09f2244c7c660607204",
+      "evidence": {
+        "turn": 2,
+        "iteration": 2,
+        "model": "mock-rc",
+        "request_id": "mock-5",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1026,
+          "output_tokens": 156
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "c617fb67d005609edb8d1180ae4b0bef5072aba685c7fa433adfdde7521fb6b8",
+        "leaf_index": 209,
+        "tree_size": 223,
+        "audit_path": [
+          "4f8164c7846ff9cf3c2bb32ec76023f9c93f2ba6b2cec31d45379eed2fa1ca56",
+          "f5df6f3f002076ceb82300f010a538b2b13a88923772ef50a294bfb246376f14",
+          "43b3552d9fa056b58b173f97793f805debd09c049ee952b95bc0d508fd2f6094",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "d9f3f01a-7dfb-42ab-baf6-b31aea93a02f",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "decide:dob_verification",
+      "in_policy": true,
+      "policy_reason": "matched scope decide:*",
+      "evidence_hash_sha512": "a3395b60935b36113895682e7a4639edb790fc2ba86bbe04a2c2ee93afdbc3c406c92022e4b24f5b7581302e634b0749a81d5f9ff829d7c71e4784f95aafe84c",
+      "observed_at": "2026-11-11T02:17:11.206000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "14e4237a7c638bb1eac44973ee491e8c7c16c9287bd4cf31a8d5483af4b4454a",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 9,
+      "signature": "1c3f38d914c7b3f48ee48a241b1cbe146ed39c2169f85e1c4a3623d7007e6318f48fa05284122d07d12300d6d1725fc8fd317ebbd691bac1134a59cd3fe30502",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "dob_verification",
+          "decision": "rep_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "none",
+          "prompt_version": "local-member-line@1.0",
+          "turn": 2,
+          "iteration": 2
+        },
+        "reasoning": {
+          "question": "Is the caller verified to hear the member's information?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "The caller stated a date of birth.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:25",
+                  "value": "Caller (00:25): My date of birth is March 3rd, 1984."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "The date of birth matches the record on file.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "match",
+                  "value": true
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "A verified representative may receive the member's PHI.",
+              "cites": [
+                {
+                  "kind": "claim",
+                  "ref": "c2",
+                  "value": "The date of birth matches the record on file."
+                },
+                {
+                  "kind": "rule",
+                  "ref": "ID-3",
+                  "value": "Share PHI only with the member or an authorized representative on file."
+                }
+              ]
+            }
+          ],
+          "decision": "rep_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "none"
+        },
+        "claims_source": "agent",
+        "model": "mock-rc",
+        "turn": 2,
+        "iteration": 2,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "7793c6d777a3c21dddd8649b4732d30269ea0adeec8ab87dceb919b6fa3a1b70",
+        "leaf_index": 210,
+        "tree_size": 223,
+        "audit_path": [
+          "d8ac0296dbd5ba19fe747835f4e58182aaa7c560b4cf5fddf225cd628061b265",
+          "53dbb118ecd37346a50cf5cb66558d6bce4ac60bd5ad75533f752a4fe66339a4",
+          "43b3552d9fa056b58b173f97793f805debd09c049ee952b95bc0d508fd2f6094",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "a5c0f008-ba2a-443a-a676-1e473d31928b",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "73d7ba0d85d23063cd124bcd9bc2baeadd66f216008398024e0d026266ecf717f3a22e62a0c2fc8905ce76fbc1ac02702af61dee3af94b7266dd8f11d1e8f3a5",
+      "observed_at": "2026-11-11T02:17:11.208000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "0cb159292b0724a3a1952d0f19ff82571aa0443d66c19ff8a35bca5ab1afc524",
+      "previous_receipt_hash": "6779fa23b7e2207db25ef2ce8fcadcc863e71dc40c4c5f2f36c94e55a1f85b40",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 10,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "e8530485638edd66a12625120e20229cd253eb0b65cedc5da89d1c75d74e532da4739d5030c08e30dfaa7daacba52ec02da846f39ddbc6ec8a6ef9dd0d51ac08",
+      "evidence": {
+        "turn": 2,
+        "iteration": 3,
+        "model": "mock-rc",
+        "request_id": "mock-6",
+        "stop_reason": "stop",
+        "usage": {
+          "input_tokens": 1041,
+          "output_tokens": 38
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "d8ac0296dbd5ba19fe747835f4e58182aaa7c560b4cf5fddf225cd628061b265",
+        "leaf_index": 211,
+        "tree_size": 223,
+        "audit_path": [
+          "7793c6d777a3c21dddd8649b4732d30269ea0adeec8ab87dceb919b6fa3a1b70",
+          "53dbb118ecd37346a50cf5cb66558d6bce4ac60bd5ad75533f752a4fe66339a4",
+          "43b3552d9fa056b58b173f97793f805debd09c049ee952b95bc0d508fd2f6094",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "5fa41214-c3d8-4b94-9e84-9f37f5c7fc5d",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "b5d1206989ec9f4c147810126dc63fc5f77e89d30e98cf471e5828b378e230bd385e2cc629808e3b87a8fa6d04e1cf509b8b5c1a58b644299cfb1555db2941f8",
+      "observed_at": "2026-11-11T02:17:11.211000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "dd7b08f12d0f0174c1b5da635173b5e92705c85b8215a57aa20f16ef7a8b7f43",
+      "previous_receipt_hash": "789b3731758148acf867b327ede669a82721e2748fb2f4aa46a862b12fc0a813",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 11,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "55bd255bbf75665fd9c7695d289efe9115a64fb54cf7bbe46fcb888dfe4efbc11d72a04156e4a6a8b8cf9ede3c69ee2728b9cbaf9107a3b665337b1ca2445a0a",
+      "evidence": {
+        "turn": 3,
+        "iteration": 1,
+        "model": "mock-rc",
+        "request_id": "mock-7",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1078,
+          "output_tokens": 53
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "81aeb82bc8d4f8d7c3ae5fc62cc4206d75df79e610a95df9eeae724a3be7d7b4",
+        "leaf_index": 212,
+        "tree_size": 223,
+        "audit_path": [
+          "f2da18ce85af43694f1ea3f715d63320b903e89cd870dc75a00187c6583393fd",
+          "625a58bbaf38838948b206bff908314c2d178a84b4e64c4a46a9546747bad9de",
+          "688bfd465d811134a6769a9bd7355ee4572734efb9617a573478d3a64ab8b295",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "b9fe1d26-d5b5-43ff-a044-94dca8adcb3a",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "tool:check_prior_auth",
+      "in_policy": true,
+      "policy_reason": "matched scope tool:*",
+      "evidence_hash_sha512": "ea3d34517a7d8065b8bf755fb38a1b6d5f2ba0504ba0527ea2765df696a2eeaa3ced27167d8552366ff4d4cb4505b73aa174337da3c05d67b71b9d3d7748e1d0",
+      "observed_at": "2026-11-11T02:17:11.213000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "fb24bb78362aea0576b3c41c3a5964457390bb66517d0e1f585946d0414047b5",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 12,
+      "signature": "71d60768358cc9bb8568fdbc7c8960d4acb02ca75533bd348da265bac73f4c50bb06bc700dacec411070649ba5418eadad792d616dfda7dafe41250a3cc19003",
+      "evidence": {
+        "turn": 3,
+        "iteration": 1,
+        "name": "check_prior_auth",
+        "input_sha256": "86ec7a90d4393ec8f319078921f3682b47743f4ac820e1fe827d46b6c466e272",
+        "result_sha256": "169096c6811d2f3914b829ab2c8fc487cb630ee443de59ea6d4c1f5a14920467",
+        "ms": 41,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "f2da18ce85af43694f1ea3f715d63320b903e89cd870dc75a00187c6583393fd",
+        "leaf_index": 213,
+        "tree_size": 223,
+        "audit_path": [
+          "81aeb82bc8d4f8d7c3ae5fc62cc4206d75df79e610a95df9eeae724a3be7d7b4",
+          "625a58bbaf38838948b206bff908314c2d178a84b4e64c4a46a9546747bad9de",
+          "688bfd465d811134a6769a9bd7355ee4572734efb9617a573478d3a64ab8b295",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "62b82640-fd7a-4d5d-ba4f-22341711eabc",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "568126b74578d685336a7c7dab8fe61f35db909d3fad04868df54a568496d24f114eb56d411707070f7ec72c9f8254042c4df032469e6a08376f994ef7612b03",
+      "observed_at": "2026-11-11T02:17:11.215000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "abfaf52a2c61bc7e169ed8c45289f8a1ec1417a4f0d9c305f2a0d08ff96c2226",
+      "previous_receipt_hash": "2d976c68443a733b2f55181c28db4ad2482069e919db70084a76fa0e9dd07216",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 13,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "4e9fb935262babd9dfa5f8319163a17b8109988eb54633f277af552b8d83e3a16a4eff34a637605febdc97fe8470c6530ab9a71177f3d5e83aa3ed7e3292b10b",
+      "evidence": {
+        "turn": 3,
+        "iteration": 2,
+        "model": "mock-rc",
+        "request_id": "mock-8",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1268,
+          "output_tokens": 211
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "2ab5d04692d9e782b1e5ab5a0db696b4ee97824fe9cc4bf5d74e3610e487de64",
+        "leaf_index": 214,
+        "tree_size": 223,
+        "audit_path": [
+          "740afd198efdbc8d2fb064548cd18f60acff577cded512857de7af80cad11871",
+          "c752ae44fb1ecb69175cd24f86d1c67c48eb77ebe1e6d22fd6880a9b497de4e8",
+          "688bfd465d811134a6769a9bd7355ee4572734efb9617a573478d3a64ab8b295",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "aebd34c5-1882-42f6-afc6-1375cbb8f538",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "decide:approval_request",
+      "in_policy": true,
+      "policy_reason": "matched scope decide:*",
+      "evidence_hash_sha512": "dd861b035dddeaabfecca06a79cccdd0c1eada47111be3b6c43b873e62cc13b52bfa273a13ee8caf997125ff6822569c76a0c0820a65c6e6ede2504f94f7a105",
+      "observed_at": "2026-11-11T02:17:11.219000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "b9210a416d60a3e33147a3fb312e30f0f9b43c1710b4a9774999b57bac0652ec",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 14,
+      "signature": "d7ca44507d7849d4804f7229e0b131cb770e909cfdf22e9fd8fee706aaa7503f1395d388ebfa4601932d3dfd07563393e6c6c6256e3ed7e8b19a6561d5fbaf04",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "approval_request",
+          "decision": "declined_provider_must_request_pa",
+          "rule_id": "PA-0",
+          "uncertainty": "none",
+          "prompt_version": "local-member-line@1.0",
+          "turn": 3,
+          "iteration": 2
+        },
+        "reasoning": {
+          "question": "Can the agent approve 10 more physical therapy visits?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "The caller asked for 10 more visits to be approved.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:45",
+                  "value": "Caller (00:45): Can you just approve ten more physical therapy visits for her?"
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "Coverage requires prior authorization for this request.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "pa-needed",
+                  "value": "auth-needed"
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "The treating provider must submit it with clinical notes.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "doc-needed",
+                  "value": "clinical"
+                },
+                {
+                  "kind": "tool",
+                  "ref": "reason",
+                  "value": "{\"text\":\"10 visits exceed the 3 confirmed visits remaining under the 20-visit annual limit; the treating provider must request prior authorization with clinical notes.\"}"
+                }
+              ]
+            },
+            {
+              "id": "c4",
+              "text": "The agent cannot approve care and must offer a letter instead.",
+              "cites": [
+                {
+                  "kind": "rule",
+                  "ref": "PA-0",
+                  "value": "The agent cannot approve care. Explain that the treating provider must request prior authorization; offer to send a letter explaining how."
+                },
+                {
+                  "kind": "claim",
+                  "ref": "c2",
+                  "value": "Coverage requires prior authorization for this request."
+                }
+              ]
+            }
+          ],
+          "decision": "declined_provider_must_request_pa",
+          "rule_id": "PA-0",
+          "uncertainty": "none"
+        },
+        "claims_source": "agent",
+        "model": "mock-rc",
+        "turn": 3,
+        "iteration": 2,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "740afd198efdbc8d2fb064548cd18f60acff577cded512857de7af80cad11871",
+        "leaf_index": 215,
+        "tree_size": 223,
+        "audit_path": [
+          "2ab5d04692d9e782b1e5ab5a0db696b4ee97824fe9cc4bf5d74e3610e487de64",
+          "c752ae44fb1ecb69175cd24f86d1c67c48eb77ebe1e6d22fd6880a9b497de4e8",
+          "688bfd465d811134a6769a9bd7355ee4572734efb9617a573478d3a64ab8b295",
+          "d2751dbd6a149718b78e36772ec9c3d3a70d2e23cd6dd71e0c2766703f17715b",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "2658033b-2daf-4edc-8830-0cb87cd745ef",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "3e9fb52de28ce0f54bfc11907ccba89c7a70b837e0e4c0afdeddb27a081dae69109fa5354358ae4fb90152d4404c9511a03c7ce4cca258a01261d199df4546a8",
+      "observed_at": "2026-11-11T02:17:11.221000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "07dd66dfb1a089cc98d63cd96d2a09c20f2799b30fad0fbcc844a7161ac49937",
+      "previous_receipt_hash": "b946b341f9df31db86124d3a86ada02a851e52a670d4c75ce9d104d12e10ee89",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 15,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "ea87f3ac7c864a179c3d432e397b44760679bc5fa23ce721b352adc91484b8dbe7639f9696640c9d38c727e9139f3c20bdee0f937dae22ec3a7d422f5ac36c0e",
+      "evidence": {
+        "turn": 3,
+        "iteration": 3,
+        "model": "mock-rc",
+        "request_id": "mock-9",
+        "stop_reason": "stop",
+        "usage": {
+          "input_tokens": 1284,
+          "output_tokens": 80
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "d7430a6c2b20e4b589714bac32ae9583efb4432f2e42b7184bbdbc43c49c6fa9",
+        "leaf_index": 216,
+        "tree_size": 223,
+        "audit_path": [
+          "aab538aec2eb7a21387a21a798318d459c32d5c5168035b8aee163aa317e9aff",
+          "c6eb1b8c784467b0e440cd60c19226aff4b3a286c03395ec880f72148ced9578",
+          "e2c9ff28aac652f09b61cbc1beb8d225ac58072af065006c386872bfa932be59",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "439eeff6-01e8-4268-8fc6-431284554309",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "df6d8c278b3db459a936a60719b628760c7d92f7d39a52122445948b94df51579b5f1e420e6c7343d84a26a3fee0cea2c6d90ee6da458e452ad199e6e9b79734",
+      "observed_at": "2026-11-11T02:17:11.223000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "36b217869a83f889e84d57efbc4f15e6f17ab6e7bc0b6c84a6ddf92af74ce381",
+      "previous_receipt_hash": "34f3b41945155bfbb3dac73ad91f678f92c0025ee15eb4b3e08ffe322b65fdda",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 16,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "850a8e75ef14867726640c2de05e0b80dfc50df49eed3881c3c31fb17d308ff19872226485e6d613cc37ece3d1e15662f15713e9c7d03f1349b03be68f7e590a",
+      "evidence": {
+        "turn": 4,
+        "iteration": 1,
+        "model": "mock-rc",
+        "request_id": "mock-10",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1354,
+          "output_tokens": 33
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "aab538aec2eb7a21387a21a798318d459c32d5c5168035b8aee163aa317e9aff",
+        "leaf_index": 217,
+        "tree_size": 223,
+        "audit_path": [
+          "d7430a6c2b20e4b589714bac32ae9583efb4432f2e42b7184bbdbc43c49c6fa9",
+          "c6eb1b8c784467b0e440cd60c19226aff4b3a286c03395ec880f72148ced9578",
+          "e2c9ff28aac652f09b61cbc1beb8d225ac58072af065006c386872bfa932be59",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "76d4a670-d10f-4f22-8aac-9b03bd0e0805",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "tool:send_pa_letter",
+      "in_policy": true,
+      "policy_reason": "matched scope tool:*",
+      "evidence_hash_sha512": "572adc08e75b1e4f02ce7589dfb25ca86a350bf711aeda94e37ae336d148fade5c1e654a3eff4a66c6d0b24701f608564c28054a6f79b0e3cd133b09d399bc4f",
+      "observed_at": "2026-11-11T02:17:11.225000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "38a185ba87272eabce2f43fe06f49eca75b729987c9152bc8ecbfd815d6c5db5",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 17,
+      "signature": "2c5100af5552fe69a026386412e4c7b47ca55670bdf1cf8c5c5b49b165fc80d4088df3eefadef15b5d1b033805ee5f4350325c0549a7048ddddad8def3290f08",
+      "evidence": {
+        "turn": 4,
+        "iteration": 1,
+        "name": "send_pa_letter",
+        "input_sha256": "d64e0a665c5284416c31d7f667c0c3c498fc4f00ac404a81450c13bfbb2c97a3",
+        "result_sha256": "04499d7c4f56430c275f4101c1e0e9ebba633dffa253c08d561babffb3832881",
+        "ms": 33,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "066fc39015220b54a58da251a3074faae58b4f7d53d05618c6ecb94500e479a6",
+        "leaf_index": 218,
+        "tree_size": 223,
+        "audit_path": [
+          "b60672c8bc37571971c57bfea93fd816b77f1526e7aa4edcb6eeb55eb4ffe862",
+          "2495e37851a986e09834c685c30ace9a606e218cc55f602479bee3756e313cf6",
+          "e2c9ff28aac652f09b61cbc1beb8d225ac58072af065006c386872bfa932be59",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "e8f86ab8-5341-419c-b3c3-b009b978ca3a",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "85a179b2c2e7e3ed97adc03b89db45fd8f75bab7ddb56373ff7a3a9845c39d8310deade06a90a09a89996a06736c9232ebff8d7f5d6f095af9d87325f616f177",
+      "observed_at": "2026-11-11T02:17:11.227000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "c33a9fc6de997d82208a30bcda77562ab5984423942ca1ec42df3afd0c9e862b",
+      "previous_receipt_hash": "a3c5d4dafde7cde6ca9540273820e5cf0def9a832ac250b907a910df0424120b",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 18,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "e3ed0f24d542e407a27a7c5dbd561c32fa6cc975d93b3af06b77b3d6d37a1cb451e72c19d3f93c6ec75e251d01e77ad31a6c54d5abee35909af25e7f78484c0c",
+      "evidence": {
+        "turn": 4,
+        "iteration": 2,
+        "model": "mock-rc",
+        "request_id": "mock-11",
+        "stop_reason": "tool_calls",
+        "usage": {
+          "input_tokens": 1388,
+          "output_tokens": 116
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "b60672c8bc37571971c57bfea93fd816b77f1526e7aa4edcb6eeb55eb4ffe862",
+        "leaf_index": 219,
+        "tree_size": 223,
+        "audit_path": [
+          "066fc39015220b54a58da251a3074faae58b4f7d53d05618c6ecb94500e479a6",
+          "2495e37851a986e09834c685c30ace9a606e218cc55f602479bee3756e313cf6",
+          "e2c9ff28aac652f09b61cbc1beb8d225ac58072af065006c386872bfa932be59",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "496c5c95-f1dc-4d64-9ff7-d0dc6f86df94",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "decide:approval_request",
+      "in_policy": true,
+      "policy_reason": "matched scope decide:*",
+      "evidence_hash_sha512": "b659495b77fb5949b2ab48ac47cf0af53a89c4f8aadc70a3dbe645dab2f9078e0eb89d488d7fd981ce38b6c89fc05e8871944076221442c0f777ae125a0e1c67",
+      "observed_at": "2026-11-11T02:17:11.230000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "9eacf3d8a77ea2091bf9ea2f326cbb8d3304161e89682b5ae7e9210e42a95bb0",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 19,
+      "signature": "a9dc3d0b17402bf9dc835bbd38898336a1488f53d626e4aaf1bcc2fc537f9f43b3cfb382484df70eb1e2387a9d3f5222c64351893d8171b8332d75a66e6a3408",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "approval_request",
+          "decision": "pa_letter_sent",
+          "rule_id": "PA-0",
+          "uncertainty": "none",
+          "prompt_version": "local-member-line@1.0",
+          "turn": 4,
+          "iteration": 2
+        },
+        "reasoning": {
+          "question": "Should the prior authorization letter be sent?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "The caller agreed to receive the letter by mail.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "01:05",
+                  "value": "Caller (01:05): Yes, please mail me the letter."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "The letter was sent.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "letter_id",
+                  "value": "LTR-35133"
+                },
+                {
+                  "kind": "tool",
+                  "ref": "expected",
+                  "value": "3 to 5 business days"
+                }
+              ]
+            }
+          ],
+          "decision": "pa_letter_sent",
+          "rule_id": "PA-0",
+          "uncertainty": "none"
+        },
+        "claims_source": "agent",
+        "model": "mock-rc",
+        "turn": 4,
+        "iteration": 2,
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "98c090ad2293f88baa483e05c922c91baf96a8e547fc936bc4d5e77f199b55da",
+        "leaf_index": 220,
+        "tree_size": 223,
+        "audit_path": [
+          "12f5fdc32c667f4e72d4c46e23868eb0da5a39cd9ee4aa0765f7bae39044a55c",
+          "54938a9b45fdf135a2e92c79d26f1b7df75cd6eb70bde3ea961ee4bdb05f3640",
+          "17145c034fbc22145e3cb2f4b66d8d9afad30e826d1c3fef6b6b55ad4e08cbab",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "7ae0af50-ce40-4dbc-a2c6-cd4cd8f3e748",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "matched scope model:*",
+      "evidence_hash_sha512": "f0a3c82c4be00989c708dca06ac82c175febd4418ab22df61de60437da69fa513492af4a3ad7177de3bf2f90f110bcb1538766610536dd37ac241f81c19e7cd0",
+      "observed_at": "2026-11-11T02:17:11.232000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "reasoning_hash": "af7a2a6d10f36690f15dce39c998317cea3f87f8a11ab7a2243cfb0ae50a781a",
+      "previous_receipt_hash": "ee21bd580a5a1403c1c32b35a7478e5c3d9828fed2ed2f6f77ecc208b5abac8d",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 20,
+      "commitment_alg": "sha256-salted-v1",
+      "signature": "251e3bb52a69e07e5d5bd1cbe78b6885ce3bf2c2024d396f5988a6d9613042670ef320c7b195246617959db0561f71470ee5718cc9c4890fa110945cc03e9700",
+      "evidence": {
+        "turn": 4,
+        "iteration": 3,
+        "model": "mock-rc",
+        "request_id": "mock-12",
+        "stop_reason": "stop",
+        "usage": {
+          "input_tokens": 1404,
+          "output_tokens": 44
+        },
+        "thinking_kind": "committed",
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "12f5fdc32c667f4e72d4c46e23868eb0da5a39cd9ee4aa0765f7bae39044a55c",
+        "leaf_index": 221,
+        "tree_size": 223,
+        "audit_path": [
+          "98c090ad2293f88baa483e05c922c91baf96a8e547fc936bc4d5e77f199b55da",
+          "54938a9b45fdf135a2e92c79d26f1b7df75cd6eb70bde3ea961ee4bdb05f3640",
+          "17145c034fbc22145e3cb2f4b66d8d9afad30e826d1c3fef6b6b55ad4e08cbab",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    },
+    {
+      "id": "5c868134-40a2-42f0-a7b1-190218de40c8",
+      "type": "notarised_evidence",
+      "plan_id": "8d50cfa1-07a9-4082-ad79-cf83fa422feb",
+      "agent": "local-member-line",
+      "action": "close:session",
+      "in_policy": true,
+      "policy_reason": "matched scope close:*",
+      "evidence_hash_sha512": "522322ad25b82a2c7f28a30539e6fcc40dd353dde833aaf67c8c10116f656995928f81b3f15d0d6ed085eedf188fdfad7635cf791fe51faa535c5b1d696a7ca0",
+      "observed_at": "2026-11-11T02:17:11.233000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "key_id": "5b8dc6e9f0553e64",
+      "agent_key_id": "",
+      "policy_hash": "fcfcc58310edfe0181e7aad7d4cd7cf9e2e54d46ae0f74f3696c2eb924b086b6",
+      "previous_receipt_hash": "20c405db310c93e672172f94abe7ea00ffecad46d93414c452af867305247bd2",
+      "plan_signature": "f2ecbd1bf6e66b12066134973e4d4927b5bccf218959e3a3c6966f72ccfce0f050fea68e5ae7d335b19313af309ac2827eff56b05e66b11d5391c0cf955be30a",
+      "seq": 21,
+      "signature": "d28158fff3ea25a327b00a0f7357388bf42e781bb5e130e74be36b7b2440122e4592ca7d115fb59ddfab58ce2d2f9540551cf177201dff10474e024d78a2c80e",
+      "evidence": {
+        "counts": {
+          "model_iteration": 12,
+          "tool_call": 4,
+          "decision": 4,
+          "error": 0,
+          "receipts": 21
+        },
+        "prompt_version": "local-member-line@1.0",
+        "prompt_sha256": "735c0c170f1ceaa8b5c41abeb72ec7c5573fc1b7de0c4e42dc7a2ef8b6bd5327",
+        "policy_hash": "b1ff67ae5ed976a1ec5fd0aade53cde6814862c058702d6116ca19fa155e0be2",
+        "model": "mock-rc",
+        "session_id": "c87f4ef0-3b76-4e99-acac-0183d6739ed0"
+      },
+      "log_inclusion_proof": {
+        "log_id": "filet-log-98a34240a2d2c8a6",
+        "leaf_hash": "54938a9b45fdf135a2e92c79d26f1b7df75cd6eb70bde3ea961ee4bdb05f3640",
+        "leaf_index": 222,
+        "tree_size": 223,
+        "audit_path": [
+          "7f7f9b9adc5d2a514b7cf11b126727161989783da1b9c3aaffc6ee7b5cba41eb",
+          "17145c034fbc22145e3cb2f4b66d8d9afad30e826d1c3fef6b6b55ad4e08cbab",
+          "ef6524e62684a808336ea58fb0316f0be0b8dde8987e235095d4e76706858405",
+          "b6a0a976d13270ab8c37f286224970b54c5c00412a802f8cee3cb573c4c0f896",
+          "4cd7942d1e2021cb978193e0bafbb4b0dc6f77cfb92cda1f9a6dbe36d0189db5",
+          "0339d360bba7d040f120d7d33f662f80f488b85bf62d0e7f3d5280a9babf3023"
+        ],
+        "sth": {
+          "tree_size": 223,
+          "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+          "timestamp": "2026-11-11T02:17:11.441000+00:00"
+        },
+        "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+      }
+    }
+  ],
+  "unanchored": 0,
+  "authority": {
+    "origin": "http://127.0.0.1:4173/authority",
+    "log_id": "filet-log-98a34240a2d2c8a6",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAAE8he/DqOK7XlX7rRnONuqXBxL47DJczjVyPKOhGHNo=\n-----END PUBLIC KEY-----\n",
+    "sth": {
+      "sth": {
+        "tree_size": 223,
+        "root_hash": "7dcdfbc219639518faeeee674acc50016850b47e1a3bdf9c128fa1d17e7c4b0f",
+        "timestamp": "2026-11-11T02:17:11.441000+00:00"
+      },
+      "sth_signature": "c6ca6ae5040abf86f8ed900356923145dbf10f515042f6855e4ec0c3653b5fe063e2691b8cd2ecafd132a17d8de604896c1d2db93437d864e0645daebcdb0f07"
+    }
+  },
+  "issuer_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAXpdM7knBygg670G8qQ67imMZ062qxb9Ivwd/zkWQ5m8=\n-----END PUBLIC KEY-----\n",
+  "issuer_key_id": "5b8dc6e9f0553e64",
+  "verify": "verifyAerfReceipt(receipt, { issuerPublicKey: issuer_public_key_pem, logPublicKey: authority.public_key_pem, requireLog: true }) and verifyAerfChain(receipts) from the AgentMint SDK"
+}
