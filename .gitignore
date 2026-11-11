@@ -11,3 +11,6 @@ coverage/
 .vendor/
 .DS_Store
 examples/demos/out/
+
+# Local test agent: vendor-side thinking and salts never leave the machine
+harness/runs/**/private.jsonl

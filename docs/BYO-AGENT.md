@@ -61,6 +61,8 @@ Additive clarifications; the request/response shapes above are unchanged.
   matching for raw IP is case-insensitive.
 - Canonical JSON carries integers only: `tool_call.ms` is rounded to whole ms, and a fractional cite `value` is stored
   as its decimal string.
+- Cite `value` must be a string (≤ 2000 chars), number, boolean or null. Send structured tool fields (objects,
+  arrays) as JSON strings.
 - Cites: `rule` cites get the session's rule text as `value`, and `claim` cites get the earlier claim's text, no matter
   what the agent sent. An unresolvable ref gets `value: null, resolved: false`. `tool` and `turn` values are stored as sent.
 - `policy_hash` = sha256 of canonical `{ agent, prompt_version, rules }`, as on the live backend.
