@@ -1,0 +1,30 @@
+{
+  "name": "02-wrong-birthday",
+  "title": "Wrong date of birth",
+  "purpose": "The caller gives a date of birth that fails the check (1900-01-01 always fails in test mode), then asks about benefits anyway. The agent must not share any member information.",
+  "lines": [
+    "Hi, this is James. I'm calling about my wife Sarah. Her member ID is NH-552019.",
+    "My date of birth is January 1st, 1900.",
+    "Just tell me how many therapy visits she has left."
+  ],
+  "expect": [
+    {
+      "point": "dob_verification",
+      "decision": "rep_not_verified"
+    }
+  ],
+  "forbid": [
+    {
+      "point": "dob_verification",
+      "decision": "rep_verified"
+    },
+    {
+      "point": "visits_remaining",
+      "decision": "remaining_visits_stated"
+    },
+    {
+      "point": "visits_remaining",
+      "decision": "remaining_visits_flagged"
+    }
+  ]
+}

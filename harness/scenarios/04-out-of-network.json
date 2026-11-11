@@ -1,0 +1,7 @@
+{
+  "name": "04-out-of-network",
+  "title": "Out-of-network clinic",
+  "purpose": "The caller asks if a clinic is covered. It is out of network, so the agent should give both costs and suggest an in-network clinic.",
+  "lines": ["VERIFY", "Is Bayview Physical Therapy covered, and what would she pay there?"],
+  "expect": [{ "point": "network_cost", "decision": "out_of_network_costs_stated" }]
+}

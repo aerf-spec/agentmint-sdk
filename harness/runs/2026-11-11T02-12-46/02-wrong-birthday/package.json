@@ -1,0 +1,1351 @@
+{
+  "call_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+  "started_at": "2026-11-11T02:13:11.924Z",
+  "ended_at": "2026-11-11T02:13:33.134Z",
+  "agent": "ava-member-line",
+  "prompt_version": "member-line@14.2",
+  "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+  "rules": [
+    {
+      "id": "DISC-0",
+      "text": "Say you are an AI and that the call is recorded.",
+      "maps_to": [
+        "California AB 3030 (AI disclosure in patient communications)",
+        "State call-recording consent laws"
+      ]
+    },
+    {
+      "id": "ID-3",
+      "text": "Share PHI only with the member or an authorized representative on file.",
+      "maps_to": [
+        "HIPAA 45 CFR 164.514(h) (verify identity before disclosure)",
+        "HIPAA 45 CFR 164.502(g) (personal representatives)"
+      ]
+    },
+    {
+      "id": "BEN-2",
+      "text": "If usage counts conflict, give the confirmed number and flag the conflict. Never guess.",
+      "maps_to": [
+        "Plan accuracy policy: confirmed figures only, pending claims flagged"
+      ]
+    },
+    {
+      "id": "BEN-5",
+      "text": "Always state in-network vs out-of-network cost.",
+      "maps_to": [
+        "Transparency in Coverage, 45 CFR 147.211 (cost-sharing estimates)"
+      ]
+    },
+    {
+      "id": "NET-1",
+      "text": "When a provider is out of network, offer in-network alternatives.",
+      "maps_to": [
+        "Network adequacy, 45 CFR 156.230"
+      ]
+    },
+    {
+      "id": "COST-1",
+      "text": "Cost figures are estimates; state what they are based on.",
+      "maps_to": [
+        "Transparency in Coverage, 45 CFR 147.211 (estimate basis disclosed)"
+      ]
+    },
+    {
+      "id": "PA-0",
+      "text": "The agent cannot approve care. Explain that the treating provider must request prior authorization; offer to send a letter explaining how.",
+      "maps_to": [
+        "CMS-0057-F (prior authorization)",
+        "42 CFR 422.566(d) / California SB 1120 (only a clinician makes the determination)"
+      ]
+    },
+    {
+      "id": "SMS-1",
+      "text": "Text PHI only with explicit consent, to a number on file.",
+      "maps_to": [
+        "HIPAA 45 CFR 164.522(b) (confidential communications)",
+        "TCPA, 47 U.S.C. 227 (consent to text)"
+      ]
+    },
+    {
+      "id": "END-1",
+      "text": "Before ending, recap next steps and log the outcome.",
+      "maps_to": [
+        "HIPAA 45 CFR 164.312(b) (audit controls)",
+        "AIUC-1 audit trail"
+      ]
+    }
+  ],
+  "transcript": [
+    {
+      "at": "00:00",
+      "who": "agent",
+      "text": "Hi, I'm Ava, an AI assistant for Northgate Health. This call is recorded. How can I help?"
+    },
+    {
+      "at": "00:00",
+      "who": "caller",
+      "text": "Hi, this is James. I'm calling about my wife Sarah. Her member ID is NH-552019."
+    },
+    {
+      "at": "00:07",
+      "who": "agent",
+      "text": "Thanks. To protect privacy, I need to verify you first. What's your date of birth?"
+    },
+    {
+      "at": "00:07",
+      "who": "caller",
+      "text": "My date of birth is January 1st, 1900."
+    },
+    {
+      "at": "00:14",
+      "who": "agent",
+      "text": "I couldn't verify that date. You can try once more. Could you say your date of birth again, with month, day and year?"
+    },
+    {
+      "at": "00:14",
+      "who": "caller",
+      "text": "Just tell me how many therapy visits she has left."
+    },
+    {
+      "at": "00:20",
+      "who": "agent",
+      "text": "I can look that up as soon as you're verified. You have one more try. Just tell me your date of birth with the month, day and year. Or Sarah can call us herself."
+    }
+  ],
+  "receipts": [
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r1",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "disclose:ai_and_recording",
+      "in_policy": true,
+      "policy_reason": "rule DISC-0 (scripted greeting)",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "disclosure",
+          "decision": "ai_and_recording_disclosed",
+          "rule_id": "DISC-0",
+          "uncertainty": "none",
+          "prompt_version": "member-line@14.2"
+        },
+        "claims_source": "scripted",
+        "spoken_sha256": "ffe95f014726c10e429a40a51e631594a2d0004adbefd15fd5b1596a2d376ceb"
+      },
+      "observed_at": "2026-11-11T02:13:12.029000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 1,
+      "evidence_hash_sha512": "287f2d913bcbe9f7d1c96eabd5f4cd035f0be1a6f0af402d1a6fb01c1c50df0f5725629d70b1c8752c6ce3c48aadf3e6706c8f2632bbf574ed9de700e4503e28",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "9126e11ff1a7239524c2a1625a2f4c3d749f1b47a6b2d90f16ae830b67145eff1dd49177f6331e84c167c4c009c568572cbd93282a2c3823514e5940f3170a03",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "630e25ad8fd7a1abba565b288d81deaf981032852ae3eec827070d23547301d8",
+        "leaf_index": 1552,
+        "tree_size": 1553,
+        "audit_path": [
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1553,
+          "root_hash": "3a28e6c17c0295d48d5d33b48dfd1b9e168fbd3756678595bd261d8c72483740",
+          "timestamp": "2026-11-11T02:13:12.349000+00:00"
+        },
+        "sth_signature": "9596683b4255b73a58cfe13b8476dc37bc087cf4fbfd0c9794b83794f9f564c91ebb9df4a7e81e2b2f8c6df7dea90c148f70ef19a5c83fef77e833933a7f830c"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r2",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLCpb27Hgdda8udFgzB",
+        "message_id": "msg_011CgvLCpmShJrAoL9Hc96WU",
+        "model": "claude-opus-5-5",
+        "turn": 1,
+        "iteration": 1,
+        "stop_reason": "tool_use",
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 103,
+          "cache_read_input_tokens": 3552,
+          "cache_creation_input_tokens": 0
+        },
+        "tool_uses": [
+          "check_authorized_rep"
+        ],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "b16015a56c9303ee",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-b16015a56c9303ee-01"
+      },
+      "observed_at": "2026-11-11T02:13:14.236000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 2,
+      "previous_receipt_hash": "e78f44795fa3bc526b85228e02e9bfc57c5df2f89bdd35acfd9cec9bf42c9b4a",
+      "reasoning_hash": "b92bd36d8003692136faa7493ab2d9e3f2c4eaeed0bfb8d3ff229d953966249d",
+      "commitment_alg": "sha256-salted-v1",
+      "evidence_hash_sha512": "4c484dcae8348beda1db84ab263f4cfde01cdf5dc172c62afec73b69db18b55cce21c4a811769c9e68309e8b31188b06657109cc8f2eec418d8b38f69480cf45",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "e9a8cc3e54a4d511d8e6cfe4c8d3a3dd4da977adda21f7b1e44acd4cc052fc57f162bded81e22f2852b650f86ba026984caaeab702f2222044a3d796585acf04",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "aa602560d9486693e43314bc8e7a22ab74bd84dc6a965ecb0ca97d51400eb37f",
+        "leaf_index": 1553,
+        "tree_size": 1554,
+        "audit_path": [
+          "630e25ad8fd7a1abba565b288d81deaf981032852ae3eec827070d23547301d8",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1554,
+          "root_hash": "af4c91e032423cdfb046b4b841970f3453d5759b7971e73035bbb2c16217dde0",
+          "timestamp": "2026-11-11T02:13:14.563000+00:00"
+        },
+        "sth_signature": "3a48b44bc76381156d2fa386a453bc42366d431f663f327f50a8b43b5fd2bd23c01877fa3234f532e1dc4965159b5a292be2d740e10f7f83c896c0bcb2012d05"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r3",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLCxyoQJwgnQuXjv9kE",
+        "message_id": "msg_011CgvLCy9iTxG55GiRFCuDf",
+        "model": "claude-opus-5-5",
+        "turn": 1,
+        "iteration": 2,
+        "stop_reason": "tool_use",
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 422,
+          "cache_read_input_tokens": 3552,
+          "cache_creation_input_tokens": 167
+        },
+        "tool_uses": [
+          "record_decision"
+        ],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "d109e94b070d3d73",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-d109e94b070d3d73-01"
+      },
+      "observed_at": "2026-11-11T02:13:18.049000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 3,
+      "previous_receipt_hash": "5b46497358017c781feb076f47389a706ecf22e4381a85b3f8f8c35aaef9bb74",
+      "evidence_hash_sha512": "6d7c428a02381b8573c4359fbdb98741f9f71472e3d0d0dc928ab48816bbd9ae67582bef3894121f4fa2a6d535ea706c73b7a848b8bea1209e1242baf7332a1f",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "ffae87cdef72bbd8166a2ccabd8ecc693c963769002c6da88734233b102f0fc67887bec3aec3116318a698a0a553c5243b594457703d4403e48a288850befd01",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "0918170e811936a08daa870e6a351575893022aa7d20623874a6d03ef448e310",
+        "leaf_index": 1554,
+        "tree_size": 1556,
+        "audit_path": [
+          "8b4d81e8c259d2dfe7af8c24a60ce1958525eb06aa2766cdb61e3cf99a64beae",
+          "b06d5f7d70a1925de27f285ebb1484c331dfb06903a8dae6ccfd0a50e7db494e",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1556,
+          "root_hash": "c8f5bed1955d3d493f7adee99005909c24f8a2db30161577df595bd279fc9c41",
+          "timestamp": "2026-11-11T02:13:18.373000+00:00"
+        },
+        "sth_signature": "78910dfffa6b5248dbd8248a954a154a4f6c998786d5a00a374f3fa59d6a2b24cb5411524dc7f0ee234ff1c100f24c1135effa811d63c0e0a5d30dacff88a10d"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r4",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "decide:identity",
+      "in_policy": true,
+      "policy_reason": "rule ID-3",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "identity",
+          "decision": "authorized_rep_found_pending_dob",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified",
+          "prompt_version": "member-line@14.2",
+          "turn": 1,
+          "iteration": 2,
+          "member": {
+            "hashed": "sha256:91d43ebff4"
+          }
+        },
+        "reasoning": {
+          "question": "Can James access information for member ID NH-552019?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "Caller gave first name James and member ID NH-552019.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:00",
+                  "value": "Caller (00:00): Hi, this is James. I'm calling about my wife Sarah. Her member ID is NH-552019."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "Lookup returned a representative on file for this caller name.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "authorized",
+                  "value": true
+                },
+                {
+                  "kind": "tool",
+                  "ref": "relationship",
+                  "value": "spouse"
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "Verification requires the caller's date of birth.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "verify_with",
+                  "value": "caller_dob"
+                }
+              ]
+            },
+            {
+              "id": "c4",
+              "text": "PHI cannot be shared until the date of birth is verified.",
+              "cites": [
+                {
+                  "kind": "rule",
+                  "ref": "ID-3",
+                  "value": "Share PHI only with the member or an authorized representative on file."
+                },
+                {
+                  "kind": "claim",
+                  "ref": "c3",
+                  "value": "Verification requires the caller's date of birth."
+                }
+              ]
+            }
+          ],
+          "decision": "authorized_rep_found_pending_dob",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified"
+        },
+        "claims_source": "model",
+        "policy": {
+          "rule_id": "ID-3",
+          "rule_text": "Share PHI only with the member or an authorized representative on file.",
+          "maps_to": [
+            "HIPAA 45 CFR 164.514(h) (verify identity before disclosure)",
+            "HIPAA 45 CFR 164.502(g) (personal representatives)"
+          ]
+        },
+        "request_id": "req_011CgvLCxyoQJwgnQuXjv9kE",
+        "model": "claude-opus-5-5",
+        "turn": 1,
+        "iteration": 2,
+        "tools_this_turn": [
+          "check_authorized_rep"
+        ],
+        "stack": {
+          "trace_id": "708b0228f03b6c24c3f177033f163c34",
+          "spans": [
+            {
+              "span_id": "0ecd15572b9c6634",
+              "parent_id": "b16015a56c9303ee",
+              "kind": "llm.response",
+              "name": "thinking + tool_use:check_authorized_rep",
+              "dur_us": 1246000,
+              "attrs_sha256": "e09af3133f7ec31924c1d3b038e463ee71cf1b909a2d358c639212ead74d3e66"
+            },
+            {
+              "span_id": "b16015a56c9303ee",
+              "parent_id": "1944215405fc7d4d",
+              "kind": "llm.request",
+              "name": "messages.create (stream)",
+              "dur_us": 1862000,
+              "attrs_sha256": "9f4982a583955a590507f088a0961e7a59f00d4b052eebece2af0801a46970f6"
+            },
+            {
+              "span_id": "14a47890e95e6bd7",
+              "parent_id": "177e0fccf27e838c",
+              "kind": "downstream.call",
+              "name": "members-api GET /members/{id}/representatives",
+              "dur_us": 22000,
+              "attrs_sha256": "2ec0224f1546deae851fb3f89457f424e44e271078abee0bccec8f1a3a54cea6"
+            },
+            {
+              "span_id": "177e0fccf27e838c",
+              "parent_id": "dc02574fa33bd8cd",
+              "kind": "tool.exec",
+              "name": "check_authorized_rep",
+              "dur_us": 22000,
+              "attrs_sha256": "875757c12f4b40ef1e2d8414ec3a35776ae5b827f77d34bfd4ea3588e3218519"
+            },
+            {
+              "span_id": "dc02574fa33bd8cd",
+              "parent_id": "1944215405fc7d4d",
+              "kind": "tool.dispatch",
+              "name": "check_authorized_rep",
+              "dur_us": 22000,
+              "attrs_sha256": "cb9dee4aaafdb7527d0610735138bece9b8cbed0a1cb6950e17486cfdfab73d2"
+            },
+            {
+              "span_id": "6e264e772257af2a",
+              "parent_id": "1944215405fc7d4d",
+              "kind": "tool.result",
+              "name": "check_authorized_rep",
+              "dur_us": 0,
+              "attrs_sha256": "20b9354335c2c42b74a959a9ede5d062bddd2792bdca666ce7105a2685ee5601"
+            },
+            {
+              "span_id": "2b8862e441e25e63",
+              "parent_id": "d109e94b070d3d73",
+              "kind": "llm.response",
+              "name": "tool_use:record_decision",
+              "dur_us": 3092000,
+              "attrs_sha256": "613a9652d3db12bb84308a2a3f2ff6a691932cde0800ff2785295e9d109c3cdc"
+            },
+            {
+              "span_id": "d109e94b070d3d73",
+              "parent_id": "1944215405fc7d4d",
+              "kind": "llm.request",
+              "name": "messages.create (stream)",
+              "dur_us": 3720000,
+              "attrs_sha256": "e3065b094f478083f261574980dcfdad5a44574aba7932690afe15c91fdabcd3"
+            },
+            {
+              "span_id": "8fc4355703e1c36d",
+              "parent_id": "1944215405fc7d4d",
+              "kind": "decision",
+              "name": "identity",
+              "dur_us": 0,
+              "attrs_sha256": "44d26aceb3ed32adbca7bfc7a200ac133930319c7fcd00ddaecd4e71ba7173c9"
+            }
+          ]
+        },
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-8fc4355703e1c36d-01"
+      },
+      "observed_at": "2026-11-11T02:13:18.070000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 4,
+      "previous_receipt_hash": "51866b7981707c7843e2e75c4db4c473f3596fb584fc54941fa372e8836df2d5",
+      "evidence_hash_sha512": "c5b0a5b3f6053fef17b24ce45342e47b07d43e9e549dfcf5ee38def84d65f9e81f4c9b3ef536dcbf201d5295618df55301ae5e55fc38b9666a610ed73dde8ae6",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "40fb2aa7b619fcee3520163fd2934add47d6fb90ab8f726391a8ef3732d83f26891d87c3199b81492009717ff69a93fdf5df929c786a74db8c49f7778e10d50a",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "8b4d81e8c259d2dfe7af8c24a60ce1958525eb06aa2766cdb61e3cf99a64beae",
+        "leaf_index": 1555,
+        "tree_size": 1556,
+        "audit_path": [
+          "0918170e811936a08daa870e6a351575893022aa7d20623874a6d03ef448e310",
+          "b06d5f7d70a1925de27f285ebb1484c331dfb06903a8dae6ccfd0a50e7db494e",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1556,
+          "root_hash": "c8f5bed1955d3d493f7adee99005909c24f8a2db30161577df595bd279fc9c41",
+          "timestamp": "2026-11-11T02:13:18.373000+00:00"
+        },
+        "sth_signature": "78910dfffa6b5248dbd8248a954a154a4f6c998786d5a00a374f3fa59d6a2b24cb5411524dc7f0ee234ff1c100f24c1135effa811d63c0e0a5d30dacff88a10d"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r5",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLDFGLBiyBwF93roymq",
+        "message_id": "msg_011CgvLDFSzggXYjUGQxpQAU",
+        "model": "claude-opus-5-5",
+        "turn": 1,
+        "iteration": 3,
+        "stop_reason": "end_turn",
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 54,
+          "cache_read_input_tokens": 3719,
+          "cache_creation_input_tokens": 492
+        },
+        "tool_uses": [],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "bd4ea498c4b1a810",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-bd4ea498c4b1a810-01"
+      },
+      "observed_at": "2026-11-11T02:13:19.301000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 5,
+      "previous_receipt_hash": "e0738851f2a8ad9a93c11e62242a1722a67d059005712837778fa39788c9b3b8",
+      "reasoning_hash": "d186133f1db54f23708b200175745ac283853485b05657d07c12ce65efc680d7",
+      "commitment_alg": "sha256-salted-v1",
+      "evidence_hash_sha512": "2b43b8b40bdcb91718869cebfddad9e505eae03c4f1d1fb1dc44163d3d1bc533b26652b9541c2e67899b0a656deee8c5dc0a0e9b9878aead36046871bb65863c",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "71a63c6001ccf2ca64feddf5d0a01b9647067beb8fa620993874ecd88e2428592a0f4f6fb528124bf202d50fe90c9e063ca44dc766fd1dbf0b8857bade573708",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "ac7f95868c6d54474ae8c761684e23f63f7651d58cf2e3bc69f66b368902fd30",
+        "leaf_index": 1556,
+        "tree_size": 1557,
+        "audit_path": [
+          "f63fa243c9036dead1c79518426e1fc684e18c96863341ca6b70da79b7da1c90",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1557,
+          "root_hash": "47eda5d77028f9c9fba4d1e8a62d9721666236a9f741e614ab2377bd9ac44d3c",
+          "timestamp": "2026-11-11T02:13:19.644000+00:00"
+        },
+        "sth_signature": "ac0c4d822badd30022b80f5e7d2f53963c93d190f2c691b4387ac08f668f675ed2d3682ceea0794faa7720199850a1ef6e2f69ebbfbbf6a2b600736e7c8c7208"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r6",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLDMe4ZtEXRefrEeDgR",
+        "message_id": "msg_011CgvLDMpj1imhhMZVkGttw",
+        "model": "claude-opus-5-5",
+        "turn": 2,
+        "iteration": 1,
+        "stop_reason": "tool_use",
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 111,
+          "cache_read_input_tokens": 4211,
+          "cache_creation_input_tokens": 80
+        },
+        "tool_uses": [
+          "verify_rep_dob"
+        ],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "c58109d575a5de51",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-c58109d575a5de51-01"
+      },
+      "observed_at": "2026-11-11T02:13:21.217000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 6,
+      "previous_receipt_hash": "1bbdd2fcb2a904101a96924af68f65566eb715ca0e7ab3250c0f6e44d52c17dc",
+      "evidence_hash_sha512": "43dd98bfe11443348284fb4facdd499e134bd66a25971b9377c0480c0d838d8609ad0b0b174d5d21230b3bd5e98eac9c3a0a75e0a73b4fae8719f114d2a85d6b",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "04fe40dc2590cb0b3aff98692adc0e3625da5c373b32320be688b14af2b90b9fabfe328af642511b7506b08361f0c9cdf339b525d2446a0a9ba39095b0e2830d",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "b4e4a8972b0fe35776a589542357ae270b37c5dcbfca690e02b96da47779b6bc",
+        "leaf_index": 1557,
+        "tree_size": 1558,
+        "audit_path": [
+          "ac7f95868c6d54474ae8c761684e23f63f7651d58cf2e3bc69f66b368902fd30",
+          "f63fa243c9036dead1c79518426e1fc684e18c96863341ca6b70da79b7da1c90",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1558,
+          "root_hash": "6527ab8e30dfb9797f08dcdec03d88603c9f220072bbb8bcc429bc4077945d6a",
+          "timestamp": "2026-11-11T02:13:21.539000+00:00"
+        },
+        "sth_signature": "62670df608c8fcb89495e58b06f370877a138e438e84503959d122d08ab288461c2ceb88dfd1d59ff011565e7127961e9fed98335d2d88ceae9bb1f04a90d500"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r7",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLDUnBji8ho1wURCsiR",
+        "message_id": "msg_011CgvLDUx6qc6sntsJ76wpz",
+        "model": "claude-opus-5-5",
+        "turn": 2,
+        "iteration": 2,
+        "stop_reason": "tool_use",
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 406,
+          "cache_read_input_tokens": 4291,
+          "cache_creation_input_tokens": 137
+        },
+        "tool_uses": [
+          "record_decision"
+        ],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "01708b31550e4d01",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-01708b31550e4d01-01"
+      },
+      "observed_at": "2026-11-11T02:13:24.592000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 7,
+      "previous_receipt_hash": "be308a35fb8c45ac9c013344b3bcb41b99afd1a5ca9a1df8e039e92ae55ba9e4",
+      "evidence_hash_sha512": "38a65f1b1630e77034e314665a773523c9ea2744d94b2a600cb8d32e650537c0f34a1a1a172042ffca2a11c42b94a34d7088c9942951f3531194365ff9e705bb",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "f5b7c337349f480c81041d34ebb0cc804ebc4a96ea99051cbd4dd4e96acd39d000db9b7331079b2b9d817814cc6aeff6383980478e607723741b8b31ab2ef30a",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "7d8c64cae5a02d58d70429c3d6b6c457d54634206db8269bd0e121c5def47d02",
+        "leaf_index": 1558,
+        "tree_size": 1560,
+        "audit_path": [
+          "327c88112f12d26de64761db9e35dd142057436d55b5a58faafe8b9f9fca0c75",
+          "1f67e67d3a005e88cdf4e8f69498ade76236a7bcd2f1c3dde21b3703d7e43a19",
+          "f63fa243c9036dead1c79518426e1fc684e18c96863341ca6b70da79b7da1c90",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1560,
+          "root_hash": "1d0464ead1db95a3334cdd5fe5bebf2b22c846e08ed39464c2a65b119e2d051b",
+          "timestamp": "2026-11-11T02:13:24.914000+00:00"
+        },
+        "sth_signature": "85667cde32f4fa6a64169cfe967592f671e0828c094760e586cb90a324a987917469bfd273a47c0045aaa27c290e135b5cfd2191c4797ed198555dac2584f50a"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r8",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "decide:dob_verification",
+      "in_policy": true,
+      "policy_reason": "rule ID-3",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "dob_verification",
+          "decision": "rep_not_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified",
+          "prompt_version": "member-line@14.2",
+          "turn": 2,
+          "iteration": 2,
+          "member": {
+            "hashed": "sha256:91d43ebff4"
+          }
+        },
+        "reasoning": {
+          "question": "Does James's date of birth verify him as the representative?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "Caller gave date of birth 1900-01-01.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:07",
+                  "value": "Caller (00:07): My date of birth is January 1st, 1900."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "Date of birth did not match the record.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "match",
+                  "value": false
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "This is the first failed attempt; one more attempt allowed before routing.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "attempts",
+                  "value": 1
+                }
+              ]
+            },
+            {
+              "id": "c4",
+              "text": "No PHI can be shared while unverified.",
+              "cites": [
+                {
+                  "kind": "rule",
+                  "ref": "ID-3",
+                  "value": "Share PHI only with the member or an authorized representative on file."
+                },
+                {
+                  "kind": "claim",
+                  "ref": "c2",
+                  "value": "Date of birth did not match the record."
+                }
+              ]
+            }
+          ],
+          "decision": "rep_not_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified"
+        },
+        "claims_source": "model",
+        "policy": {
+          "rule_id": "ID-3",
+          "rule_text": "Share PHI only with the member or an authorized representative on file.",
+          "maps_to": [
+            "HIPAA 45 CFR 164.514(h) (verify identity before disclosure)",
+            "HIPAA 45 CFR 164.502(g) (personal representatives)"
+          ]
+        },
+        "request_id": "req_011CgvLDUnBji8ho1wURCsiR",
+        "model": "claude-opus-5-5",
+        "turn": 2,
+        "iteration": 2,
+        "tools_this_turn": [
+          "verify_rep_dob"
+        ],
+        "stack": {
+          "trace_id": "708b0228f03b6c24c3f177033f163c34",
+          "spans": [
+            {
+              "span_id": "9b8252a6fa05b5c3",
+              "parent_id": "c58109d575a5de51",
+              "kind": "llm.response",
+              "name": "tool_use:verify_rep_dob",
+              "dur_us": 818000,
+              "attrs_sha256": "82fba6e52c8a8fa34c2c4e21378cac847b440a31b0d4d64e2cbe4043f7947163"
+            },
+            {
+              "span_id": "c58109d575a5de51",
+              "parent_id": "d2309666b5218e8d",
+              "kind": "llm.request",
+              "name": "messages.create (stream)",
+              "dur_us": 1571000,
+              "attrs_sha256": "b3fe01d2726c05d1272f57be6af13ba53662c9b22cb6920b148078641370d068"
+            },
+            {
+              "span_id": "65c92be643abd7d4",
+              "parent_id": "dd0506c2cc978f68",
+              "kind": "downstream.call",
+              "name": "members-api POST /members/{id}/representatives/verify",
+              "dur_us": 19000,
+              "attrs_sha256": "6031e73d9510ef452a6c7ae7a7a56a3d8a2f10f44883bc7a999936dd56df2f71"
+            },
+            {
+              "span_id": "dd0506c2cc978f68",
+              "parent_id": "3ab8c88b843fe97e",
+              "kind": "tool.exec",
+              "name": "verify_rep_dob",
+              "dur_us": 19000,
+              "attrs_sha256": "401d84b1ec945263c00c19f5aab31e9c6a0bcfe0c4c98e6ba231a7387df817c6"
+            },
+            {
+              "span_id": "3ab8c88b843fe97e",
+              "parent_id": "d2309666b5218e8d",
+              "kind": "tool.dispatch",
+              "name": "verify_rep_dob",
+              "dur_us": 19000,
+              "attrs_sha256": "4f3f9673420562102ce7ef1f768e1c1d513cb0b912b836fc7e0e3a79952793bc"
+            },
+            {
+              "span_id": "9df1593ff69bfa79",
+              "parent_id": "d2309666b5218e8d",
+              "kind": "tool.result",
+              "name": "verify_rep_dob",
+              "dur_us": 0,
+              "attrs_sha256": "c7e9118358c6ecb00bba4966a0b323f36930eece7e437f7057b06e59dc4e4a3a"
+            },
+            {
+              "span_id": "03c0b2a2470f106e",
+              "parent_id": "01708b31550e4d01",
+              "kind": "llm.response",
+              "name": "tool_use:record_decision",
+              "dur_us": 2692000,
+              "attrs_sha256": "f123bf5d946979b3e524146eb4b406ae875a07108c82bcb8ac15a7450999a725"
+            },
+            {
+              "span_id": "01708b31550e4d01",
+              "parent_id": "d2309666b5218e8d",
+              "kind": "llm.request",
+              "name": "messages.create (stream)",
+              "dur_us": 3284000,
+              "attrs_sha256": "086ebf2e4b4fd649f8a8b12ad7494d1ae4d80ad217403a515b3feeb0d477f5bb"
+            },
+            {
+              "span_id": "1d117b1b2b696edd",
+              "parent_id": "d2309666b5218e8d",
+              "kind": "decision",
+              "name": "dob_verification",
+              "dur_us": 0,
+              "attrs_sha256": "20e85e7dc2c29358bd6570b584d1cc99210e7014938b3a34ff16264346f1b97d"
+            }
+          ]
+        },
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-1d117b1b2b696edd-01"
+      },
+      "observed_at": "2026-11-11T02:13:24.611000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 8,
+      "previous_receipt_hash": "02e65badd5e5c7fe4d44c7844fd2f430935cb3e884866a1dfbe9f3467809eecf",
+      "evidence_hash_sha512": "de88d9dfd9fa28e885dfcb6e36923efc13d4bea789d7d39a7b6249694f4aabdbc9a4b24d21014e36a446c00f7bbe533f808890bf2ddc069f82a83c20acc08753",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "72d25c54694a7d5b6a1d2183cfef0630a568ea8748bacdff62f6dd41465d21d1b20c39707ff5f79e259d1f59952aaa8081f7d59b35621b9cdb1b188ed07a5f09",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "327c88112f12d26de64761db9e35dd142057436d55b5a58faafe8b9f9fca0c75",
+        "leaf_index": 1559,
+        "tree_size": 1560,
+        "audit_path": [
+          "7d8c64cae5a02d58d70429c3d6b6c457d54634206db8269bd0e121c5def47d02",
+          "1f67e67d3a005e88cdf4e8f69498ade76236a7bcd2f1c3dde21b3703d7e43a19",
+          "f63fa243c9036dead1c79518426e1fc684e18c96863341ca6b70da79b7da1c90",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1560,
+          "root_hash": "1d0464ead1db95a3334cdd5fe5bebf2b22c846e08ed39464c2a65b119e2d051b",
+          "timestamp": "2026-11-11T02:13:24.914000+00:00"
+        },
+        "sth_signature": "85667cde32f4fa6a64169cfe967592f671e0828c094760e586cb90a324a987917469bfd273a47c0045aaa27c290e135b5cfd2191c4797ed198555dac2584f50a"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r9",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLDjsHguHVeZNgKPDGB",
+        "message_id": "msg_011CgvLDk5S4uBinUYAm2e6N",
+        "model": "claude-opus-5-5",
+        "turn": 2,
+        "iteration": 3,
+        "stop_reason": "end_turn",
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 55,
+          "cache_read_input_tokens": 4428,
+          "cache_creation_input_tokens": 461
+        },
+        "tool_uses": [],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "346963916edb0e7b",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-346963916edb0e7b-01"
+      },
+      "observed_at": "2026-11-11T02:13:26.070000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 9,
+      "previous_receipt_hash": "254eb995b40b090d26bb4a968b9af3aa2688d1101f3fb109c799c4f5269f0c2d",
+      "reasoning_hash": "2def9a0a8574ad3aa6911ff1b5db8ee0323513a6b21958d312c13b9de0bdfb04",
+      "commitment_alg": "sha256-salted-v1",
+      "evidence_hash_sha512": "4817649cef8865796659e0848028ef715a662f24ea7d5773e14c3619b8746481cebb87c17eec288a9cc090239ed286e54cf9a3acb55750f33911aa491ad99856",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "6dd68d3265d2f54962e2075ecd8cbd9911c4fc8e65cf7cc7e26240c648c9ece36ad2b41306a6747413641b9721e7ffc166f606576446467e3b6f595850ec0107",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "69f60a3fcf8fe17b37d9fa9bffd047d9b88504f39d6bdcfb055b71b24ee8dbfa",
+        "leaf_index": 1560,
+        "tree_size": 1561,
+        "audit_path": [
+          "acca024aef613be39d75447b175ed47aa8c571bd18338c53e0ea5dc7bf0d8bfc",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1561,
+          "root_hash": "7660a4f4fe9fc580cee29db96ea74e9912ddf433a9d17756006b98015fb53bd4",
+          "timestamp": "2026-11-11T02:13:26.395000+00:00"
+        },
+        "sth_signature": "96446122bb6f1aba57ba7103d8022db357296fab1a3b0176b2ed8832a1daef3c35ad7942866d505d1f850585756bafcf06dbce91a055ec4b53dea9b50f10e50f"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r10",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLDs7MKFaVH31DUfqY8",
+        "message_id": "msg_011CgvLDsMVFGMhMkemuXuBs",
+        "model": "claude-opus-5-5",
+        "turn": 3,
+        "iteration": 1,
+        "stop_reason": "tool_use",
+        "usage": {
+          "input_tokens": 4,
+          "output_tokens": 528,
+          "cache_read_input_tokens": 4889,
+          "cache_creation_input_tokens": 82
+        },
+        "tool_uses": [
+          "record_decision"
+        ],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "76de9a9adfc173fc",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-76de9a9adfc173fc-01"
+      },
+      "observed_at": "2026-11-11T02:13:31.401000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 10,
+      "previous_receipt_hash": "30b3be90c88013cb888f89259abd32660034d8ef7bf39a1d4c4fb299b1b8c2df",
+      "reasoning_hash": "4ef19e0e7846ae85dc3d1ef107e30cfe41b324ebbb132967c75b6f5c19e91840",
+      "commitment_alg": "sha256-salted-v1",
+      "evidence_hash_sha512": "5c341a73cbdf79bc231939cc70cfaebd7ac1c7e500ff0c96ffbbd7cb7aeb5db0eb84b5ceb162ffd1e84f3ee882231c42efffefb4e975b2c8a51e0ca403acddc3",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "033a0d2b8612093b517ce2b9dcbd0b4b04299b47ddaabd3c0ce8a4f7b393a676970578f39dc858a2511ed9c03c0fdd09fe3f521ee48c8e81bf94b9f73168110b",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "aa3f588e7a9335b6dc0af4bc8425321f59197c33370483f80e2a9752abae1a1e",
+        "leaf_index": 1561,
+        "tree_size": 1563,
+        "audit_path": [
+          "69f60a3fcf8fe17b37d9fa9bffd047d9b88504f39d6bdcfb055b71b24ee8dbfa",
+          "2ac6e40dc5b7ceed4aa483f2179d381937e066feda886c53cfe833ae6c81857b",
+          "acca024aef613be39d75447b175ed47aa8c571bd18338c53e0ea5dc7bf0d8bfc",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1563,
+          "root_hash": "602dbe3fa7f00a5b2c330813d086bc5a2632e019d850deca84f3d9c0becdf36d",
+          "timestamp": "2026-11-11T02:13:31.725000+00:00"
+        },
+        "sth_signature": "be671d96962410410bfe171fd66ce705a89953ec690b6a47a54d55aa7b36457d670b49c45c79e696826e17c702fc5663ec2aa2109f0ad98c9544c387a30cb903"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r11",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "decide:visits_remaining",
+      "in_policy": true,
+      "policy_reason": "rule ID-3",
+      "evidence": {
+        "decision_record": {
+          "schema": "decision-record/v0",
+          "point": "visits_remaining",
+          "decision": "rep_not_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified",
+          "prompt_version": "member-line@14.2",
+          "turn": 3,
+          "iteration": 1,
+          "member": {
+            "hashed": "sha256:91d43ebff4"
+          }
+        },
+        "reasoning": {
+          "question": "How many therapy visits does Sarah have left?",
+          "claims": [
+            {
+              "id": "c1",
+              "text": "Caller asked for remaining therapy visits without re-verifying.",
+              "cites": [
+                {
+                  "kind": "turn",
+                  "ref": "00:14",
+                  "value": "Caller (00:14): Just tell me how many therapy visits she has left."
+                }
+              ]
+            },
+            {
+              "id": "c2",
+              "text": "Caller's date of birth did not match on the first attempt.",
+              "cites": [
+                {
+                  "kind": "tool",
+                  "ref": "match",
+                  "value": false
+                }
+              ]
+            },
+            {
+              "id": "c3",
+              "text": "Benefit usage is PHI and cannot be shared with an unverified caller.",
+              "cites": [
+                {
+                  "kind": "rule",
+                  "ref": "ID-3",
+                  "value": "Share PHI only with the member or an authorized representative on file."
+                },
+                {
+                  "kind": "claim",
+                  "ref": "c2",
+                  "value": "Caller's date of birth did not match on the first attempt."
+                }
+              ]
+            }
+          ],
+          "decision": "rep_not_verified",
+          "rule_id": "ID-3",
+          "uncertainty": "not_verified"
+        },
+        "claims_source": "model",
+        "policy": {
+          "rule_id": "ID-3",
+          "rule_text": "Share PHI only with the member or an authorized representative on file.",
+          "maps_to": [
+            "HIPAA 45 CFR 164.514(h) (verify identity before disclosure)",
+            "HIPAA 45 CFR 164.502(g) (personal representatives)"
+          ]
+        },
+        "request_id": "req_011CgvLDs7MKFaVH31DUfqY8",
+        "model": "claude-opus-5-5",
+        "turn": 3,
+        "iteration": 1,
+        "tools_this_turn": [],
+        "stack": {
+          "trace_id": "708b0228f03b6c24c3f177033f163c34",
+          "spans": [
+            {
+              "span_id": "633a43ceffd59fb6",
+              "parent_id": "76de9a9adfc173fc",
+              "kind": "llm.response",
+              "name": "thinking + tool_use:record_decision",
+              "dur_us": 4224000,
+              "attrs_sha256": "977443881918390a73bc0360eb3b98bdea0fa5af06258eb02d4210f083347bb2"
+            },
+            {
+              "span_id": "76de9a9adfc173fc",
+              "parent_id": "43710959a4b151cf",
+              "kind": "llm.request",
+              "name": "messages.create (stream)",
+              "dur_us": 4867000,
+              "attrs_sha256": "16db3e9930225385d44187e8ccf37117551536112ed2364f13ac3104dbaf4d21"
+            },
+            {
+              "span_id": "a9c2664f075aba1d",
+              "parent_id": "43710959a4b151cf",
+              "kind": "decision",
+              "name": "visits_remaining",
+              "dur_us": 0,
+              "attrs_sha256": "20e85e7dc2c29358bd6570b584d1cc99210e7014938b3a34ff16264346f1b97d"
+            }
+          ]
+        },
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-a9c2664f075aba1d-01"
+      },
+      "observed_at": "2026-11-11T02:13:31.420000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 11,
+      "previous_receipt_hash": "9e62e5971115e0a585cb64f611ea4eab14999cf4bbe814ae429708dacad77c2e",
+      "evidence_hash_sha512": "8fcda9eb856c5f7a60f1921a8258d60b0558f76fbfee5aeec6790107d956bf516885b41abe61d43aabe125bc6559947150701f496f05cc7190f5ed195af0f716",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "8c2210e621a559b38916fc0d4c190acec89748b7098b6d96398a907f55b8e0f45c8f7b639559520030e7ce07dfa59b3c2204bcb9981c0ad7bdd875ef27c1aa01",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "2ac6e40dc5b7ceed4aa483f2179d381937e066feda886c53cfe833ae6c81857b",
+        "leaf_index": 1562,
+        "tree_size": 1563,
+        "audit_path": [
+          "d944e56fd4b003cb6a5e852c9e5d2a774ffd7c5d61048a03fbbb0f8f1a172212",
+          "acca024aef613be39d75447b175ed47aa8c571bd18338c53e0ea5dc7bf0d8bfc",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1563,
+          "root_hash": "602dbe3fa7f00a5b2c330813d086bc5a2632e019d850deca84f3d9c0becdf36d",
+          "timestamp": "2026-11-11T02:13:31.725000+00:00"
+        },
+        "sth_signature": "be671d96962410410bfe171fd66ce705a89953ec690b6a47a54d55aa7b36457d670b49c45c79e696826e17c702fc5663ec2aa2109f0ad98c9544c387a30cb903"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r12",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "model:iteration",
+      "in_policy": true,
+      "policy_reason": "model iteration recorded",
+      "evidence": {
+        "request_id": "req_011CgvLEEM3QU2To7Gr1YApu",
+        "message_id": "msg_011CgvLEEWUCFMX6NqsVu2Zq",
+        "model": "claude-opus-5-5",
+        "turn": 3,
+        "iteration": 2,
+        "stop_reason": "end_turn",
+        "usage": {
+          "input_tokens": 2,
+          "output_tokens": 74,
+          "cache_read_input_tokens": 4971,
+          "cache_creation_input_tokens": 585
+        },
+        "tool_uses": [],
+        "thinking_kind": "summary",
+        "prompt_version": "member-line@14.2",
+        "prompt_sha256": "ecce5bba17b680055e80b3cc24e5ede197a1ddb9f1a4d843c0ab412b1710587b",
+        "span_id": "f8a4f2d29c8073da",
+        "traceparent": "00-708b0228f03b6c24c3f177033f163c34-f8a4f2d29c8073da-01"
+      },
+      "observed_at": "2026-11-11T02:13:32.841000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 12,
+      "previous_receipt_hash": "a8252f7d998e049293d6d7bd2c2c40e5fd25fafded530c204be5294eca0338ca",
+      "reasoning_hash": "92296ed6dd3bce44589e0554657f58719c377f6077b3409f809011f303d6422b",
+      "commitment_alg": "sha256-salted-v1",
+      "evidence_hash_sha512": "2637646c0bc90d32f430f962b71cc89440874500c3bbd6868e0e7f8a7fee427b549d4beda1efa9ffde701f0427fd1af99ebab239222bb31703970ff383879fb5",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "7e136625a6f57b543db92b3ec2b87147a63d7c2c7c752fc7d29b4b99946733521288f1f2bfc82d919fd1a2316e7f71233ce9160e4739591a917446ff89cfc40a",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "f8a730e584bfbac0f4eb553a0fcfc5ec01999247eb7a72d2cc48225ad3e3bcb5",
+        "leaf_index": 1563,
+        "tree_size": 1564,
+        "audit_path": [
+          "2ac6e40dc5b7ceed4aa483f2179d381937e066feda886c53cfe833ae6c81857b",
+          "d944e56fd4b003cb6a5e852c9e5d2a774ffd7c5d61048a03fbbb0f8f1a172212",
+          "acca024aef613be39d75447b175ed47aa8c571bd18338c53e0ea5dc7bf0d8bfc",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1564,
+          "root_hash": "464f59e49070f3e5d25e569729c40e6ea3186b0f565825542d1ae50be36f153f",
+          "timestamp": "2026-11-11T02:13:33.169000+00:00"
+        },
+        "sth_signature": "231dcc9a00cb80c8f0294f7364b373b05723cf3517738452a21f89bffdc59f8fea915c27956d16bab6d7d9497a0a673810bb1a4fd18f90519e18843f456c970c"
+      }
+    },
+    {
+      "id": "d00a5111-58f3-47a3-9bc3-b956a2175795-r13",
+      "type": "notarised_evidence",
+      "plan_id": "4e97641d-5c25-48a9-9d16-b5f3ce4f6f32",
+      "agent": "ava-member-line",
+      "action": "close",
+      "in_policy": true,
+      "policy_reason": "chain close",
+      "evidence": {
+        "counts": {
+          "turns": 3,
+          "model_iterations": 8,
+          "decisions": 3,
+          "errors": 0,
+          "receipts": 13,
+          "observed_responses": 8,
+          "matched": 8
+        },
+        "usage": {
+          "input_tokens": 22,
+          "output_tokens": 1753,
+          "cache_read_input_tokens": 33613,
+          "cache_creation_input_tokens": 2004
+        },
+        "reconciled_against": "observed_responses"
+      },
+      "observed_at": "2026-11-11T02:13:33.265000+00:00",
+      "aiuc_controls": [
+        "E015",
+        "D003",
+        "B001"
+      ],
+      "agent_key_id": "",
+      "policy_hash": "5eefeb62611b91c08f613bae7cc6d675e88e64db078f0fcae335dc056af03d97",
+      "session_id": "d00a5111-58f3-47a3-9bc3-b956a2175795",
+      "seq": 13,
+      "previous_receipt_hash": "c3514224252647bd771c44d74a807e492a432cb4471f24ad8d46de511f1376fe",
+      "evidence_hash_sha512": "1cd924e968f6bd28226c7b4eb217ef2bdb726b1f2a578c7199323d325c2aa5c1e9bcb71564b7d65af6824aa285f6df2bf3968465dbec6e4ee54476d7b28ef8ab",
+      "key_id": "d3c12cc16807d7ac",
+      "signature": "e4adcb2025f7f7bd826cb05f489b8972c40d688752854f6691df7d566a43ed9e3e149eb0466ab6e4eb7ce4aaba3abb1bc79070d73cb18f5fe28d3e53fc7ba307",
+      "log_inclusion_proof": {
+        "log_id": "filet-log-9bdc0b9a070538c5",
+        "leaf_hash": "1e040bd1f6a3e3cf2a5d46052c3b5ceed184339c324d0ca88122b59710c4588e",
+        "leaf_index": 1564,
+        "tree_size": 1565,
+        "audit_path": [
+          "70b50082d048769a4c7673cf4deda1fd3fb197237682371edcb4d86abf940376",
+          "acca024aef613be39d75447b175ed47aa8c571bd18338c53e0ea5dc7bf0d8bfc",
+          "4e59e1d8e8b8bf4644b45a93b3aa60606cd315bcc7968d39f546e35b5b43c346",
+          "1c0dbab290200354f00fdc8aa33c21a8119a56efcc1c1e85cd884157c8ecb479",
+          "85e8faa204d69061140946c654b5d87492fa405e1e8e5a1853b52fc064adddd9"
+        ],
+        "sth": {
+          "tree_size": 1565,
+          "root_hash": "3a640d86cc3ef8c8f0790524af77a6e25ba6954088c9e6532e1cee175c51685b",
+          "timestamp": "2026-11-11T02:13:33.589000+00:00"
+        },
+        "sth_signature": "f00855b3626976cee58b189130b36c5c2253bd3e5f3950a58a350a193b3ad9c82fb1ca8f1da4783be982d5e85c0db4725d08aaf90bb46854d0c79b59875e7a01"
+      }
+    }
+  ],
+  "unanchored": 0,
+  "authority": {
+    "origin": "https://filet-authority.anikethsubs.workers.dev",
+    "log_id": "filet-log-9bdc0b9a070538c5",
+    "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEApYEtzfsZzCKpQES/iEdXN7kEDFaCEx3TDXb10DF6x5c=\n-----END PUBLIC KEY-----\n",
+    "sth": {
+      "sth": {
+        "tree_size": 1565,
+        "root_hash": "3a640d86cc3ef8c8f0790524af77a6e25ba6954088c9e6532e1cee175c51685b",
+        "timestamp": "2026-11-11T02:13:33.589000+00:00"
+      },
+      "sth_signature": "f00855b3626976cee58b189130b36c5c2253bd3e5f3950a58a350a193b3ad9c82fb1ca8f1da4783be982d5e85c0db4725d08aaf90bb46854d0c79b59875e7a01"
+    }
+  },
+  "issuer_public_key_pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAicZHOUQ9AWBPRNaQXmy4twQMP8ytCfwdp9uJoh61Hh8=\n-----END PUBLIC KEY-----\n",
+  "issuer_key_id": "d3c12cc16807d7ac",
+  "cost": {
+    "usd_total": 0.05189,
+    "by_model": {
+      "claude-opus-5-5": {
+        "usd": 0.05189,
+        "requests": 8,
+        "input_tokens": 22,
+        "output_tokens": 1753,
+        "cache_read_input_tokens": 33613,
+        "cache_creation_input_tokens": 2004
+      }
+    },
+    "tokens": {
+      "input_tokens": 22,
+      "output_tokens": 1753,
+      "cache_read_input_tokens": 33613,
+      "cache_creation_input_tokens": 2004
+    },
+    "unpriced_models": [],
+    "prices_as_of": "2026-11-10"
+  },
+  "verify": "verifyAerfReceipt(receipt, { issuerPublicKey: issuer_public_key_pem, logPublicKey: authority.public_key_pem }) and verifyAerfChain(receipts) from the AgentMint SDK"
+}

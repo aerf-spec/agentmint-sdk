@@ -49,6 +49,7 @@ import {
   PRIVATE_PROMPT,
   PROMPT_VERSION,
   RULES,
+  POLICY_MAP,
   TOOLS,
   UNCERTAINTY,
   runMockTool,
@@ -163,7 +164,7 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (req.method === "GET" && p === "/calls/costs") {
     await rateLimit(env, req, "costs", LIMITS.costs);
-    const idx = env.CALL_INDEX.get(env.CALL_INDEX.idFromName("index")) as unknown as CallIndexRpc;
+    const idx = env.CALL_INDEX.get(env.CALL_INDEX.idFromName("index-v3")) as unknown as CallIndexRpc;
     const calls = (await idx.list(100)).map((c) => ({ ...c, usd: c.usd_total }));
     const total_usd = Math.round(calls.reduce((a, c) => a + c.usd_total, 0) * 1e6) / 1e6;
     return json({ prices_as_of: PRICES.prices_as_of, calls, total_usd });
@@ -478,6 +479,7 @@ export class CallDO extends DurableObject<Env> {
     this.emit("start", {
       call_id: id,
       rules: RULES,
+      policy_map: POLICY_MAP,
       prompt_version: PROMPT_VERSION,
       prompt_sha256: await sha256Hex(PRIVATE_PROMPT),
       policy_hash: this.s.policy_hash,
@@ -890,7 +892,7 @@ export class CallDO extends DurableObject<Env> {
       member: { hashed: "sha256:" + (await sha256Hex("NH-552019")).slice(0, 10) },
     };
     const decStart = this.nowUs();
-    this.emit("decision", { ...ctx, decision_record, reasoning, claims, claims_source: "model", rule_text: RULES[inp.rule_id as string], request_id: model.request_id, tool_use_id: tu.id });
+    this.emit("decision", { ...ctx, decision_record, reasoning, claims, claims_source: "model", rule_text: RULES[inp.rule_id as string], maps_to: POLICY_MAP[inp.rule_id as string] ?? [], request_id: model.request_id, tool_use_id: tu.id });
     const dec = span({ parent_id: rootId, kind: "decision", name: String(inp.point), start_us: decStart, dur_us: 0, attrs: { rule_id: inp.rule_id, decision: inp.decision } });
     const stack = await Promise.all(spans.map(async (sp) => ({
       span_id: sp.span_id, parent_id: sp.parent_id, kind: sp.kind, name: sp.name, dur_us: sp.dur_us,
@@ -901,6 +903,7 @@ export class CallDO extends DurableObject<Env> {
       : undefined;
     const r = await this.sign(ctx.step, ctx.turn, ctx.iteration, `decide:${inp.point}`, {
       decision_record, reasoning, claims_source: "model",
+      policy: { rule_id: inp.rule_id, rule_text: RULES[inp.rule_id as string], maps_to: POLICY_MAP[inp.rule_id as string] ?? [] },
       request_id: model.request_id, model: model.model, turn: ctx.turn, iteration: ctx.iteration,
       tools_this_turn: spans.filter((x) => x.kind === "tool.dispatch").map((x) => x.name),
       stack: { trace_id: this.s.trace_id, spans: stack },
@@ -1248,7 +1251,7 @@ export class CallDO extends DurableObject<Env> {
       agent: AGENT,
       prompt_version: PROMPT_VERSION,
       policy_hash: this.s.policy_hash,
-      rules: Object.entries(RULES).map(([id, text]) => ({ id, text })),
+      rules: Object.entries(RULES).map(([id, text]) => ({ id, text, maps_to: POLICY_MAP[id] ?? [] })),
       transcript: this.s.transcript,
       receipts,
       unanchored: receipts.filter((r) => !r.log_inclusion_proof).length,
@@ -1288,7 +1291,7 @@ export class CallDO extends DurableObject<Env> {
 
   private async indexUpdate(): Promise<void> {
     try {
-      const idx = this.env.CALL_INDEX.get(this.env.CALL_INDEX.idFromName("index")) as unknown as CallIndexRpc;
+      const idx = this.env.CALL_INDEX.get(this.env.CALL_INDEX.idFromName("index-v3")) as unknown as CallIndexRpc;
       await idx.upsert({ id: this.s.id, started_at: new Date(this.s.created).toISOString(), turns: this.s.turn, usd_total: this.s.cost.usd_total, by_model: this.s.cost.by_model, ended: this.s.ended });
     } catch (e) {
       console.error("call index update failed", e);

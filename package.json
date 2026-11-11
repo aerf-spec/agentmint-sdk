@@ -13,7 +13,8 @@
     "dev": "tsx watch app/server.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "loadtest": "tsx app/loadtest.ts"
+    "loadtest": "tsx app/loadtest.ts",
+    "harness": "tsx harness/run.ts"
   },
   "dependencies": {
     "tsx": "^4.19.0"

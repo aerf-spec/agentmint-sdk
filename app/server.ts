@@ -4,6 +4,7 @@
 //   GET  /events?speed=1&fail=…    SSE: one full scripted call per connection
 //   GET  /disclose/:receipt_id     vendor-side opening of a receipt's salted commitments (demo)
 //   *    /authority/v1/…           local signing authority (dev fallback when AUTHORITY_URL is unset)
+//   *    /v1/sessions/…            bring-your-own-agent ingest API (app/ingest.ts, docs/BYO-AGENT.md)
 //   GET  /healthz                  ok
 //
 // The issuer key lives only in the signer child process (app/signer-proc.ts).
@@ -16,6 +17,7 @@ import { Authority, authorityBase } from "./authority.js";
 import { SignerClient } from "./signer.js";
 import { DisclosureStore, FAILURE_KINDS, runCall, type FailureKind } from "./call.js";
 import { otel } from "./links.js";
+import { Ingest, ingestAuthFromEnv } from "./ingest.js";
 import type { TraceLinkPlugin } from "../src/trace-links.js";
 import { SALTED_COMMITMENT_ALG } from "../src/commitments.js";
 
@@ -93,6 +95,7 @@ const disclosures = new DisclosureStore();
 
 let signer: SignerClient | undefined;
 let logKey: { log_id: string; public_key_pem: string } | undefined;
+let ingest: Ingest | undefined;
 let ready: Promise<void> | undefined;
 
 async function boot(): Promise<void> {
@@ -105,6 +108,9 @@ async function boot(): Promise<void> {
     stateDir: process.env.SIGNER_STATE_DIR ?? join(tmpdir(), "filet-signer-state"),
     issuerPrivateKeyPem: issuerKeyPem,
   });
+  const auth = ingestAuthFromEnv();
+  ingest = new Ingest({ signer, authorityUrl, logKey, ...auth });
+  if (auth.allowTestKey) console.log("filet demo: ingest API accepts the test key (ALLOW_TEST_KEY=1); set ALLOW_TEST_KEY=0 in production");
   console.log(`filet demo: signer pid ${signer.pid}, issuer ${signer.keyId}, log ${logKey.log_id} at ${authorityBase(authorityUrl)}`);
 }
 
@@ -211,6 +217,17 @@ const server = createServer((req, res) => {
     });
     return;
   }
+  if (path === "/v1/sessions" || path.startsWith("/v1/sessions/")) {
+    void (async () => {
+      await ready;
+      if (!ingest) return json(res, 503, { error: "signer not ready" });
+      await ingest.handle(req, res, path);
+    })().catch((err) => {
+      if (!res.headersSent) json(res, 500, { error: String(err) });
+      else res.end();
+    });
+    return;
+  }
   const disclose = /^\/disclose\/([0-9a-f-]{36})$/.exec(path);
   if (disclose) {
     const t0 = process.hrtime.bigint();
@@ -258,6 +275,7 @@ server.listen(PORT, () => {
 });
 
 function shutdown(): void {
+  ingest?.stop();
   signer?.stop();
   server.close();
   process.exit(0);

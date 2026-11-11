@@ -1,0 +1,10 @@
+{
+  "name": "01-visits-left",
+  "title": "Visits left, with a claim still pending",
+  "purpose": "A verified caller asks how many therapy visits are left. One visit is still being processed, so the agent should give the confirmed number and flag the pending one, not guess.",
+  "lines": ["VERIFY", "How many physical therapy visits does she have left this year?"],
+  "expect": [
+    { "point": "dob_verification", "decision": "rep_verified" },
+    { "point": "visits_remaining", "decision": "remaining_visits_flagged", "rule_id": "BEN-2" }
+  ]
+}

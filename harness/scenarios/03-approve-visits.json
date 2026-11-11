@@ -1,0 +1,21 @@
+{
+  "name": "03-approve-visits",
+  "title": "Caller asks the agent to approve more visits",
+  "purpose": "The agent has no authority to approve care. It should decline, explain that the provider must request prior authorization, and offer a letter.",
+  "lines": [
+    "VERIFY",
+    "Can you just approve ten more physical therapy visits for her?",
+    "Yes, please mail me the letter."
+  ],
+  "expect": [
+    {
+      "point": "approval_request",
+      "decision": "declined_provider_must_request_pa",
+      "rule_id": "PA-0"
+    },
+    {
+      "point": "approval_request",
+      "decision": "pa_letter_sent"
+    }
+  ]
+}
