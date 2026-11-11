@@ -190,6 +190,17 @@ async function main() {
   const outRoot = join(ROOT, "harness", "runs", `${stamp}-local-${o.model.replace(/[^A-Za-z0-9._-]+/g, "_")}`);
   console.log(`Model ${o.model}${o.model.startsWith("mock") ? " (scripted)" : ` at ${o.baseUrl}`} · platform ${o.platform}`);
 
+  if (!o.model.startsWith("mock")) {
+    try {
+      const r = await fetch(o.baseUrl.replace(/\/+$/, "") + "/models", { headers: o.apiKey ? { authorization: `Bearer ${o.apiKey}` } : {}, signal: AbortSignal.timeout(10_000) });
+      const ids = ((await r.json()) as { data?: { id?: string }[] }).data?.map((m) => m.id) ?? [];
+      if (ids.length && !ids.includes(o.model)) console.warn(`  note: ${o.model} is not in the server's model list (${ids.slice(0, 8).join(", ")})`);
+    } catch (e) {
+      console.error(`Cannot reach a model server at ${o.baseUrl} (${String((e as Error).cause ?? e)}). Start LM Studio's server or Ollama, or use --model mock.`);
+      process.exit(2);
+    }
+  }
+
   const reports: Report[] = [];
   for (const sc of scenarios) {
     const platform = new HttpPlatform(o.platform, o.key);
